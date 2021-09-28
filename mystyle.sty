@@ -1,0 +1,91 @@
+% C++ Code
+\usepackage{alltt, listings, textcomp, color, verbatim}
+\lstdefinestyle{cpp}{
+		language=C++,                        % choose the language of the code
+		basicstyle=\ttfamily\footnotesize,   % the size of the fonts that are used for the code
+		tabsize=2,                           % sets default tabsize to 2 spaces
+		showstringspaces=false,              % show spaces adding particular underscores
+		showtabs=false,                      % show tabs within strings adding particular underscores
+		keywordstyle=\color{blue},           % keyword style
+		identifierstyle=\color{black},       % identifier style
+		emphstyle=\color{black}\bf,          % emphasis style
+		%commentstyle=\color{gray}\slshape,   % comment style
+		%stringstyle=\color{gray},            % string literal style
+		aboveskip=\baselineskip,             % skip space when starting code environment
+		xleftmargin=10pt, xrightmargin=10pt, % code margins
+		frame=lines,                         % adds a frame around the code
+		numbers=left,                        % where to put the line-numbers
+		numberstyle=\tiny,                   % the size of the fonts that are used for the line-numbers
+		numbersep=10pt,                      % how far the line-numbers are from the code
+}
+\lstnewenvironment{cpp}{\lstset{style=cpp}}{}
+\newcommand{\inputcpp}[1]{\lstinputlisting[style=cpp]{#1}}
+
+% Python Code
+\usepackage{listings, textcomp, color, verbatim, xcolor}
+\definecolor{deepgreen}{rgb}{0,0.4,0}
+
+\lstdefinestyle{python}{
+		language=python,
+		basicstyle=\color{black}\ttfamily\footnotesize,
+		stringstyle=\color{deepgreen}\slshape,
+		% commentstyle=\color{gray}\slshape,
+		keywordstyle=\color{red}\bf,
+		emphstyle=\color{blue}\bf,
+		tabsize=2,
+		%%%%%%%%%%%%%%%
+		showstringspaces=false,
+    emph={access,and,break,class,continue,def,del,elif,else,except,exec,finally,for,from,global,if,import,in,i s,lambda,not,or,pass,print,raise,return,try,while,as},
+		upquote=true,
+		morecomment=[s]{"""}{"""},
+		literate=*
+		{:}{{\textcolor{blue}:}}{1}%
+		{=}{{\textcolor{blue}=}}{1}%
+		{-}{{\textcolor{blue}-}}{1}%
+		{+}{{\textcolor{blue}+}}{1}%
+		{*}{{\textcolor{blue}*}}{1}%
+		{!}{{\textcolor{blue}!}}{1}%
+		{(}{{\textcolor{blue}(}}{1}%
+		{)}{{\textcolor{blue})}}{1}%
+		{[}{{\textcolor{blue}[}}{1}%
+		{]}{{\textcolor{blue}]}}{1}%
+		{<}{{\textcolor{blue}<}}{1}%
+		{>}{{\textcolor{blue}>}}{1},%
+		%%%%%%%%%%%%%%%%
+		aboveskip=\baselineskip,
+		xleftmargin=20pt, xrightmargin=15pt,
+		frame=lines,
+		numbers=left, numberstyle=\tiny
+}
+\lstnewenvironment{python}{\lstset{style=python}}{}
+\newcommand{\inputsamplepython}[1]{\lstinputlisting[style=python]{../ClassCodes/#1}}
+\newcommand{\inputpython}[1]{\lstinputlisting[style=python]{#1}}
+
+
+% Operators
+\newcommand{\indep}{\perp \!\!\! \perp}
+\newcommand{\partiald}[1]{\frac{\partial}{\partial #1}}
+\newcommand{\set}[1]{\{ #1 \}}
+
+% Common Packages
+\usepackage{bbm} % pretty indicator variable 
+\usepackage{hyperref} % hyperlink
+\usepackage{enumitem} % different numbering system for numeration 
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+
+% Math
+\usepackage{amssymb,amsmath,amsthm} % Standard Math symbols, operators, and environments
+\usepackage{esdiff } % pretty derivatives 
+
+% Layout 
+\setlength\parindent{0pt} % no paragraph indent
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% Level and Spacing 
+\setlength\parindent{0pt}
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
