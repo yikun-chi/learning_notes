@@ -1,0 +1,260 @@
+\chapter{Forecasting}
+\section{Primer: Least squares estimation}
+Best LS estimate of $y|x$ is $E[Y|X]$
+    \begin{align*}
+        \overset{min}{f} E_{x,y}[(y - f(x))^2 ]
+        & = \overset{min}{f} E_x[ E_{y|x}[[(y - f(x))^2|x]] \\
+        & = \overset{min}{f} E_x[ E_{y|x}[[(y - E[Y|X])^2|x]] \\
+        & = var(Y|X)
+    \end{align*}
+So the best LS estimate of $x_{n+h}|x_n$ is 
+    \begin{align*}
+        E[x_{n+h}|x_n]
+    \end{align*}
+If we constraint the LS predictor to be linear in the form of $f(x_n)=a(x_n-\mu) + b$. Assume $\{x_t \}$ is stationary with $E[x_t]=\mu$. Then the best linear predictor has the form 
+    \begin{align*}
+        f(x_n) = \rho(h)(x_n - \mu) + \mu
+    \end{align*}
+and with MSE 
+    \begin{align*}
+        \sigma^2(1-\phi(h)^2)
+    \end{align*}
+And if the process is also Gaussian, $f$ is the optimal overall predictor. 
+
+\section{Projection Theorem} 
+Let $\mathcal{H}$ is a Hilbert space (complete inner product space). For random variable, $<x,y> = E[xy]$ Let $\mathcal{M}$ be a closed linear subspace of $\mathcal{H}$. So for $y\in \mathcal{H}$, there is a point $P_y \in \mathcal{M}$ such that
+    \begin{align*}
+        & \norm{P_y - y} \leq \norm{w - y} \textrm{ for } w\in \mathcal{M}\\
+        & \norm{P_y - y} <\norm{w - y} \textrm{ for } w\in \mathcal{M}, w\neq y\\  
+        & <y-P_y, w> = 0 \textrm{ for } w\in M
+    \end{align*}
+In translation, given $y \in \mathcal{H}$, $P_y$ is a point (project of $P_y$ onto $M$ ) such that the distance between $y$ and $P_y$ is smaller than $y$ to all other points in $M$. 
+
+
+
+\section{The m-step-ahead predictor Definition}
+The m-step-ahead predictor ($n+m$ is the goal, and $n$ is the length of the sequence given) is defined as 
+    \begin{align*}
+        x^n_{n+m} = E[x_{n+m}|x_1,...,x_n]
+    \end{align*}
+and minimizes MSE (here $x^n_{n+m}$ is the predictor)
+    \begin{align*}
+        P^n_{n+m} = E[(x_{n+m} - x^n_{n+m})^2]
+    \end{align*}
+We want to constrain to linear form 
+    \begin{align*}
+        x^n_{n+m} = \alpha_0 + \sum_{i=1}^{n} \alpha_i x_i 
+    \end{align*}
+Note we have $a_0 = 0$ if we assume stationary process with mean $E[x_i] = \mu$, we can get $a_0 = \mu$. So normally, we can just assume $E[x_i] =0$ for simplicity. 
+
+
+\section{Prediction Equation and Projection Theorem} 
+Given history $x_1,...,x_n$, the best linear predictor satisfies the prediction equations 
+    \begin{align*}
+        & E[x_{n+m} - x^n_{n+m}] = 0  \tag{Unbiased predictor} \\
+        & E[(x_{n+m} - x_{n+m}^n)x_i] = 0 & \forall i = 1,...,n \tag{Error uncorrelated to observed value (projection theorem)} \\
+    \end{align*}
+We can think of $H$ as the space of random variables with inner product defined as $E[xy]$, and the linear space $M$ is span of $\{1, x_1, ..., x_n\}$ and $y = x_{n+m}$
+
+
+\section{1-step-ahead linear prediction}
+Form of forecast: 
+    \begin{align*}
+        x_{n+1}^n = \phi_{n+1, 1}^n x_n + ... + \phi_{n+1, n}^n x_1
+    \end{align*}
+The prediction equations gives us 
+    \begin{align*}
+        & E[(x_{n+1}^n - x_{n+1}) x_{n+1-i}] = 0, i = 1, ..., n\\
+        & \Longrightarrow E[(\sum_{j=1}^n \phi_{n+1, j}^n x_{n+1-j} - x_{n+1}) * x_{n+1-i}] = 0\\
+        & \Longrightarrow \sum_{j=1}^n \phi^n_{n+1, j} E[x_{n+1-j} x_{n+1-i}] = E[x_{n+1} x_{n+1-i}]\\
+        & \Longrightarrow \sum_{j=1}^n \phi_{n+1,j}^n \gamma(i-j) = \gamma(i)\\
+        & \Longrightarrow \Gamma_n \tilde{\phi}_{n+1}^n = \tilde{\gamma}(n) \\
+        & \Gamma_n = 
+            \begin{bmatrix}
+            \gamma(0) & \gamma(1) & \cdots & \gamma(n-1) \\
+            \gamma(1) & \gamma(0) & \cdots & \gamma(n-2) \\
+            \vdots & \vdots & \ddots & \vdots \\
+            \gamma(n-1) & \gamma(n-2) & \cdots & \gamma(0)
+            \end{bmatrix}
+        \tilde{\phi}_{n+1}^n = 
+            \begin{bmatrix}
+            \phi_{n+1, 1}^n \\\phi_{n+1, 2}^n \\ \vdots \\ \phi_{n+1, n}^n  
+            \end{bmatrix}
+        \tilde{\gamma}(n) = 
+            \begin{bmatrix}
+                \gamma(1) \\ \gamma(2) \\ \vdots \\ \gamma(n)
+            \end{bmatrix}
+    \end{align*}
+Note so getting best linear predictor still uses second order statistics 
+
+\paragraph{MSE of 1-step-ahead linear prediction} \mbox{}\\
+So our MSE is 
+    \begin{align*}
+    P_{n+1}^n 
+    & = E[(x_{n+1} - x_{n+1}^n)^2]\\
+    & = E[(x_{n+1}(x_{n+1} - x_{n+1}^n) -  x_{n+1}^n(x_{n+1} - x_{n+1}^n)]\\
+    & =  E[(x_{n+1}(x_{n+1} - x_{n+1}^n)] \tag{By projection theorem, $x^n_{n+1}$ in linear space $M$, and $x_{n+1} - x_{n+1}^n$ is the error} \\
+    & = \gamma(0) - E[x_{n+1} \tilde{\phi_{n+1}^n}^T x] \tag{$x$ is a vector of $x_i$}\\
+    & = \gamma(0) - E[x_{n+1} x^T] \Gamma_n^{-1} \tilde{\gamma}(n)\\
+    & = \gamma(0) - \tilde{\gamma}(n)^T \Gamma_n^{-1} \tilde{\gamma}(n)\\
+    & = Var(x_{n+1}) - Cov(x_{n+1}, x) Cov(x,x)^{-1} Cov(x, x_{n+1})\\
+    \end{align*}
+So variance is reduced by conditioning on the history. 
+
+
+\section{The m-step-ahead predictor}
+Form (using $x_1, ..., x_n$ to predict $x_{n+m}$): 
+    \begin{align*}
+        x_{n+m}^n 
+        & = \phi_{n+m, 1}^n x_n + \phi_{n+m, 2}^n x_{n-1} + ... +  \phi_{n+m, n}^n x_{1}\\
+        & = \sum_{i=1}^n \phi_{n+m, i}^n x_{n+1-i}
+    \end{align*}
+The prediction equations are 
+    \begin{align*}
+        E\left[ (x_{n+m}^n - x_{n+m}) * (x_{n+1-i}) \right] = 0, i = 1,...,n 
+    \end{align*}
+The simplified matrix form is 
+    \begin{align*}
+        & \tilde{\phi}_{n+m}^n = \Gamma_n^{-1} \tilde{\gamma}_n^m\\
+        & \tilde{\gamma}_n^m = 
+            \begin{bmatrix}
+                \gamma(m) \\ \vdots \\ \gamma(m+n-1)
+            \end{bmatrix}
+    \end{align*}
+And the MSE is 
+    \begin{align*}
+        P_{n+m}^n = E\left[ (x_{n+m} - x_{n+m}^n)^2 \right] = \gamma(0) - (\tilde{\gamma}_n^{(m)})^T \Gamma_n^{-1} \gamma_n^{(m)}
+    \end{align*}
+
+\paragraph{Computation Alternative} \mbox{}\\
+How to compute $\tilde{\phi}_{n+m}^n $ without solving the linear system
+    \begin{itemize}
+        \item Durbin-Levinson recursive algorithm for AR(p)
+        \item Innovations algorithm for MA(q)
+    \end{itemize}
+
+\paragraph{Prediction Intervals} \mbox{}\\
+    \begin{align*}
+        x_{n+m}^n \pm c_{\alpha / 2} \sqrt{P_{n+m}^n}
+    \end{align*}
+For Gaussian process, the prediction error has $\mathcal{N}(0, P_{n+m}^n)$. But we need to adjust for multiple testing to get $PI$ for more than one time period, such as using Bonferroni. 
+
+
+
+\section{Backcasting}
+Given $x_1, ..., x_n$, predict $x_{1-m}, m > 0$
+
+\paragraph{1-step linear backcasting} \mbox{}\\
+Form of backcast
+    \begin{align*}
+        & x_0^n = \phi_{0, 1}^n x_1 + \phi_{0, 2}^n x_2 + ... + \phi_{0, n}^n x_n = (\tilde{\phi}_0^n)^T x \tag{Note now $x$ is flipped from $x_n, ...,  x_1$ to $x_1, ..., x_n$}
+    \end{align*}
+Prediction equations
+    \begin{align*}
+        E[(x_0^n - x_0)x_i] = 0, i = 1, ..., n \Longrightarrow \Gamma_n \tilde{\phi}_0^n = \tilde{\gamma}(n)
+    \end{align*}
+So it is the same, except now the coefficients are lined up from $x_1$ to $x_n$ instead of the reveres order. \\
+
+
+
+
+\section{Forecasting ARMA} 
+\subsection{Recursive Solution}
+Linear prediction based on infinite past: \\
+Assume infinite past $x_n, x_{n-1}, ..., $
+    \begin{align*}
+        \tilde{x}_{n+m} = E[x_{n+m} | x_n,x_{n-1}, ... ] = \sum_{i=1}^\infty \alpha_i x_{n+1-i}
+    \end{align*}
+Orhtogonality property of optimal linear predictor implies
+    \begin{align*}
+        E[(\tilde{x}_{n+m} - x_{n+m})x_i] = 0, i = 1,2,3,...
+    \end{align*}
+So if $\{ x_t \}$ is a 0 mean stationary process, we have 
+    \begin{align*}
+        \sum \alpha_i \gamma(i-j) = \gamma(m-1+i), i = 1,2,3,...
+    \end{align*}
+If $\{ x_t \}$ is causal, invertible, linear process, we can write 
+    \begin{align*}
+        & x_{n+m} = \sum_{j=1}^\infty \psi_j w_{n+m-j} + w_{n+m} & w_{n+m} = \sum_{j=1}^\infty \pi_j x_{n+m-j} + x_{n+m}\\
+    \end{align*}
+Taking expectation of the second equation, we have 
+    \begin{align*}
+        E[x_{n+m} | x_n, ...] 
+        & = E[w_{n+m} | x_n, ...] - \sum_{j=1}^\infty \pi_j x_{n+m-j} \\
+        & = - \sum_{j=1}^\infty \pi_j x_{n+m-j} \\
+        & = -\sum_{j=1}^{m-1} \pi_j \tilde{x}_{n+m-j} - \sum_{j=m}^\infty \pi_j x_{n+m-j}\\
+        & \tag{Notice the second part contains observed value} 
+    \end{align*}
+So we can iteratively predict: 
+    \begin{align*}
+        & \tilde{x}_{n+1} = - \sum_{j=1}^\infty \pi_j x_{n+1-j}\\
+        & \tilde{x}_{n+2} = - \sum_{j=1}^1 \pi_j \tilde{x}_{n+2-j} -  \sum_{j=2}^\infty \pi_j x_{n+2-j} = -\pi_1 \tilde{x}_{n+1} - \sum_{j=2}^\infty \pi_j x_{n+2-j}\\
+        & \tilde{x}_{n+3} = - \sum_{j=1}^2 \pi_1 \tilde{x}_{n+3-j} -  \sum_{j=2}^\infty \pi_j x_{n+3-j} = -\pi_1 \tilde{x}_{n+2} - \pi_2 \tilde{x}_{n+1} - \sum_{j=3}^\infty \pi_j x_{n+3-j}
+    \end{align*}
+
+\subsection{MSE} 
+    \begin{align*}
+        x_{n+m} 
+        & = \sum_{j=1}^\infty \psi_j w_{n+m-j} + w_{n+m}\\
+        E[\tilde{x}_{n+m}| x_n, ...]
+        & = \sum_{j=1}^\infty \psi_j E[w_{n+m-j} | x_n, ...] +E[w_{n+m}|x_n,...]\\
+        & = \sum_{j=1}^\infty \psi_j E[w_{n+m-j} | x_n, ...]\\
+        & = \sum_{j=m}^\infty \psi_j w_{n+m-j}\\
+        MSE 
+        & = E[(x_{n+m} - E[\tilde{x}_{n+m}|x_n,...])^2] \\
+        & = E[(x_{n+m} - \sum_{j=m}^\infty \psi_j w_{n+m-j})^2] \\
+        & = E[(\sum_{j=0}^\infty \psi_j w_{n+m-j} - \sum_{j=m}^\infty \psi_j w_{n+m-j})^2] \\
+        & = E[(\sum_{j=0}^{m-1} \psi_j w_{n+m-j})^2]\\
+        & = \sigma_w^2 \sum_{j=0}^{m-1} \psi_j^2
+    \end{align*}
+So for $m = 1$, we have the MSE being the variance $\sigma_w^2$. \\
+As $m \to \infty$, we have 
+    \begin{align*}
+        & \tilde{x}_{n+m} = 0 \tag{The mean} \\
+        & P_{n+m}^n \sigma_w^2 \sum_{j=0}^\infty \psi_j^2 = \sigma_x^2
+    \end{align*}
+So for far in the future, we just predict the mean (history doesn't matter), and the MSE is the variance of the process. 
+
+\subsection{Truncated Forecasts}
+For large $n$, truncating infinite-past forecasts gives a good approximations: 
+    \begin{align*}
+        \tilde{x}_{n+m} = \sum_{j=1}^{m-1} \pi_j \tilde{x}_{n+m-j} - \sum_{j=m}^\infty \pi_j x_{n+m-j}\\
+        \tilde{x}^n_{n+m} = \sum_{j=1}^{m-1} \pi_j \tilde{x}_{n+m-j} - \sum_{j=m}^{n+m-1} \pi_j x_{n+m-j}\\
+    \end{align*}
+The approximation is exact for AR(p) when $n \geq p$ because $\pi_j = 0$ for $j > p$. In general, a good approximation if $\pi_j$ converge quickly to 0. 
+
+
+\subsection{Example: Forecasting ARMA(p,q) model Summary}
+    \begin{align*}
+        x_t - \sum_{i=1}^p \phi_i x_{t-i} = w_t + \sum_{i=1}^q \theta_i w_{t-i}
+    \end{align*}
+We want to forecast $x_{n+m}$ from $x_1, ..., x_n$.  The exact predictor is trivial for AR(p) process using $\phi_i$. Otherwise, we can compute truncated forecast recursively in time $O((n+m)(p+q))$. The algorithm is \\
+For $t = n+1, ..., n+m$, calculate: 
+    \begin{align*}
+    \tilde{x}_t^n = \phi_1 \tilde{x}_{t-1}^n + ... + \phi_p \tilde{x}_{t-p}^n + \theta_1 \tilde{w}_{t-1}^n + ... \theta_q \tilde{w}_{t-q}^n
+    \end{align*}
+For $1 \leq t \leq n$: 
+    \begin{align*}
+        \tilde{w}_t^n = \phi(B) \tilde{x}_t^n - \theta_1 \tilde{w}_{t-1}^n - ... - \theta_q \tilde{w}_{t-q}^n
+    \end{align*}
+Boundary condition: 
+    \begin{align*}
+        \tilde{x}_t^n = x_t, 1 \leq t \leq n \\
+        \tilde{x}_t^n = 0, t \leq 0 \\
+        \tilde{w}_t^n = 0, t \leq 0, t > n
+    \end{align*}
+
+    
+\subsection{Forecasting Metrics} 
+\paragraph{Mean absolute percent error (MAPE)}
+    \begin{align*}
+        \frac{1}{m} \sum_{j=1}^m \frac{|x_{n+j}^n - x_{n+j}|}{|x_{n+j}|} * 100\%
+    \end{align*}
+    \begin{itemize}
+        \item have issue if $x_{n+j}$ is 0
+    \end{itemize}
+    
+\paragraph{Weighted Average Percentage Error(WAPE)}
+    \begin{align*}
+        \frac{  \frac{1}{m}  \sum_{j=1}^m |x_{n+j}^n - x_{n+j}|}{\frac{1}{m}  \sum_{j=1}^m |x_{n+j}|}
+    \end{align*}

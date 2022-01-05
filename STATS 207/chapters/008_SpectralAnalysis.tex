@@ -1,0 +1,121 @@
+\chapter{Spectral Analysis} 
+
+\section{Representing Stationary Processes as Random Sum of Sines and Cosines} 
+Any stationary process $\{ x_t \}$ can be somewhat approximately represented by 
+    \begin{align*}
+        x_t = \sum_{k=1}^q u_k \cos(2\pi \omega_k t) + v_k \sin(2\pi \omega_k t)
+    \end{align*}
+    \begin{itemize}
+        \item $u_k$ and $v_k$ are uncorrelated 0 mean random variable with variance $\sigma_k^2$
+        \item $q$ could be quite large
+    \end{itemize}
+
+\subsection{Example: Periodic Stationary Processes with 1 period} 
+    \begin{align*}
+        x_t 
+        & = u \cos(2\pi \omega t) + v\sin(2\pi\omega t)\\
+        E[x_t] 
+        & = 0\\
+        \gamma(t, t+h) 
+        & = cov(u \cos_t + v \sin_t, u\cos_{t+h} + v\sin_{t+h})\\
+        & = E[u^2 \cos_t \cos_{t+h}] + E[v^2\sin_t \sin_{t+h}] \\
+        & = \sigma^2 (\cos_t \cos_{t+h} + \sin_t \sin_{t+h}) \\
+        & = \sigma^2 (\cos(2\pi \omega (t + h) - 2\pi\omega t )) \tag{trig identity of $cos(a-b)$}\\
+        & = \sigma^2(\cos(2\pi\omega h) \tag{Stationary, because no $t$} 
+    \end{align*}
+
+\subsection{Periodic Stationary Processes with sum over frequency} 
+    \begin{align*}
+        \gamma(h) & = \sum_{k=1}^q \sigma_k^2 \cos(2\pi\omega_k h) \\
+        var(x_t) & = \gamma(0) = \sum_{k=1}^q \sigma_k^2
+    \end{align*}
+    
+\section{Spectral density} 
+\subsection{Definition} 
+If the autocovariance function $\gamma(h)$ of a stationary process $\{ x_t \}$ satisfies 
+    \begin{align*}
+        \sum_{h=-\infty}^\infty |\gamma(h)| < \infty 
+    \end{align*}
+then the $\gamma(h)$ can be written as the inverse transform of the spectral density $f(\omega)$
+    \begin{align*}
+        & \gamma(h) = \int_{-0.5}^0.5 e^{2\pi i \omega h} f(\omega) \,d \omega \\
+        & f(\omega) = \sum_{h=-\infty}^\infty \gamma(h) e^{-2\pi i \omega h}
+        & i = \sqrt{-1} \\
+    \end{align*}
+    \begin{itemize}
+        \item $f(\omega)$ is the Fourier transform of $\gamma(h)$
+        \item $h = 0, \pm 1, \pm 2, ...$
+        \item $-\frac{1}{2} \leq \omega \leq \frac{1}{2}$
+    \end{itemize}
+\subsection{Properties}
+Spectral density is: 
+    \begin{itemize}
+        \item Non-negative
+        \item symmetric
+        \item Perod = 1, hence $f(\omega + 1) = f(\omega)$
+        \item Defines variance $\gamma(0) = var(x_t) = \int_{-0.5}^{0.5} f(\omega) \, d \omega$
+    \end{itemize}
+    
+
+
+\section{Linear Filtering} 
+For some specified set of filter coefficients $a_j$ (impulse response of filter) with $\sum_{j=-\infty}^{\infty} |a_j| \leq \infty$, linear filtering $y_t$ is
+    \begin{align*}
+        y_t = \sum_{j=-\infty}^\infty a_j x_{t-j}
+    \end{align*}
+Let the frequency response function be the Fourier transform of the impulse response function
+    \begin{align*}
+        A(\omega) = \sum_{j=-\infty}^\infty a_j e^{-2\pi i \omega j}
+    \end{align*}
+We also know that if $\{ x_t \}$ has spectrum $f_x(\omega)$, then the filtered output $\{ y_t \}$ has spectrum 
+    \begin{align*}
+        f_y(\omega) = |A(\omega)|^2 f_x(\omega)
+    \end{align*}
+    
+    
+\section{Examples} 
+\subsection{Spectral density of white noise} 
+Given $\gamma(0) = \sigma_w^2$ and $\gamma(h) = 0$ for $h \neq 0$, we have 
+    \begin{align*}
+        f(\omega) = \sum_{h=-\infty}^\infty \gamma(h) e^{-2\pi i \omega h} = \sigma_w^2
+    \end{align*}
+This means spectral density constant across frequencies. In another word, each frequency contributes equally to variance. 
+
+\subsection{Spectral density of ARMA} 
+For a causal ARMA process, we can write 
+    \begin{align*}
+        x_t = \sum_{j=0}^\infty \psi_j w_{t-j} & \sum_{j=0}^\infty |\psi_j| \leq \infty 
+    \end{align*}
+where $\psi(z) = \frac{\theta(z)}{\phi(Z)}$ AND $f_w(\omega) = \sigma_w^2$. Notice this is already in the form of linear filter where $a_j = \psi_j$. So we know 
+    \begin{align*}
+        A(\omega) &= \sum_{j=0}^\infty \psi_j e^{-2\pi i \omega j } \\
+        & = \sum_{j=0}^\infty \psi_j (e^{-2\pi i \omega}) ^ j \tag{Looks like $\sum_{j=0}^\infty \psi_j B^j = \psi(B)$} \\
+        & = \psi(e^{-2\pi i \omega} \\
+        & = \frac{\theta(e^{-2\pi i \omega})}{\phi(e^{-2\pi i \omega})} \\
+        & \Longrightarrow f_x(\omega) = \abs{\frac{\theta(e^{-2\pi i \omega})}{\phi(e^{-2\pi i \omega})}}^2\sigma_w^2
+    \end{align*}
+    
+\subsection{Spectral density of MA(1)}
+For MA(1), we just have $\theta(z) = 1+\theta z$. so 
+    \begin{align*}
+        f_x(\omega) 
+        & = \sigma_w^2 \abs{1 + \theta e^{-2\pi i \omega}}^2 \\
+        & = \sigma_w^2 (1 + 2\theta \cos(2\pi \omega) + \theta^2)
+    \end{align*}
+    
+\subsection{Spectral density of AR(1)}
+For AR(1), we just have $\phi(z) = 1 - \phi z$
+    \begin{align*}
+        f_x(\omega)
+        & = \frac{\sigma_w^2}{\abs{1 - \phi e^{-2\pi i \omega}}^2} \\
+        & = \frac{\sigma_w^2}{1 - 2\phi \cos(2\pi \omega) + \phi^2}\\
+    \end{align*}
+    
+\subsection{Spectral density of AR(2)}
+    \begin{align*}
+        & x_t - x_{t-1} + 0.9 x_{t-2} = w_t & \sigma_w^2 = 1\\
+        & \Longrightarrow \phi(z) = 1-z + 0.9z^2 \\
+        & \Longrightarrow f_x(\omega) = \abs{\phi(e^{-2\pi i \omega}}^{-2} \\
+        & = \abs{1 - e^{-2\pi i \omega} + 0.9 e^{-4\pi i \omega}}^{-2}\\
+        & = \abs{ 2.81 - 3.8 \cos(2\pi \omega) + 1.8 \cos(4\pi\omega)}^{-1}
+    \end{align*}

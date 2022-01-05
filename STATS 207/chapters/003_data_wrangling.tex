@@ -1,0 +1,146 @@
+\chapter{Data Wrangling}
+
+\paragraph{Motivation} \mbox{}\\
+The goal is to 
+    \begin{itemize}
+        \item Remove trend and periodic components
+        \item Ohter transformations of data
+        \item Fit model (for stationary time series) to resulting data 
+    \end{itemize}
+
+\section{Parametric Detrending and data transformations} 
+
+\subsection{Parametric Trend Model}
+The trend model is
+    \begin{align*}
+        x_t = y_t + T_t
+    \end{align*}
+    \begin{itemize}
+        \item $y_t$ is the stationary process
+        \item $T_t$ is a deterministic trend parameterized by $B$. 
+        \item The detrended series will be defined as $\hat{y}_t = x_t - f(t; \hat{B})$
+        \item Some examples of trend functions are 
+            \begin{itemize}
+                \item Polynomial regression $f(t;B) = \beta_0 + \beta_1 t + \beta_2 t^2 + ...$
+                \item Periodic regression over known period $T$:  $f(t;A) = \alpha_1 cos(\frac{2\pi t}{T}) + \alpha_2 sin(\frac{2\pi t}{T})$
+                \item Hybrid: polynomial + periodic 
+            \end{itemize}
+        \item It is easy to fit and predict, but may be unrealistic
+    \end{itemize}
+
+\subsection{Differencing} 
+\paragraph{1st order} \mbox{}\\
+    \begin{align*}
+        \nabla x_t 
+        & = x_t - x_{t-1} = (1-B)x_t \tag{B is a backshift operator} \\
+        & = (y_t - y_{t-1}) + (T_t - T_{t-1}) \tag{Hope $T_t - T_{t-1}$ is constant} \\
+        & \textrm{If $y_t$ is stationary, then $y_t - y_{t-1}$ is also stationary}
+    \end{align*}
+\paragraph{Order d} \mbox{}\\
+    \begin{align*}
+        \nabla^d x_t = (1-B)^d x_t 
+    \end{align*}
+Example:    
+    \begin{align*}
+        & x_t = t^2 + y_t \\
+        & \nabla^2 x_t \\
+        & = \nabla (\nabla x_t) \\
+        & = \nabla (x_t - x_{t-1})\\
+        & = \nabla x_t - \nabla x_{t-1}\\
+        &= (x_t - x_{t-1}) - (x_{t-1} - x_{t-2}) \\
+        &= (t^2 + y_t - (t-1)^2 - y_{t-1}) - (x_{t-1} - x_{t-2}) \\
+        &= [(2t-1) + (y_t - y_{t-1})] - [2(t-1) - 1 + (y_{t-1} - y_{t-2})]\\
+        &= 2 + y_t - 2y_{t-1} + y_{t-2} \tag{Constant + filtering of $y_t$ (approximation of second derivative)}
+    \end{align*}
+    
+\subsection{Log and Power Transformation} 
+\paragraph{Log} \mbox{}\\
+    \begin{align*}
+        y_t = log x_t
+    \end{align*}
+    \begin{itemize}
+        \item Applies to non-negative data
+        \item tends to suppress large fluctuations occuring over portions of the series 
+        \item Improves approximation to normality (including in transforming large count data to be approximately normal) 
+        \item Improves linearity in predicting one series from another 
+    \end{itemize}
+
+\paragraph{Box Cox Power Transformation} \mbox{} \\
+    \begin{align*}
+        y_t = 
+            \begin{cases} 
+            (x_t^\lambda - 1) / \lambda & \lambda > 0 \\
+            \log (x_t) & \lambda = 0
+            \end{cases}
+    \end{align*}
+    
+    
+\section{Nonparametric Trend Estimation: Smoothing} 
+General goals of nonparametrics: 
+    \begin{itemize}
+        \item Flexibility
+        \item Make few assumptions about $f(x)$
+        \item Complexity can grow with the number of observation 
+    \end{itemize}
+    
+\subsection{k-NN Regression}
+Given dataset of pairs $(t_1, x_1), ..., (t_n, x_n)$ and query point $t_q$. We 
+    \begin{enumerate}
+        \item Order data by distance from $t_q$.  $(t_{NN1},...,t_{NNK})$ such that for any $t_i$ not in the nearest neighbor (NN) set, $|t_i - t_q| \geq |t_{NNK} - t_q|$
+        \item  Estimate $\hat{f}(t_q) = \frac{1}{K} \sum_{j=1}^K x_{NNj}$
+    \end{enumerate}
+KNN have discontinuity, and also boundary issue. We can use weighted k-NN
+    \begin{align*}
+        \hat{f}(t_q) = \frac{C_{qNN1}X_{NN1} + C_{qNN2}X_{NN2} + ... + C_{qNNk}X_{NNk}}{\sum_{j=1}^k C_{qNNj}}
+    \end{align*}
+The weight can be decided using Kernel, e.g. a Gaussian kernel : 
+    \begin{itemize}
+        \item $C_{qNNj} = Kernel_{\lambda}(|t_{NNj} - t_q|) = exp(-(t_{NNj} - t_q)^2 / \lambda)$
+    \end{itemize}
+\subsection{Kernel Regression}
+K-NN has a fixed set of $K$ nearest neighbors. We can weight all points and use Kernel weights. (Nadaraya-Watson Kernel Weighted Average). Notice here $\lambda$ is the distance away from $t_q$ where we apply the kernel. So if a point $t_i$ is more than $\lambda$ away from $t_q$, the Kernel will be 0. 
+    \begin{align*}
+        \hat{f}(t_q) = \frac{\sum_{i=1}^{n} Kernel_\lambda(distance(t_i, t_q)) * x_i }{\sum_{i=1}^{n} Kernel_\lambda(distance(t_i, t_q))}
+    \end{align*}
+Generally, choice of kernel matters much less than choice of $\lambda$. We can pick $\lambda$ through cross validation. 
+
+
+\subsection{Local Linear Regression}
+Notice the kernel regression is a solution to 
+    \begin{align*}
+        \hat{f}(t_q) = \overset{argmin}{a} \sum_{i=1}^n K_\lambda(|t_i - t_q|)(x_i-a)^2
+    \end{align*}
+So we are fitting constant function locally at each point (finding an average / weighted average locally). What if we fit a line or polynomial locally at each point? 
+    \begin{align*}
+        \beta_{0q} + \beta_{1q}(t-t_q) \tag{Centered at $t_q$}
+    \end{align*}
+So our objective is to at each point, we fit a local regrression
+    \begin{align*}
+        & \overset{argmin}{\beta} \sum_i K_\lambda(|t_i-t_q|)(x_i - (\beta_{0q} + \beta_{1q}(t-t_q)))^2\\
+        & \hat{f}(t_q) = \hat{\beta}_{0q} \tag{Fit at $t_q$ is just intercept} 
+    \end{align*}
+Local regression rules of thumb: 
+    \begin{itemize}
+        \item Local linear fit reduces bias at boundaries with minimum increase in variance 
+        \item Local quadratic fit doesn't help at boundaries and increase variance, but does help capture curvature in the interior 
+        \item with sufficient data, local polynomials of odd degree dominate those of even degree 
+    \end{itemize}
+    
+
+\subsection{Splines} 
+
+Consider generic function forms
+    \begin{align*}
+        \overset{min}{f} ||x - f(t)||^2
+    \end{align*}
+If we constrained to linear forms, we have least square solution. But if $f$ can be arbitrary, we have interpolator function (just set $f$ to be those points). So we can introduce a term to penalize complexity. hence 
+    \begin{align*}
+        \overset{min}{f} || x-f(t)||^2 + \lambda \int f''(t)^2 dt
+    \end{align*}
+The result is a natural cubic spline with knots at data points (smoothing splines). \\
+Cublic spline with two knots example below are: 
+    \begin{align*}
+        f(t) = \beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + b_1(t-\xi_1)^3_+ + b_2(t-\xi_2)^3_+
+    \end{align*}
+ 
+Overall, an order-M spline with knots $\xi_1 < ... < \xi_K$ is a piecewise $M-1$ degree polynomial with $M-2$ continuous derivative at the knots. A spline that is linear beyond the boundary knots is called a natural spline. The choices are 

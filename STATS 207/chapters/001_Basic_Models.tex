@@ -1,0 +1,230 @@
+\chapter{Baisc Time Series Model} 
+
+\section{Basic Definition}
+\subsection{Stochastic Processes}
+Definition: \\
+A discrete time stochastic process is a set of random variables indexed by $\mathbb{N} = \set{1,2,...}$ \\ \par
+
+Notation: \\
+$\set{x_t}, \set{x_t}_{t\in \mathbb{N}}$\\
+\par
+
+Realization: \\
+A realization is the observed value of the stochastic process. \\
+\par
+
+Time Series Model: \\
+A time series model specifies the joint distribution of the sequence of $\set{x_t}$ of random variables. i.e.: \begin{align*}
+    Pr(x_1 \leq c_1, ..., x_t \leq c_t) \qquad \forall t, c_1, ..., c_t
+\end{align*}
+But traditionally, we focus on second order properties. i.e.: 
+\begin{align*}
+    E[x_t], \qquad E\left [(x_s - E[x_s])(x_t - E[x_t])\right]
+\end{align*}
+
+
+\subsection{Stationary}
+Definition: \\
+$\set{x_t}$ is strictly stationary if for all $k, t_1, ..., t_k, c_1, ..., c_k, h$, we have 
+    \begin{align*}
+        Pr(x_{t_1} \leq c_1, ..., x_{t_k} \leq c_k) =  Pr(x_{t_1 + h} \leq c_1, ..., x_{t_k + h} \leq c_k)
+    \end{align*}
+i.e.: shifting time axis does not affect distribution \\ 
+\par
+
+Second Order Properties - Mean Function: \\
+    \begin{align*}
+        \mu_{xt} = E[x_t]
+    \end{align*}
+\par
+
+Second Order Properties - Autocovariance function: 
+    \begin{align*}
+        \gamma_x(s,t) = cov(x_s, x_t) = E[(x_s - \mu_{xs})(x_t - \mu_{xt})]
+    \end{align*}\\
+\par
+
+Weak stationarity: \\
+$x_{t}$ is weakly stationary if for all $t, s$, we have 
+    \begin{align*}
+        & \mu_{xt} = \mu_{xs} & \textrm{mean does not vary with time}\\
+        & \gamma_x(s,t) = \gamma_x(0, |t-s|) & \textrm{Only depends on distance b/t t and s} \\ 
+    \end{align*}
+    \begin{itemize}
+        \item For weak stationarity, we use shortcut representation  $\gamma_x(h) = \gamma_x(0, h)$
+    \end{itemize}
+\par
+
+Second Order Properties - Autocorrelation: \\
+    \begin{align*}
+        \rho_x(s,t) = corr(x_s, x_t) = \frac{cov(x_s, x_t)}{\sqrt{var(x_s)var(x_t)}} = \frac{\gamma_x(s,t)}{\sqrt{\gamma_x(s,s) \gamma_x(t,t)}}
+    \end{align*}
+
+    \begin{itemize}
+        \item $\rho_x(t,t) = 1$
+        \item  $ -1 \leq \rho_x(s,t) \leq 1$
+        \item $|\rho_x(s,t) = 1| \rightarrow $ perfect linear relations between $x_s$ and $x_t$
+        \item If the process is weakly stationary, we have $\rho_x(h) = \frac{\gamma_x(h)}{\gamma_x(0)}$
+        
+    \end{itemize}
+
+
+
+\subsection{Estimating Autocovariance / Autocorrelation}
+Assume observations $x_1, ..., x_n$ and stationary process, we have 
+    \begin{align*}
+        \textrm{Sample mean: }& \hat{\mu_{xt}}=\bar{x} = \frac{1}{n}\sum_{t=1}^{n}x_t\\
+        \textrm{Sample autocov: }& \hat{\gamma}_x(h) = \frac{1}{n}\sum_{t=1}^{n-h}(x_{t+h} - \bar{x})(x_t - \bar{x}) \\
+        \textrm{Sample autocorr: } & \hat{\rho}(h) = \frac{\hat{\gamma}(h)}{\hat{\gamma}(0)}
+    \end{align*}
+    \begin{itemize}
+        \item Note for sample autocov, we are normalizing using $\frac{1}{n}$, and also subtracting from the full sample mean $\bar{x}$ instead of only restrict to $n-h$. 
+    \end{itemize}
+\subsubsection{Testing for WN}
+If we can derive confidence limits for sample autocorrelation function, then we can test for white noise. We have: 
+    \begin{align*}
+        & SE[\hat{\rho}_{WN}(h)] \approx \frac{1}{\sqrt{n}} \\
+        & \Longrightarrow \sqrt{n} \hat{\rho}_{WN}(h) \overset{D}{\sim} N(0,1)
+    \end{align*}
+So for $h>0$, we have $Pr(|\hat{\rho}_{WN}(h)| > 1.96 / \sqrt{n}) \approx Pr(|N(0,1)| > 1.96 / \sqrt{n})=0.05$
+
+
+
+\section{Basic Model: White Noise} 
+\begin{align*}
+x_t \sim WN(0, \sigma^2) \quad if 
+\end{align*}
+\begin{itemize}
+    \item Zero Mean: $E[x_t]=0$ for all $t=1,2,...$
+    \item Finite \& identical variance: $E[x_t^2]=\sigma^2$ for all t = 1,2,...
+    \item Pairwise uncorrelated $E[x_sx_t]=0$ for all $t \neq s$
+\end{itemize}
+
+\subsection{White Noise Example 1: iid noise} 
+$\set{x_t}$ is iid noise if $x_t$ independent and identically distributed. So its joint distribution equals the product of the individual distribution. White noise is not necessarily iid noise, but iid noise is white noise. Because uncorrleated doesn't imply independent. 
+    \begin{align*}
+        E[x_t] & = 0 \\
+        E[x_t^2] & = \sigma^2 \\
+        \gamma_x(t+h, t) & = 
+            \begin{cases}
+            \sigma^2 & h=0 \\
+            0 & o/w
+            \end{cases} \\
+        \rho_x(h) &= \frac{\gamma_x(h)}{\gamma_x(0)} = 
+            \begin{cases}
+            1 & h=0 \\
+            0 & o/w
+            \end{cases} \\
+    \end{align*}
+So this is a stationary process (actually true for all white noise process). 
+
+\subsection{White Noise Example 2: Gaussian White noise}
+$\set{x_t}$ is Gaussian white noise if $x_t$ iid noise with $x_t \sim N(0, \sigma^2)$
+
+
+\section{Basic Model: Random Walk}
+\begin{align*}
+    x_t = \sum_{i=1}^t w_i = x_{t-1} + w_t
+\end{align*}
+\begin{itemize}
+    \item $w_t$ is a 0-mean noise, e.g.: white noise
+    \item $E[x_t] = 0$
+    \item $var(x_t) = E[x_t^2] = E[\sum_{i=1}^t w_i \sum_{j=1}^t w_j] =\sum_{i=1}^t E[w_i^2] = t \sigma_w^2$ (Because all cross terms have $E[w_i * w_j]=0$). So the variance grows with time. 
+    \item We can also add a drift term so $x_t = \delta_t + x_{t-1} + w_t$ to have non-zero expected value. 
+    \item $\gamma_x(t+h, t) = cov(x_{t+h}, x_t) = Cov(x_t + \sum_{i=1}^{h} w_{t+i}, x_t) = cov(x_t, x_t) = t\sigma^2$ Second last inequality is because $w_i, w_{i+1}$ is independent. 
+    \item Not stationary because $\gamma_x(t+h, t) = t\sigma^2$ which is dependent on $t$, not just the distance between $t+h$ and $t$
+    \item $\rho_x(t+h, t) = \frac{t\sigma^2}{\sqrt{(t\sigma^2)(t+h)\sigma^2}} = \frac{1}{1 + \sqrt{h/t}}$
+\end{itemize}
+
+
+    
+    
+    
+
+\section{Basic Model: Autoregressive}
+\begin{align*}
+    x_t = \sum_{j=1}^p \phi_j x_{t-j} + w_t
+\end{align*}
+\begin{itemize}
+    \item $p$ is a number of lags considered in the model 
+\end{itemize}
+Checking for stationary: \\
+    \begin{align*}
+        \mu_{xt} & = E[x_t] = \phi E[x_{t-1}] + E[w_t] \\
+                    & = \phi E[x_{t-1}]\\
+                    & = 0 \qquad \textrm{If stationary} \\
+        \gamma_x(t+h, t) &= Cov(\phi x_{t+h-1} + w_{t+h}, x_t) \\
+            &= \phi Cov(x_{t+h-1}, x_t) \\
+            &= \phi \gamma_x(t+h-1, t) \\
+            &= \phi^{|h|}\gamma_x(t,t) \\
+            & = \phi^{|h|} E[x_t^2] \qquad \textrm{If stationary} \\
+            & = \phi^{|h|} (\phi^2 E[x^2_{t-1}] + \sigma^2) \\
+            & \textrm{With stationary assumption} \Longrightarrow E[x_t^2] = E[x^2_{t-1}] \\
+            & \Longrightarrow  E[x_t^2] = E[x^2_{t-1}] = \frac{\sigma^2}{1-\phi^2}\\
+            & \Longrightarrow \gamma_x(h) = \phi^{|h|} * \frac{\sigma^2}{1-\phi^2}
+    \end{align*}
+Thus for autocorrelation function, we have: 
+    \begin{align*}
+        \rho_x(h) = \phi^{|h|}
+    \end{align*}
+
+\section{Basic Model: Trend + seasonal}
+\begin{align*}
+    x_t = T_t + S_t + w_t
+\end{align*}
+\begin{itemize}
+    \item $T_t$ is the trend component. It could be a line $\beta_0 + \beta_1 t$
+    \item $S_t$ is the seasonal component. It could be $\sum_i(\beta_{i1}cos(\lambda_it) + \beta_{i2}sin(\lambda_it)) $
+\end{itemize}
+Checking for Stationarity: 
+    \begin{align*}
+        \mu_{xt} &= E[x_t] = \beta_0 + \beta_1 t + \sum_i(\beta_{i1}\cos{\lambda_it} + \beta_{i2}\sin{\lambda_it}) \\
+        \gamma_x(t+h, t) &= 
+            \begin{cases}
+                \sigma^2 & h=0 \\
+                0 & o/w
+            \end{cases} 
+    \end{align*}
+So it is not stationary. 
+
+\section{Basic Model: Moving Average Process}
+    \begin{align*}
+        & x_t = w_t + \theta w_{t-1} \\
+        & w_t \sim WN(0, \sigma^2)
+    \end{align*}
+We have: 
+    \begin{align*}
+        \mu_{xt} & = E[x_t] = 0 \\
+        \gamma_x(t+h, t) & = E[(w_{t+h}+\theta w_{t+h-1})(w_t + \theta w_{t-1})] \\
+                        & = \begin{cases}
+                            Var(w_{t}+\theta w_{t-1}) & h = 0 \\
+                            \sigma^2\theta & h = \pm 1 \\
+                            0 & o/w
+                        \end{cases}\\
+                        & = \begin{cases}
+                            \sigma^2 + \theta^2 \sigma^2 & h = 0 \\
+                            \sigma^2\theta & h = \pm 1 \\
+                            0 & o/w
+                        \end{cases}\\
+    \end{align*}
+So the process is stationary. For autocorrelation function, we have: 
+    \begin{align*}
+        & h=0 \Longrightarrow 1\\
+        & h \pm 1 \Longrightarrow \frac{\theta}{1+\theta^2}\\
+        & o/w \Longrightarrow 0
+    \end{align*}
+
+
+\section{Basic time series workflow}
+\begin{enumerate}
+    \item Plot time series
+    \item Transform data so residuals are stationary 
+        \begin{itemize}
+            \item Estimate and subtract trend and seasonal components
+            \item Differencing 
+            \item Nonlinear transformations
+        \end{itemize}
+    \item Fit Model to residuals 
+\end{enumerate}
+
+

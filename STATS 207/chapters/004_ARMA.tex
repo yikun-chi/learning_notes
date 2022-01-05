@@ -1,0 +1,428 @@
+\chapter{AR, MA, and ARMA Processes}
+
+\section{Linear Processes, causality and invertibility} 
+
+\subsection{Linear Processes}
+A linear process is one that can be written as 
+    \begin{align*}
+        & x_t = \mu + \sum_{j=-\infty}^{\infty} \psi_j w_{t-j}, w_t \sim WN(0, \sigma^2_w)\\
+        & \textrm{where } \sum_{j=-\infty}^{\infty} |\psi_j| < \infty
+    \end{align*}
+
+\subsection{Backshift Operator} 
+The backshift operator is defined as $Bx_t = x_{t-1}$.
+
+\subsection{Causality}
+A linear process $\{ x_t \}$ is causal (formally a causal function of $\{w_t \})$ if
+    \begin{align*}
+        & x_t = \psi(B)w_t\\
+        & \psi(B) = \psi_0 + \psi_1B + \psi_2 B^2 +..., \\
+        & \sum_{j=0}^\infty |\psi_j| \leq 0
+    \end{align*}
+i.e.: we can represent $x_t$ as a linear combination of past $w_{i}$
+
+
+\subsection{Invertibility} 
+A linear process $\{ x_t \}$ is invertible iff
+    \begin{align*}
+        & w_t = \pi(B)x_t \\
+        & \pi(B) = \pi_0 + \pi_1 B + \pi_2 B^2 + ... \\
+        & \sum_{j=0}^\infty |\pi_j| < \infty 
+    \end{align*}
+i.e.: we can represent $w_t$ as a linear combination of past $x_i$
+
+
+
+
+\section{Autoregressive Process}
+
+\subsection{Definition}
+An order-p autoregressive process, $AR(p)$ is defined as 
+    \begin{align*}
+        & x_t = \phi_1 x_{t-1} + \phi_2 x_{t-2} + ... + \phi_p x_{t-p} + w_t \\
+        & w_t \sim WN(0, \sigma_w^2)
+    \end{align*}
+Alternative, $AR(p)$ process can be defined with a mean 
+    \begin{align*}
+        x_t - \mu 
+        & = \phi_1 (x_{t-1}-\mu) + \phi_2 (x_{t-2}-\mu) + ... + \phi_p (x_{t-p}-\mu)) + w_t \\
+        & \textrm{or} \\
+        x_t
+        & = \alpha + \phi_1 x_{t-1} + \phi_2 x_{t-2} + ... + \phi_p x_{t-p} + w_t \\
+        & \alpha = \mu (1 - \phi_1 - ... \phi_p)
+    \end{align*}
+
+
+\subsection{AR(1) Processes}
+    \begin{align*}
+        x_t = \phi x_{t-1} + w_t
+    \end{align*}
+
+\paragraph{What if |phi| < 1} \mbox{}\\
+    \begin{align*}
+        x_t 
+        & =  \phi x_{t-1} + w_t \\
+        & = \phi^k x_{t-k} + \sum_{j=1}^{k-1}\phi^j w_{t-j} \\
+        & \textrm{If $|\phi| < 1$ and $\overset{sup}{t} var(x_t) < \infty$}\\
+        & \textrm{as $k \to \infty$, we have: }\\
+        & \Longrightarrow \phi^k x_{t-k} \to 0, \qquad \sum_{j=0}^\infty \phi^j w_{t-j} \textrm{converges} \\
+        & \Longrightarrow x_t = \sum_{j=0}^\infty \phi^j w_{t-j}
+    \end{align*}
+So this is a stationary, linear process. It is equivalent to $MA(\infty)$
+    \begin{align*}
+        E[x_t] & =  \sum_{j=0}^\infty \phi^j E[w_{t-j}] = 0\\
+        \gamma(h) & = cov(x_{t+h}, x_t) \\
+            & = E\left[\sum_{j=0}^\infty \phi^j w_{t+h-j} * \sum_{k=0}^\infty \phi^k w_{t-k}\right]\\
+            &= E\left[(w_{t+h} + \phi^1 w_{t+h-1} + ... + \phi^h w_{t} + \phi^{h+1}w_{t-1} + ...)(w_{t} + \phi^1 w_{t-1} + ...)\right]\\
+            &= \sigma_w^2 \sum_{j=0}^\infty \phi^{h+j} \phi^j \tag{$E[w_iw_j]=0$ if $i\neq j$}\\
+            & = \sigma_w^2 \phi^h \sum_{j=0}^\infty \phi^{2j}\\
+            &= \sigma_2^2 \frac{\phi^h}{1 - \phi^2}\\
+        \rho(h) 
+            &= \frac{\gamma(h)}{\gamma(0)} = \phi^h = \phi*\rho(h-1)
+    \end{align*}
+So overall, we say an AR(1) process is causal iff $|\phi| < 1$
+
+\paragraph{What if phi = 1}\mbox{}\\
+We have a random walk process, which is not stationary. 
+    
+    
+\paragraph{What if |phi| > 1}\mbox{}\\
+We have a non-stationary exploding variance AR process. But there is a stationary solution with $|\phi|>1$. I.e.: is there a stationary sequence with recursion like $x_t = \phi x_{t-1} + w_t$
+    \begin{align*}
+        & x_{t+1} = \phi x_t + w_{t+1}\\
+        & \Longrightarrow w_t = \phi^{-1}x_{t+1} - \phi^{-1} w_{t+1}\\
+        & = \phi^{-k} x_{t+k} - \sum_{j=1}^{k-1} \phi^{-j} w_{t+j}\\
+        & \textrm{ If $|\phi|^{-1} < 1$} \\
+        & \Longrightarrow x_t = -\sum_{j=1}^\infty \phi^{-j} w_{t+j}
+    \end{align*}
+So this is a linear process, and it is stationary. This is not causal. (past depended on the future) 
+
+
+
+\subsection{Leveraging the backshift Operator and Manipulation}
+Using this, we can rewrite AR(1) processes as 
+    \begin{align*}
+        & \phi(B)x_t = w_t
+        & \phi(B) = 1 - \phi*B
+    \end{align*}
+Let $|\phi|<1$, we have 
+    \begin{align*}
+        x_t 
+        & = \sum_{j=0}^\infty \phi^j w_{t-j}\\
+        & = \sum_{j=0}^\infty \phi^j B^j * w_t\\
+        & = \pi(B) w_t
+    \end{align*}
+We can show that $ \pi(B) = \phi(B)^{-1}$
+    \begin{align*}
+        \pi(B) * \phi(B) 
+        & = \sum_{j=0}^\infty \phi^j B^j * (1-\phi*B) \\
+        & =  \sum_{j=0}^\infty \phi^j B^j-\sum_{j=1}^\infty \phi^j B^j\\
+        & = \phi^0 B^0 = 1
+    \end{align*}
+
+
+
+\subsection{Causal Processes and backshift Operator}
+We can say AR(1) process is causal iff of the following two equivalent statement 
+    \begin{itemize}
+        \item $|\phi|<1$ 
+        \item $\phi(z) = 1 - \phi z$ satisfies root  $|z_1| > 1$
+    \end{itemize}
+An AR(1) process is stationary iff of the following two equivalent statement
+    \begin{itemize}
+        \item $|\phi|\neq 1$ 
+        \item $\phi(z) = 1 - \phi z$ satisfies root  $|z_1| \neq  1$
+    \end{itemize}
+    
+\subsection{AR(p) Process Summary}
+\paragraph{Definition}\mbox{}\\
+AR(p) process can be defined as : 
+    \begin{align*}
+        & x_t = \phi_1 x_{t-1} + \phi_2x_{t-2} + ... + \phi_p x_{t-p} + w_t\\
+        & (1-\phi_1B - \phi_2B^2-...-\phi^pB^p)x_t = w_t \\
+        & \phi(B)x_t = w_t
+    \end{align*}
+Its characteristic polynomial is $\phi(z) = 1 - \phi_1 z - \phi_2 z^2 - ... - \phi_p z^P$
+
+\paragraph{Stationarity and causality for AR(p): }\mbox{}\\
+A unique stationary solution to 
+    \begin{align*}
+        \phi(B)x_t = w_t
+    \end{align*}
+exists iff 
+    \begin{align*}
+        \phi(z) = 1 - \phi_1 z - ... - \phi_pz^P=0 \Longrightarrow |z| \neq 1
+    \end{align*}
+This AR(p) is causal iff 
+    \begin{align*}
+        \phi(z) = 1 - \phi_1 z - ... - \phi_pz^P=0 \Longrightarrow |z| > 1
+    \end{align*}
+    
+    
+    
+\section{Moving Average Processes} 
+
+\subsection{Definition}
+An order-q moving average process, MA(q) is defined as 
+    \begin{align*}
+        x_t = w_t + \theta_1 w_{t-1} + \theta_2 w_{t-2} + ... + \theta_q w_{t-q}
+    \end{align*}
+Equivalently, in backshift operator form 
+    \begin{align*}
+        & x_t = \theta(B)w_t & \theta(B) = 1 + \theta_1 B + \theta_2 B^2 + ... + \theta_q B^q
+    \end{align*}
+This process is a stationary process for all choices of $\theta$. The characteristic polynomial is $\theta(z) = 1 +\theta_1 z + ... + \theta_p z^p$. We normally pick the representation that is invertible. 
+
+\subsection{MA(1)}
+    \begin{align*}
+        & E[x_t] = 0 \\
+        & \gamma(h) =  
+            \begin{cases}
+                (1 + \theta^2)\sigma_w^2 & h = 0 \\
+                \theta \sigma_w^2 & h = 1 \\
+                0 & h > 1
+            \end{cases} \\
+        & \rho(h) = 
+            \begin{cases}
+                1 & h = 0 \\
+                \frac{\theta}{1 + \theta^2} & h = 1 \\
+                0 & h > 1
+            \end{cases} \\
+    \end{align*}
+It is not unique. $\tilde{x_t} = \tilde{w_t} + \frac{1}{\theta} \tilde{w}_{t-1}, \tilde{w}_t \sim WN(0, \theta^2 \sigma^2_w)$ has the exact same second order statistics. \\
+
+\paragraph{Invertibility} \mbox{}\\
+The backshift operator form of MA(1) is 
+    \begin{align*}
+        x_t = w_t + \theta w_{t-1} = (1 + \theta B) w_t 
+    \end{align*}
+If $|\theta| < 1$, we can write it as 
+    \begin{align*}
+        & (1 + \theta B)^{-1} x_t = w_t \\
+        & (1 - \theta B + \theta^2 B - \theta^3  B^3 + ... ) x_t = w_t  \tag{geometric series} \\
+        & \sum_{j=0}^\infty (-\theta)^j x_{t-j} = w_t \\
+    \end{align*}
+Note we can write $w_t$ as a causal function of $x_t$, we call this invertible. In addition, notice that the third line is an infinity order AR process. \\
+If $|\theta| > 1$, then $sum_{j=0}^\infty (-\theta)^j x_{t-j}$ diverges. But we can write it as 
+    \begin{align*}
+        w_{t-1} 
+        & = -\theta^{-1} w_t + \theta^{-1} x_xt 
+        & = \sum_{j=0}^\infty (-\theta)^j x_{t+j}
+    \end{align*}
+That is we can write $w_t$ as linear, but non-causal function of $x_t$. so now MA(1) is not invertible. \\
+In summary, an MA(1) process is invertible 
+    \begin{itemize}
+        \item iff $|\theta| < 1$
+        \item iff $\theta(z) = 1 + \theta z$ has root outside of unit circle. 
+    \end{itemize}
+    
+\subsection{Summary of MA(q) Process}     
+An MA(q) process is invertible iff the root of the characteristics polynomial is outside the unit circle. 
+    
+    
+  
+
+\section{ARMA} 
+An ARMA(p,q) process $\{ x_t \}$ is a stationary process that satisfies 
+    \begin{align*}
+        & x_t = \phi_1 x_{t-1} + ... + \phi_p x_{t-p} + w_t + \theta_1 w_{t-1} + ... + \theta_q w_{t-q}\\
+        & w_t \sim WN(0, \sigma^2_w)
+    \end{align*}
+In backshift form, we have 
+    \begin{align*}
+        \phi(B)x_t = \theta(B)w_t
+    \end{align*}
+
+
+
+\subsection{Stationary AR models that are not causal }
+An ARMA(p,q) process $\{ x_t \}$ is causal if it can be written as a one-sided linear process / past white noise terms
+    \begin{align*}
+        x_t = \sum_{j=0}^\infty \psi_j w_{t_j} = \psi(B) w_t
+    \end{align*}
+where 
+    \begin{align*}
+        \psi(B) = \sum_{j=0}^\infty \psi_jB^j
+    \end{align*}
+with 
+    \begin{align*}
+        & \sum_{j=0}^\infty |\psi_j| < \infty & \psi_0 = 1\\
+    \end{align*}
+An ARMA process is causal iff the AR characteristics polynomial 
+    \begin{align*}
+        \phi(z) \neq 0 \forall |z| \leq 1 
+    \end{align*}
+That is, $\phi(z)$ has roots only outside the unit circle. \\
+In the case of a causal ARMA(p,q) process, we can write  
+    \begin{align*}
+        \psi(z) = \sum_{j=0}^\infty \psi_j z^j = \frac{\theta(z)}{\phi(z)}
+    \end{align*}
+
+\subsection{Non-unique MA models / Invertibility }
+An ARMA(p,q) process $\{ x_t \}$ is invertible if it can be written as 
+    \begin{align*}
+        \pi(B) x_t = \sum_{j=0}^\infty \pi_j x_{t-j} = w_t
+    \end{align*}
+Where
+    \begin{align*}
+        \pi(B) = \sum_{j=0}^\infty \pi_j B^j
+    \end{align*}
+with 
+    \begin{align*}
+        & \sum_{j=0}^\infty |\pi_j| < \infty & \pi_0 = 1\\
+    \end{align*}
+An ARMA process is invertible iff MA char polynomial 
+    \begin{align*}
+        \theta(z) \neq 0 \forall |z| \leq 1
+    \end{align*}
+That is, $\theta(z)$ has roots only outside the unit circle. \\
+In the case of an invertible ARMA(p,q) process, we can write 
+    \begin{align*}
+        \pi(z) = \sum_{j=0}^\infty \pi_j z^j = \frac{\phi(z)}{\theta(z)}, |z| \leq 1
+    \end{align*}
+    
+    
+
+\subsection{Parameter redundancy}
+Assuming $\phi_p \neq 0$ and $\theta_p \neq 0$
+    \begin{align*}
+        & AR: \phi(z) = 1 - \phi_1 z - ... - \phi_p z^P \\
+        & MA: \theta(z) = 1 + \theta_1 + ... + \theta_p z^q \\
+        & \psi(z) = \frac{\theta(z)}{\phi(z)}\\
+        & \pi(z) = \frac{\phi(z)}{\theta(z)}
+    \end{align*}
+If AR and MA polynomials $\phi(z), \theta(z)$ have common factors, they cancel out when solving for the ARMA causal or invertible operator. That is, there exists a reduced order, yet stochastically equivalent ARMA process. 
+
+
+\subsection{Example} 
+    \begin{align*}
+        & x_t = 1.5 x_{t-1} + w_t + 0.2 w_{t-1}\\
+        & \Longrightarrow \phi(B) = 1 - 1.5z & z = \frac{2}{3}\\
+        & \theta(z) = 1 + 0.2z & z = -5
+    \end{align*}
+$\frac{2}{3} < 1$ so the process is not causal. $|-5|>1$ so the process is invertible. 
+
+
+\subsection{Solving for MA infinite representation and AR infinite representation} 
+How to solve $\phi(z)\psi(z) = \theta(z)$ or $\theta(z)\pi(z) = \phi(z)$. \\
+
+In general, we have 
+    \begin{align*}
+        \phi(B)x_t = \theta(B)w_t & x_t = \psi(B)w_t \\
+        \Longrightarrow \theta_j = \phi(B)\psi_j
+    \end{align*}
+with $\theta_0 = 1$, $\theta_j = 0$ for $j < 0, j > q$
+
+\subsubsection{Example}
+    \begin{align*}
+        & x_t = 0.4x_{t-1} + 0.45x_{t-2} + w_t + w_{t-1} + 0.25w_{t-2}\\
+        & \phi(z) = 1 - 0.4z - 0.45z^2 =(1 + 0.5z)(1-0.9z)\\
+        & \theta(z) = 1 + z + 0.25z^2 = (1 + 0.5z)^2\\
+    \end{align*}
+    
+    \begin{itemize}
+        \item $\phi$ and $\theta$ have common factors, so we need to take out the common factor. So it is a ARMA(1,1) process
+        \item the root for $\phi$ is $\frac{10}{9}$, so it is causal (outside the unit circle) 
+        \item the root for $\theta$ is -2, so it is invertible. 
+    \end{itemize}
+Recall the ARMA form is 
+    \begin{align*}
+        \phi(B)x_t = \theta(B)w_t
+    \end{align*}
+
+\paragraph{Solving for MA infinity form (causal polynomial)}\mbox{}\\    
+If ARMA is causal, it means we can write $x_t = \psi(B)w_t$. So we have $\psi(z) = \frac{\theta(z)}{\phi(z)}$. Alternatively, we have  
+    \begin{align*}
+        & \phi(z) * \psi(z) = \theta(z) \\
+        & \Longrightarrow (1-0.9z)(1+\psi_1 z + \psi_2 z^2 + ... ) = (1 + 0.5z)\\
+    \end{align*}
+Once we multiply out the left term, we can do coefficient matching and have 
+    \begin{align*}
+        \begin{cases}
+            \psi_1 - 0.9 = 0.5 \\
+            \psi_j - 0/9 \psi_{j-1} = 0 & j > 1
+        \end{cases}
+    \end{align*}
+So overall, we have 
+    \begin{align*}
+        x_t = w_t + 1.4 \sum_{j=1}^\infty 0.9^{j-1} w_{t-j}
+    \end{align*}
+
+
+\section{ACF and partial ACF} 
+
+\subsection{Autocovariance of an ARMA process}
+Causal linear process representation
+    \begin{align*}
+        x_t = \sum_{j=0}^\infty \psi_j w_{t-j}
+    \end{align*}
+Autocovariance is 
+    \begin{align*}
+        \gamma(h) = \sigma_w^2 \sum_{j=0}^\infty \psi_j \psi_{j+h} & h \geq 0 \\
+    \end{align*}
+Special case: MA(q) (Because moving average is already in casual form)
+    \begin{align*}
+        \gamma(h) = \sigma_w^2 \sum_{j=0}^{q-h} \theta_j \theta_{j+h} & h \geq 0
+    \end{align*}
+
+\subsection{Solving linear difference equation directly for autocov fcn}
+The ARMA form is 
+    \begin{align*}
+        & x_t - \phi_1 x_{t-1} - ... - \phi_p x_{t-p} = w_t + \theta_1w_{t-1} + ... + \theta_q w_{t-q}\\
+        & \Longrightarrow E[(x_t - \phi_1 x_{t-1} - ... - \phi_p x_{t-p}) * x_{t-h}] = E[(w_t + \theta_1w_{t-1} + ... + \theta_q w_{t-q}) * x_{t-h}]\\
+        & \Longrightarrow \gamma(h) - \phi_1 \gamma(h-1) - ... - \phi_p \gamma(h-p) = \sigma_w^2 \sum_{j=0}^{q-h} \theta_{h+j}\psi_j
+    \end{align*}
+Some more detail on the right hand side: 
+    \begin{align*}
+        & \textrm{Recall } w_t, ..., w_{t-h+1} \textrm{ is uncorrelated with } x_{t-h} \\
+        & \Longrightarrow E[(w_t + \theta_1w_{t-1} + ... + \theta_q w_{t-q}) * x_{t-h}] = E[(\theta_h w_{t-h} + ... \theta_q w_{t-q}) * x_{t-h}]\\
+        & \textrm{Examine a single term $E[\theta_{h+i} * w_{t-h-i} * x_{t-h}]$} \\
+        & = \theta_{h+i}E[w_{t-h-i} \sum_{j=0}^\infty \psi_j w_{t-h-j}] \\
+        & \textrm{The only non zero product is when $j = i$} \\
+        & \Longrightarrow = \theta_{h+i}\psi_i E[w_{t-h-i}^2] \\
+        & = \theta_{h+i} \psi_i \sigma_w^2
+    \end{align*}
+    
+\subsection{Autocorrelation Function (ACF) of an ARMA process} 
+As always, $\rho(h) = \gamma(h)/\gamma(0)$. From previous result, we have $\gamma(h) - \phi_1 \gamma(h-1) - ... - \phi_p \gamma(h-p) = \sigma_w^2 \sum_{j=0}^{q-h} \theta_{h+j}\psi_j$
+
+\subsubsection{ACF for AR(p)} 
+For ARMA(p,0) process, there is no moving average component. So 
+    \begin{align*}
+        & \gamma(h) - \phi_1 \gamma(h-1) - ... - \phi_p \gamma(h-p) = 0 \\
+        & \Longrightarrow \rho(h) - \phi_1 \rho(h-1) - ... - \phi_p \rho(h-p) = 0 \\
+        & \Longrightarrow \rho(h) = z_1^{-h}P_1(h) + z_2^{-h}P_2(h) + ... + z_r^{-h}P_r(h) \\
+        & \textrm{ $r=$ number of distinct roots, each $z_i$ is a root of the characteristics polynomial} \\
+        & \textrm{$P_j(h)$ is a polynomial of degree $m_j - 1$ where $m_j$ is multiplicity of root $z_j$, constant if distinct root} 
+    \end{align*}
+So 
+    \begin{itemize}
+        \item If $z_j$ are all real, $\rho(h)$ dampens exponentially fast to 0 as $h \to \infty $
+        \item if some $z_j$ are complex (in complex conjugate pairs), $\rho(h)$ dampens exponentially  fast in sinusoidal manner. 
+    \end{itemize}
+    
+\subsection{Partial ACF}
+ACF can help with determine the $q$ for $MA(q)$ process because for any $h > q$, it goes to 0. But ACF cannot determine order of ARMA(p,q) or AR(p)
+
+\paragraph{Partial correlation}\mbox{}\\
+\begin{align*}
+    ParCorr(x,y|z_1,...,z_j) = Corr(x - \hat{x}(z_1,...,z_h), y - \hat{y}(z_1,...,z_h))
+\end{align*}
+where $\hat{x}, \hat{y}$ is regression of $x$ or $y$ on $z_1,...,z_h$
+
+\paragraph{Partial Autocorrelation Function} \mbox{}\\
+PartialACF of a stationary process $\{ x_t \}$ is 
+\begin{align*}
+    ParCorr(x_{t+h}, x_t | x_{t+1}, ..., x_{t+h-1}
+\end{align*}
+In summary, we have 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+     & AR(p)    & MA(q)    & ARMA(p,q)  \\
+ACF  & decays   & cutoff q & decays     \\
+PACF & cutoff p & decays   & decays     \\
+\end{tabular}
+\end{table}
+

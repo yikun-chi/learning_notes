@@ -1,0 +1,125 @@
+\chapter{ARIMA Model}
+\section{Motivation and IMA Models}
+Interated Moving Average: \\
+A process $\{ x_t\}$ is IMA(d,q) if 
+    \begin{align*}
+        \nabla^d x_t = \theta(B)w_t
+    \end{align*}
+where $w_t$ is white noise, $\theta(B) = \sum_{j=0}^q \theta_j B^j, \theta_0 = 1$. I.e.: the process's $d$th order difference is a moving average process. \\
+    \begin{itemize}
+        \item e.g.: $\nabla^2 x_t = (1-B)^2 x_t = x_t - 2x_{t-1} + x_{t-2}$
+    \end{itemize}
+    
+\subsection{EWMA as IMA(1,1)} 
+    \begin{align*}
+        & \nabla x_t = w_t - \lambda w_{t-1} \\
+        & \Longrightarrow x_t = x_{t-1} + w_t - \lambda w_{t-1} \\
+        & \textrm{Assume $|\lambda| < 1$ and $x_0 = 0$}\\
+    \end{align*}
+Alternative form: 
+    \begin{align*}
+        & x_t - x_{t-1} = \theta(B) w_t & \theta(B) = 1-\lambda B \\
+        & \Longrightarrow w_t = \theta^{-1}(B) (x_t - x_{t-1})\\
+        & = \frac{1}{1 - (\lambda B)}(x_t - x_{t-1})\\
+        & = \sum_{j=0}^\infty \lambda^j B^j (x_t - x_{t-1})\\
+        & = \sum_{j=0}^\infty \lambda^j x_{t-j} - \sum_{j=0}^\infty \lambda^j x_{t-j-1}\\
+        & = x_t + \sum_{j=1}^\infty \lambda^j x_{t-j} - \sum_{j=0}^\infty \lambda^j x_{t-j-1}\\
+        & =  x_t + \lambda \sum_{j=1}^\infty \lambda^{j-1} x_{t-j} - \sum_{j=1}^\infty \lambda^{j-1} x_{t-j}\\
+        & \Longrightarrow x_t = \sum_{j=1}^\infty (1-\lambda)\lambda^{j-1} x_{t-j} + w_t
+    \end{align*}
+So the 1 step ahead prediction given infinite history is just 
+    \begin{align*}
+        \tilde{x}_{n+1} = \sum_{j=1}^\infty (1-\lambda)\lambda^{j-1} x_{n+1-j}
+    \end{align*}
+We also have a very simple updating formula: 
+    \begin{align*}
+        \tilde{x}_{n+1}^n
+        & = \sum_{j=1}^\infty (1-\lambda)\lambda^{j-1} x_{n+1-j}\\
+        & = (1-\lambda) x_{n} + \sum_{j=2}^\infty (1-\lambda) \lambda^{j-1} x_{n+1-j}\\
+        & = (1-\lambda) x_{n} + \lambda \sum_{j=2}^\infty (1-\lambda) \lambda^{j-2} x_{n+1-j}\\
+        & = (1-\lambda) x_{n} + \lambda \sum_{j=1}^\infty (1-\lambda) \lambda^{j-1} x_{n-j}\\
+        & = (1-\lambda) x_{n} + \lambda\tilde{x}_{n}^{n-1}\\
+    \end{align*}
+    
+\section{ARIMA Models and Workflow}
+A process $\{ x_t \}$ is ARIMA(p,d,q) if 
+    \begin{align*}
+        \nabla^d x_t = (1-B)^d x_t
+    \end{align*}
+is ARMA(p,q), hence 
+    \begin{align*}
+        \phi(B) (1-B)^d x_t = \theta(B)w_t
+    \end{align*}
+
+\subsection{ARIMA forecasting} 
+Theoretical and computational aspects of ARIMA forecasting are better handled using state space models. Intuitively, since $y_t = \nabla^d x_t$, we can use ARMA forecasts $y_{n+m}^n$ and transform back. 
+
+\subsection{ARIMA Workflow} 
+    \begin{itemize}
+        \item Plotting the data 
+        \item Possibly transforming the data 
+        \item Identifying possible order of the AR, differencing, and MA components
+        \item Parameter estiamtion 
+        \item Diagonstics 
+        \item Model Choice 
+    \end{itemize}
+    
+\paragraph{Diagnostic Fitted Model} \mbox{}\\
+Standardized residuals: \\
+Should behave like 0-mean unit variance IID sequence: 
+    \begin{align*}
+        e_t = \frac{x_t - \hat{x}_t^{t-1}}{\sqrt{\hat{P}_t^{t-1}}}
+    \end{align*}
+    \begin{itemize}
+        \item Time plot 
+        \item QQ plot to detect departure from normality : $\Phi^{-1}(\frac{i - 1/2}{n})$ vs. $i$th order statistics
+        \item Sample ACF for the standardized residuals. Check any large values or patterns
+        \item Ljung-Box-Pierce test: compute Q statistics $Q=n(n+2)\sum_{h=1}^H \frac{\hat{\rho}_e^2(h)}{n-h}$, $ Q\sim \chi^2_{H-p-q}$. Often $H=20$. Detect any significant value at confidence level $\alpha$
+    \end{itemize}
+
+\paragraph{Model Selection Criteria} \mbox{}\\
+How to choose if diagnostic for many models are all good? Just as in linear regression case. \\
+
+AIC: Akaike's information criterion for a model with $k$ parameters
+    \begin{align*}
+        & \log \hat{\sigma_k}^2 + \frac{n + 2k}{n} & \hat{\sigma}_k^2 = \frac{\sum_{t=1}^n (x_t - \hat{x}_t)^2}{n}
+    \end{align*}
+AICc: Bias corrected AIC
+    \begin{align*}
+        \log \hat{\sigma_k}^2 + \frac{n+k}{n-k-2}
+    \end{align*}
+Bayesian Information Criterion (BIC)
+    \begin{align*}
+        \log \hat{\sigma_k}^2 + \frac{k \log n}{n}
+    \end{align*}
+    
+\section{Seasonal ARIMA}
+\subsection{SARMA}
+A process $\{ x_t \}$ is $SARMA(P,Q)_s$ if 
+    \begin{align*}
+        \Phi_P(B^s) x_t = \Theta_Q(B^s) w_t 
+    \end{align*}
+Where
+    \begin{align*}
+        & \Phi_p (B^s) = 1 - \Phi_1 B^s - \Phi_2 B^{2s} - ... - \Phi_p B^{Ps}\\
+        & \Theta_Q(B^s) = 1 + \Theta_1 B^s + ... + \Theta_Q B^{Qs}
+    \end{align*}
+So essentially we are focusing on past value at the seasonal period. 
+
+\subsection{Multiplicative Seasonal ARIMA Model}
+A process $\{ x_t \}$ is $SARMA(p,q) \times (P,Q)_s$ if 
+    \begin{align*}
+        & \Phi_P(B^s) \phi(B) x_t = \Theta_Q(B^s) \theta(B) w_t\\
+        & \Phi_p (B^s) = 1 - \Phi_1 B^s - \Phi_2 B^{2s} - ... - \Phi_p B^{Ps}\\
+        & \Theta_Q(B^s) = 1 + \Theta_1 B^s + ... + \Theta_Q B^{Qs}\\
+        & \phi(B) = 1 - \sum_{i=1}^p \phi_i B^i \\
+        & \theta(B) = 1 + \sum_{i=1}^q \theta_i B^i
+    \end{align*}
+    
+\subsection{Multiplicative Seasonal ARIMA Model}
+A process $\{ x_t \}$ is $SARIMA(p,d,q) \times (P,D,Q)_s$ if 
+    \begin{align*}
+        & \Phi_P(B^s) \phi(B) \nabla_s^D \nabla^d x_t = \Theta_Q(B^s) \theta(B) w_t\\
+        & \nabla_s^D = (1 - B^s)^D \tag{Seasonal Differencing} \\
+        & \nabla^d = (1-B)^d
+    \end{align*}

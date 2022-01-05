@@ -1,0 +1,110 @@
+\chapter{Estimation}
+
+\section{Estimating ARMA(p,q) parameters given p and q}
+\subsection{Method of Moments} 
+Choose parameters for which the moments equal the empirical moments. 
+\subsubsection{AR(p) and Yule-Walker estimation} 
+    \begin{align*}
+        & \gamma(h) = \phi_1 \gamma(h-1) + ... + \phi_p \gamma(h-p), h = 1,...,p \\
+        & \sigma_w^2 = \gamma(0) - \phi_1 \gamma(1) - ... - \phi_p\gamma(p)
+    \end{align*}
+The matrix form is 
+    \begin{align*}
+        & \Gamma_p \tilde{\phi} = \tilde{\gamma}_p\\
+        & \sigma_w^2 = \gamma(0) - \tilde{\phi}^T \tilde{\gamma}_p
+    \end{align*}
+Notice here the $\tilde{\phi}$ and $\sigma_w^2$ is what we want to solve. The method of moments replace $\gamma(h)$ by $\hat{\gamma(h)}$
+    \begin{align*}
+        & \hat{\phi} = \hat{\Gamma}_p^{-1} \hat{\gamma}_p \\
+        & \hat{\sigma}_w^2 = \hat{\gamma}(0) - \hat{\gamma}_p^T \hat{\Gamma}_p^{-1}\hat{\gamma}_p
+    \end{align*}
+Convergence property: 
+    \begin{align*}
+        \sqrt{n}(\hat{\phi} - \phi) \overset{d}{\to} \mathcal{N}(0, \sigma_w^2 \Gamma_p^{-1})
+    \end{align*}
+
+
+
+\subsection{Maximum likelihood estimation} 
+\subsubsection{MLE for AR(1)}
+    \begin{align*}
+        & x_t = \phi x_{t-1} + w_t\\
+        & |\phi| < 1
+        & w_t \overset{iid}{\sim} \mathcal{N}(0, \sigma_w^2)
+    \end{align*}
+The likelihood of sequence $x_1, ..., x_n$: 
+    \begin{align*}
+        L(\phi, \sigma_w^2) 
+        & = f(x_1) * \prod_{t=2}^n f(x_t|x_{t-1})\\
+        & = f(x_1) * \prod_{t=2}^n \mathcal{N}(\phi x_{t-1}, \sigma_w^2)\\
+        & = \mathcal{N}(0, \frac{\sigma_w^2}{1-\phi^2}) *  \prod_{t=2}^n \mathcal{N}(\phi x_{t-1}, \sigma_w^2) \tag{use $\gamma(0)$}\\
+        & = \frac{1}{(2\pi \sigma_w^2)^{\frac{n}{2}} (1-\phi^2)^\frac{-1}{2}} * \exp \left( \frac{ - (1-\phi^2)x_1^2 + \sum_{t=2}^n(x_t - \phi x_{t-1})^2}{2\sigma_w^2}    \right)\\
+        & = \frac{1}{(2\pi \sigma_w^2)^{\frac{n}{2}} (1-\phi^2)^\frac{-1}{2}} * \exp \left( \frac{ - S(\phi)}{2\sigma_w^2}    \right) \\
+        S(\phi) 
+        & =   (1-\phi^2)x_1^2 + \sum_{t=2}^n(x_t - \phi x_{t-1})^2
+    \end{align*}
+Recall: 
+    \begin{align*}
+        \gamma(h) = \frac{\sigma_w^2}{1-\phi^2} \phi^{|h|}
+    \end{align*}
+The log likelihood is 
+    \begin{align*}
+        & - \frac{1}{2} (n \log 2\pi + n \log \sigma_w^2 - \log (1-\phi^2)) - \frac{S(\phi)}{2\sigma_w^2}
+    \end{align*}
+Taking partial derivative and set it 0 we have 
+    \begin{align*}
+        \hat{\sigma_w}^2 = \frac{S(\hat{\phi})}{n}
+    \end{align*}
+So now if we plut in $\hat{\sigma}_w^2$ into the original log likelihood equation, and ignore constant, we have 
+    \begin{align*}
+        \hat{\phi} 
+        & = \overset{argmax}{\phi} - \frac{n}{2} \log \frac{S(\phi)}{n} + \frac{1}{2} \log (1-\phi^2) - \frac{1}{2}\frac{S(\phi)}{S(\phi)/n} \\
+        & =\overset{argmin}{\phi}\log \frac{S(\phi)}{n} -  \frac{1}{n}\log (1-\phi^2) \tag{also divided everything by $n$}
+    \end{align*}
+The unconditional least square of $\sigma_w^2$ is just $\hat{s}(\phi) / 2$ (Sample variance divided by 2)\\
+
+Overall, the asymptotic distribution of parameter estimates same as Gaussian case. But it is a difficult optimization problem, and normally require a good starting point. 
+
+\subsubsection{MLE for ARMA(p,q)} 
+\begin{align*}
+    x_t - \sum_{i=1}^p \phi_i x_{t-i} = w_t + \sum_{i=1}^q \theta_i w_{t-i}
+\end{align*}
+Let $\beta = (\phi_1, ..., \phi_p, \theta_1, ..., \theta_q)^T$\\
+The likelihood can be represented as Gaussian with mean of 1 step ahead forecasting and variance being the variance of the forecasting. 
+    \begin{align*}
+        L(\beta, \sigma_w^2) 
+        & = \prod_{t=1}^n f(x_t | x_{t-1}, ..., x_1) \\
+        & = \prod_{t=1}^n \mathcal{N}(x_t^{t-1}, P_t^{t-1}) \\
+        & = \frac{1}{(2\pi)^{n/2}(P_1^0 * ... * P_n^{n-1})^{1/2}} * \exp \left( -\frac{1}{2} \sum_{t=1}^n \frac{(x_t - x_t^{t-1})^2}{P_t^{t-1}}  \right)\\
+        & = \frac{1}{(2\pi * \sigma_w^2)^{n/2}(r_1^0 * ... * r_n^{n-1})^{1/2}} * \exp \left(- \frac{S(\beta)}{2\sigma_w^2}  \right) \\
+        & r_t^{t-1} = \frac{{P_t}^{t-1}}{\sigma_w^2} \tag{a function of $\beta$ and $\sigma_w^2$}\\
+        & S(\beta) = \sum_{t=1}^n \frac{(x_t - x_t^{t-1})^2}{r_t^{t-1}} \tag{$x_t^{t-1}$ is a function of $\beta$}
+    \end{align*}
+So the log likelihood is 
+    \begin{align*}
+        -\frac{n}{2} \log 2\pi \sigma_w^2 - \frac{1}{2} \sum_{i=1}^n \log r_t^{t-1} - \frac{S(\beta)}{2\sigma_w^2}
+    \end{align*}
+And we have 
+    \begin{align*}
+        & \hat{\sigma_w}^2 = \frac{S(\hat{\beta})}{n}\\
+        & \hat{\beta} = (\hat{\phi}, \hat{\theta}) = argmin \log \frac{S(\beta)}{n} + \frac{1}{n}\sum_{t=1}^n \log r_t^{t-1}
+    \end{align*}
+If we do unconditional LS, we can drop the $\log r_t^{t-1}$ terms in the log likelihood. In conditional LS (condition on first $m = max(p,q)$ values of time series). Now $r_t^{t-1} = r$ is a constant because we can forecast any $x_t$ equally well. So we have 
+
+    \begin{align*}
+        & L = \frac{1}{(2\pi \sigma_w^2)^{n-m}} e^{-\frac{1}{2\sigma_w^2 r}} \sum_{t=m+1}^n (x_t - x_t^{t-1})^2\\
+        & \hat{\sigma}_w^2 = \frac{S(\beta)}{n - m - p - q - 1}\\
+        & \hat{\beta} = argmin \qquad S(\beta)
+    \end{align*}
+\subsection{Conditional Least Square} 
+\subsubsection{Conditional Least Square for AR(1)}
+Conditioning on $x_1$ removes complicated terms from the log likelihood, so our loglikelihood can be simplified.
+    \begin{align*}
+        & - \frac{1}{2} (n \log 2\pi + n \log \sigma_w^2 - \log (1-\phi^2)) - \frac{- (1-\phi^2)x_1^2 + \sum_{t=2}^n(x_t - \phi x_{t-1})^2}{2\sigma_w^2}\\
+        & = - \frac{1}{2} (n \log 2\pi + n \log \sigma_w^2) - \frac{- \sum_{t=2}^n(x_t - \phi x_{t-1})^2}{2\sigma_w^2}\\
+        & \Longrightarrow \hat{\sigma_w^2} = \frac{s_c(\hat{\phi})}{n-1}  \textrm{ or } \frac{s_c(\hat{\phi})}{n-2 - 1}\\
+        \hat{\phi} 
+        & = \overset{argmax}{\phi} \sum_{t=2}^n(x_t - \phi x_{t-1})^2  \tag{Same obj as Least Squares} \\
+        & = \frac{\sum_{t=2}^n (x_t - \frac{1}{n-1} \sum_{k=2}^n x_k)(x_{t-1} - \frac{1}{n-1} \sum_{k=1}^{n-1} x_k)}{\sum_{t=2}^n(x_{t-1} - \frac{1}{n-1} \sum_{k=1}^{n-1} x_k)}\\
+        & \approx \hat{\phi}(1)
+    \end{align*}
