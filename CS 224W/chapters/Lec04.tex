@@ -1,0 +1,82 @@
+\chapter{PageRank and Matrix Formulation of Graph} 
+
+\section{PageRank}
+\paragraph{Rank}\mbox{}\\
+We can define the rank $r_j$ for node $j$ as 
+    \begin{align*}
+        r_j = \sum_{i\rightarrow j} \frac{r_j}{d_j}
+    \end{align*}
+So essentially we are splitting the node $i$ rank by its degree, and flow it to node $j$. 
+
+
+
+\paragraph{Stochastic Adjacency Matrix $M$}\mbox{}\\
+Let $d_i$ to be the outdegree of node $i$, if $i \rightarrow j$, then $M_{ji} = \frac{1}{d_i}$. So each columns of $M$ sums to $1$. Let $r$ be the rank vector, hence $r_i$ is the importance score of page $i$. Then, we can write the entire flow of the graph as 
+    \begin{align*}
+        & r = M \cdot r \\
+        & \textrm{or}\\
+        & \forall j, r_j = \sum_{i\rightarrow j} \frac{r_i}{d_i}
+    \end{align*}
+
+\paragraph{PageRank to Random Walk and Eigenvector}\mbox{}\\
+Let vector $p(t)$ denotes the probability of a random surfer is a certain page (e.g.: $p(t)[i]$ indicates the probability of the random surfer at page $i$ at time $t$. Suppose the random walk reaches a stationary state, i.e.: $p(t+1) = M \cdot p(t)$, then $p(t)$ is the stationary distribution of a random walk. But note this is same equation as the rank vector. So $r$ is a stationary distribution for the random walk. \\
+
+The rank vector $r$ is an eigenvector of the stochastic adjacency matrix $M$ with eigenvalue of $1$. Given any starting position vector $u$,  the limit $M(M(...M(Mu)))$ is the long-term distribution of the surfer, which is $r$. So $r$ is the principal eigenvector of $M$ with eigenvalue of $1$, and can be solved via power iteration. \\
+
+In summary, we can solve $r$ as $M(M(...M(Mu)))$. Alternatively, we can just update node by node with  $r_j^{(t+1)} = \sum_{i\rightarrow j}\frac{r_i^{(t)}}{d_i}$ with random initiation (such as uniform initiation).
+
+
+
+\paragraph{Accounting for Dead-end and Spider Traps} \mbox{}\\
+Two problems: 
+    \begin{itemize}
+        \item Dead-end (no out-links). Such pages cause importance to leak out. Cause the in-flow will not flow to other place. 
+        \item Spider traps (all out-links are within the group). Eventually spider traps will obsort all importance
+    \end{itemize}
+Solutions: 
+    \begin{itemize}
+        \item For dead-end, we want to follow random teleport links with total probability of $1$ from the dead-ends (adjust matrix accordingly). 
+        \item For spider traps, at each time step, the random surfer has probability of $\beta$ to follow a link at random, and $1 - \beta$ jump to a random page. Common value for $\beta$ is 0.8 and 0.9. 
+    \end{itemize}
+Overall, we have 
+    \begin{align*}
+        & r_j = (\sum_{i \rightarrow j} \beta \frac{r_i}{d_i}) + (1-\beta) \frac{1}{N} \\
+        & \textrm{or}\\
+        & G = \beta M + (1-\beta) [\frac{1}{N}]_{N\times N}
+    \end{align*}
+We can recursively solve the problem of $r = G \cdot r$ using the same process. Note this assumes that the graph has no dead-end. We can preprocess the graph by altering the dead-end column in adjacency matrix $M$ to be uniformally teleport. 
+    \begin{itemize}
+        \item In reality, we never materialize matrix $G$ due to space complexity. We want to work with sparse matrix $M$ and the implicit teleport matrix. 
+        \item Note the dead-end pre-processing is just a one-time process
+    \end{itemize}
+
+
+
+
+\section{Personalized PageRank}
+We want to use PageRank to measure proximity of the nodes. Given a set of query nodes, we simulate a random walk. As we walk, we record the visit counts of each neighbor. But with probability $\alpha$, we restart the walk at one of the query nodes. The highest visit count nodes has the highest proximity to nodes. Note this teleportation can be calculated in Matrix form by setting the teleportation matrix. In page rank, the teleporation vector (one column in the teleporation Matrix) is $[\frac{1}{N}]$. In Personalized PageRank, we restrict teleport to only a set of nodes. But be careful to set the query nodes to be in a Spider Traps. 
+
+
+\section{Random Walk with Restarts}
+For random walk with restart, it is essentially same as personalized PageRank, but only restart at a specific node instead of a set of query nodes. But be careful to set the query nodes to be in a Spider Traps. 
+
+
+\section{Matrix Factorization and Node Embeddings} 
+Recall in node embedding, we have an embedding matrix $Z$. Each column of the $Z$ is an embedded node, and we want to maximize $z_v^Tz_u$ for nodes $u, v$ that are similar. \\
+\paragraph{Edge as similarity}\mbox{}\\
+If we use having an edge as similarity, then we have $z_v^Tz_u = A_{u,v}$, hence $Z^TZ = A$. In reality, we can't achieve exact factorization. So we want to minimize $\norm{A - Z^TZ}$ (here we use L2 norm, and previously we used softmax)
+
+\paragraph{DeepWalk similarity}\mbox{}\\
+DeepWalk define node similarity based on uniform random walks of the fixed length. It is equivalent to matrix factorization of the following matrix 
+    \begin{align*}
+        \log\left (vol(G)(\frac{1}{T}\sum_{r=1}^T (D^{-1}A)^r)D^{-1}\right )-\log b
+    \end{align*}
+    \begin{itemize}
+        \item $vol(G)$ is $2 \times \#$ of edges
+        \item $T=|N_R(u)|$, or the conext window size / length of random walk 
+        \item $D$ is the diagonal matrix $D$ with entries to be the nodes degree 
+        \item $b$ is the number of negative samples. 
+    \end{itemize}
+Node2vec can also be formulated as matrix factorization, but more complicated. 
+
+

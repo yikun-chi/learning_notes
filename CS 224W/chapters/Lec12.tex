@@ -1,0 +1,136 @@
+\chapter{Subgraph Mining} 
+
+\section{Definition of Subgraphs} 
+
+\subsection{Node-induced subgraph} 
+Take subset of the nodes and all edges induced by the nodes: i.e.: $G'=(V', E')$ is a node induced subgraph iff
+    \begin{align*}
+        & V'\subseteq V\\
+        & E' = \{ (u,v)\in E | u,v \in V' \}
+    \end{align*}
+This is also normally called node induced subgraph 
+
+\subsection{Edge-induced subgraph} 
+$G'=(V', E')$ is an edge induced subgraph iff
+    \begin{align*}
+        & E' \subseteq E \\
+        & V' = \{ v\in V | (v,u) \in E' \textrm{for some $u$} \} 
+    \end{align*}
+So we determine edge first, and then add nodes that the edge belong to. 
+
+\subsection{Graph Isomorphism} 
+$G_1 = (V_1, E_1)$ and $G_2 = (V_2, E_2)$ are isomorphic if there exists a bijection $f:V_1 \to V_2$ such that $(u,v) \in E_1$ iff $(f(u), f(v))\in E_2$.
+
+\subsection{Subgraph Isomorphism} 
+$G_2$ is subgraph-isomorphic to $G_1$ ($G_1$ is a subgraph of $G_2$) if some subgraph of $G_2$ is isomorphic to $G_1$
+
+\section{Network Motifs}
+\subsection{Subgraph Frequency} 
+\subsubsection{Graph Level Frequency} 
+Let $G_Q$ be a small graph and $G_T$ be a target graph. The graph-level subgraph frequency is defined as number of unique subsets of nodes $V_T$ of $G_T$ for which the subgraph of $G_T$ induced by the nodes $V_T$ is isomorphic to $G_Q$.
+
+\subsubsection{Node Level Frequency} 
+Let $G_Q$ be a small graph, $v$ be a node in $G_Q$, and $G_T$ be a target graph. The node-level subgraph frequency is defined as: The number of nodes $u$ in $G_T$ for which some subgraph of $G_T$ is isomorphic to $G_Q$ and the isomorphism maps to node $u$ to $v$. $(G_Q, v)$ is called a node-anchored subgraph. 
+
+\subsection{Random Graph Generation} 
+\subsubsection{Erdos-Renyi(ER) random graphs}
+$G_{n,p}$ is an undirected graph on $n$ nodes where each edge $(u,v)$ appears iid with probability $p$
+
+\subsubsection{Configuration Model}
+The goal is to generate a random graph with a given degree sequence $k_1, ...,k_N$.  
+
+\paragraph{Method 1} 
+    \begin{itemize}
+        \item Generate nodes with spokes, and treat each node spoke as a mini-node
+        \item Randomly pair up "mini" nodes. (Pick two from all the mini nodes that hasn't been paired, pair them)
+        \item Connect node $A$ to node $B$ if there exists at least one mini-node connection. 
+    \end{itemize}
+The result will be a graph with approximately the same degree sequence as the given. Although in detail, we can have multiple mini-node connections between two nodes, or a inner-node mini-node connection, but the probability of those occurance gets really small for a large graph. 
+
+\paragraph{Method 2: Switching } 
+    \begin{itemize}
+        \item Start from a given graph $G$
+        \item Repeat the switching step $Q \cdot |E|$ times. Each time, select a pair of edges $A\to B$ and $C \to D$ at random, and exchange the endpoints to give $A \to D$ and $C \to B$. We exchange edges only if no multiple edges of self-edges are generated. 
+    \end{itemize}
+
+\subsection{Motif Significance} 
+The overall process is 
+    \begin{enumerate}
+        \item Count motifs in the given graph $G_{real}$
+        \item Generate a random graphs with similar statistics (number of nodes, edges, degree sequence and etc.), and count motifs in the random graphs 
+        \item Use statistical measures to evaluate how significant is each motif (Z-score). Subgraph with high Z-score is the motif. 
+    \end{enumerate}
+
+\subsubsection{Z score and Network Significance Profile}
+The $Z$ score for motif $i$ is defined as 
+    \begin{align*}
+        Z_i = \frac{N_i^{real} - \bar{N}_i^{rand}}{std(N_i^{rand}}
+    \end{align*}
+Network significance profile (SP) is defined as a vector of normalized z-scores: 
+    \begin{align*}
+        SP_i = \frac{Z_i}{\sqrt{\sum_j Z_j^2}}
+    \end{align*}
+
+\section{Neural Subgraph Representations and Counting} 
+
+\subsection{Setup}
+Given a large target graph (can be disconnected) and a query graph (connected), is query graph a subgraph in the target graph? We can use GNN to predict subgraph isomorphism by exploiting the geometric shape of embedding space to capture the properties of subgraph isomorphism. \\\par
+
+Overall, we want to break the big graph into neighborhoods (containing node anchor), and compare the node-anchored embedding of the query graph and the neighborhoods. 
+
+\subsection{Neighborhood Decomposition} 
+\begin{itemize}
+    \item For each node in $G_T$:
+        \begin{itemize}
+            \item Obtain a $k-hop$ neighborhood around the anchor. Can be performed using BFS, and $k$ is a hyper-parameter
+        \end{itemize}
+    \item For query $G_Q$, if the graph is large, do the same procedures. Otherwise, do not decompose
+    \item Compute the embedding of the anchor nodes. 
+\end{itemize}
+
+\subsection{Order Embedding Space} 
+We want to map graph $A$ to a point $z_A$ such that $z_A$ is non-negative in all dimensions. Also, if $B$ is a subgraph of $A$, then $z_B$ has lower value for all coordinates compare to $z_A$. 
+
+\subsection{Loss function to satisfy order embedding space} 
+We specify the order constraint: 
+    \begin{align*}
+        \forall_{i=1}^D \quad z_q[i] \leq z_u[i] \qquad iff  \quad G_Q \subseteq G_T
+    \end{align*}
+GNN Embeddings are learned by minimizing a max-margin loss
+    \begin{align*}
+        E(G_q, G_t) = \sum_{i=1}^D(max(0, z_q[i] - z_t[i]))^2
+    \end{align*}
+    
+\subsection{Training Detail} 
+Construct training examples $(G_q, G_t)$ where half the time, $G_q$ is a subgraph of $G_t$ and the other half it is not. Train on those examples by minimizing the max-margin loss:
+    \begin{itemize}
+        \item For positive examples: Minimize $E(G_q, G_t)$ 
+        \item For negative examples: Minimize $\max(0, \alpha - E(G_q, G_t))$
+    \end{itemize}
+
+
+\subsection{Training Example Construction} 
+We can get $G_T$ by choosing a random anchor $v$ and taking all nodes in $G$ within distance $K$ from $v$ to be in $G_T$ \\ \par
+
+Positive examples: Sample induced subgraph $G_Q$ of $G_T$ with BFS sampling 
+    \begin{itemize}
+        \item Initialize $S = \{ v \} $, $V = \emptyset$
+        \item Let $N(S)$ be all neighbors of nodes in $S$, at every step, sample 10\% of the nodes in $N(S) - V$, put them in $S$. Put the remaining nodes of $N(S)$ IN v
+        \item After $K$ steps, take the sub-graph of $G$ induced by $S$ anchored at $q$
+    \end{itemize}
+Negative examples: "Corrupt" $G_Q$ by adding / removing nodes/edges so it is no longer a subgraph. 
+
+\subsection{Prediction} 
+Given query graph $G_q$ anchored at node $q$ and target graph $G_t$ anchord at node $t$. Output whether the query is a node-anchored subgraph of the target by comparing $E(G_q, G_t)$. If $E(G_q, G_t) < \epsilon$, then predict true. \\ \par
+
+To check if $G_Q$ is isomorphic to a subgraph of $G_T$, repeat the checking for all $q\in G_Q, t\in G_T$
+???
+
+
+\section{Mining Frequent Subgraphs}
+Goal: Find the frequency of the size $k$ motifs. \\
+SPminer: Estimate frequency of $G_Q$ by counting the number of $G_{N_i}$ such that their embeddings $z_{N_i}$ staisfy $z_Q \leq z_{N_i}$
+    \begin{itemize}
+        \item Initial Step: Start by randomly picking a starting node $u$ in the target graph $G_T$, set $S = \{ u \}$
+        \item Interatively: Grow a motif by iteratively choosing a neighbor in $G_T$ of a node in $S$ and add that node to $S$. We grow the motif $S$ until it reaches the target size $k$ 
+    \end{itemize}

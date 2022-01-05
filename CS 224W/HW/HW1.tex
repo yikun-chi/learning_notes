@@ -1,0 +1,283 @@
+\documentclass{book}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mystyle}
+
+
+
+
+\title{CS 224W Homework 1}
+\author{Yikun Chi}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 1}
+\subsection*{Problem 1.1}
+First we think about the existing known solutions. Eloise's transition matrix $T_E$ can be represented as a matrix with only second row being all 1 and 0 elsewhere. 
+    \begin{align*}
+        \begin{bmatrix}
+            -0-\\
+            -1-\\
+            -0-\\
+            \vdots \\
+        \end{bmatrix}
+    \end{align*}
+Let we have the following equation needs to be solved: 
+    \begin{align*}
+        & v_E = (\beta M + (1 - \beta)T_E)v_E \\
+        & \Longrightarrow v_E = \beta M v_E + (1 - \beta) T_E v_E \\
+        & \Longrightarrow v_E = \beta M v_E + (1 - \beta) [0, 1, 0, ...] \tag{$V_E$ normalized and given $T_e$}
+    \end{align*}
+So the solution that fits above equation is the personalized page rank vector for Eloise. Now given the transition vector for A to D, we can list out their solved system of equation and simplify. E.g.: $T_A$ has $\frac{1}{3}$ in row 1, 2 and 3, and 0 in all other rows. So the first three component of $T_A v_A$ is $\frac{1}{3} [V_A]_1 + \frac{1}{3} [V_A]_2 + ... = \frac{1}{3}\sum_i [V_A]_i = \frac{1}{3}$. The rest of the components are all 0. 
+    \begin{align*}
+        & v_A = \beta M V_A + (1-\beta) \frac{1}{3}[1, 1, 1, 0, 0, 0, ...] \\
+        & v_B = \beta M V_B + (1-\beta) \frac{1}{3}[0, 0, 1, 1, 1, 0, ...] \\
+        & v_C = \beta M V_C + (1-\beta) \frac{1}{3}[1, 0, 0, 1, 1, 0, ...] \\
+        & v_D = \beta M V_D + (1-\beta) [1, 0, 0, 0, 0, 0, ...] \\
+    \end{align*}
+
+Notice that now we can take linear combination of $v_i$, specifically $3v_A - 3v_B + 3V_c - 2 * V_D$, we have 
+    \begin{align*}
+        (3v_A - 3v_B + 3V_c - 2 V_D) = \beta M (3v_A - 3v_B + 3V_c - 2 V_D) + (1-\beta) * [0, 1, 0, 0, 0]
+    \end{align*}
+So now we have the solution to our original equation. Hence $v_E = 3v_A - 3v_B + 3V_c - 2 V_D$
+
+
+\subsection*{Problem 1.2}
+Not possible. We can't get to $[0,0,0,0,1,,...]$ using a linear combination of the existing vector (vector next to $(1-\beta)$). 
+
+\subsection*{Problem 1.3}
+Not possible. We were able to simplify $T_E V_E$ in the first case is because we have uniform transition probability at each row. So we simplify $\frac{1}{3} v_1 + \frac{1}{3}v_2 + ... = \frac{1}{3}(v_1 + v_2 + ...) = \frac{1}{3} * 1$ (here $v_i$ is the $i_{th}$ component of a page rank vector). 
+
+
+\subsection*{Problem 1.4}
+As previously discussed, if we can take a linear combination of the vector next to $(1-\beta)$ and obtain the new vector that fits the target set, then we can get the new personalized page rank vector. Note this is assuming the teleport probability is uniformally distributed in the target set. 
+
+\subsection*{Problem 1.5}
+    \begin{align*}
+        r 
+        & = Ar\\
+        & = (\beta M + \frac{1-\beta}{N}\mathbbm{11}^T)\\
+        &= \beta M r + \frac{1-\beta}{N}\mathbbm{11}^T * r 
+    \end{align*}
+And in above section we have already shown that when calculating the multiplication,  $\mathbbm{11}^T * r $, each row in the result vector is $\sum_i r_i$ which is 1. So the result of the multiplication is a column vector of 1. 
+
+
+\newpage 
+\section*{Problem 2}
+\subsection*{2.1}
+We can do the two iterations here. 
+In iteration 1: 
+    \begin{align*}
+        p(Y_1 = +) 
+        & = \frac{1}{2}\left( p(Y_2 = +) + p(Y_3 = +) \right)\\
+        & = \frac{1}{2}\left( \frac{1}{2} + \frac{1}{2} \right)\\
+        & = \frac{1}{2}\\
+        p(Y_2 = +) 
+        & = \frac{1}{4}\left( p(Y_1 = +) + p(Y_3 = +) + p(Y_5 = +) + p(Y_4 = +) \right)\\
+        & = \frac{1}{4}\left( 0.5 + 0.5 + 0 + 0.5 \right)\\
+        & = \frac{3}{8} \\
+        p(Y_3 = +) 
+        & = \frac{1}{3}\left( p(Y_1 = +) + p(Y_2 = +) + p(Y_6 = +)  \right)\\
+        & = \frac{1}{3}\left( \frac{1}{2} + \frac{3}{8}  + 1\right)\\
+        & = \frac{5}{8} \\
+        p(Y_4 = +) 
+        & = \frac{1}{4}\left( p(Y_2 = +) + p(Y_5 = +) + p(Y_8 = +) + p(Y_7 = +)  \right)\\
+        & = \frac{1}{4}\left( \frac{3}{8} + 0  + \frac{1}{2} + 1 \right)\\
+        & = \frac{15}{32} \\
+        p(Y_8 = +) 
+        & = \frac{1}{2}\left( p(Y_4 = +) + p(Y_9 = +)   \right)\\
+        & = \frac{1}{2}\left( \frac{15}{32} + \frac{1}{2} \right)\\
+        & = \frac{31}{64} \\
+        p(Y_9 = +) 
+        & = \frac{1}{2}\left( p(Y_5 = +) + p(Y_8 = +)   \right)\\
+        & = \frac{1}{2}\left( 0 + \frac{31}{64} \right)\\
+        & = \frac{31}{128} \\
+    \end{align*}
+In Iteration 2
+    \begin{align*}
+        p(Y_1 = +) 
+        & = \frac{1}{2}\left( p(Y_2 = +) + p(Y_3 = +) \right)\\
+        & = \frac{1}{2}\left( \frac{3}{8} + \frac{5}{8} \right)\\
+        & = \frac{1}{2}\\
+        p(Y_2 = +) 
+        & = \frac{1}{4}\left( p(Y_1 = +) + p(Y_3 = +) + p(Y_5 = +) + p(Y_4 = +) \right)\\
+        & = \frac{1}{4}\left( \frac{1}{2} + \frac{5}{8} + 0 + \frac{15}{32} \right)\\
+        & = \frac{51}{128} \\
+        p(Y_3 = +) 
+        & = \frac{1}{3}\left( p(Y_1 = +) + p(Y_2 = +) + p(Y_6 = +)  \right)\\
+        & = \frac{1}{3}\left( \frac{1}{2} + \frac{51}{128}  + 1\right)\\
+        & = \frac{81}{128} \\
+        p(Y_4 = +) 
+        & = \frac{1}{4}\left( p(Y_2 = +) + p(Y_5 = +) + p(Y_8 = +) + p(Y_7 = +)  \right)\\
+        & = \frac{1}{4}\left( \frac{51}{128} + 0  + \frac{31}{64} + 1 \right)\\
+        & = \frac{241}{512} \\
+        p(Y_8 = +) 
+        & = \frac{1}{2}\left( p(Y_4 = +) + p(Y_9 = +)   \right)\\
+        & = \frac{1}{2}\left( \frac{241}{512} + \frac{31}{128} \right)\\
+        & = \frac{365}{1024} \\
+        p(Y_9 = +) 
+        & = \frac{1}{2}\left( p(Y_5 = +) + p(Y_8 = +)   \right)\\
+        & = \frac{1}{2}\left( 0 + \frac{365}{1024} \right)\\
+        & = \frac{365}{2048} \\
+    \end{align*}
+    
+
+So $p(Y_3 = + ) \approx 0.6328 $    
+
+\subsection*{2.2}
+Using result above, we have $p(Y_4 = + ) \approx 0.4707 $    
+
+\subsection*{2.3}
+Using result above, we have $p(Y_8 = + ) \approx 0.3564 $    
+
+
+\subsection*{2.4}
+not 3,6,7,10
+
+
+\newpage
+\section*{Problem 3}
+In iteration 1
+\subsection*{3.1}
+    \begin{align*}
+        & \textrm{Node 1: } 0\\
+        & \textrm{Node 2: } 1\\
+        & \textrm{Node 3: } 1\\
+        & \textrm{Node 4: } 1\\
+        & \textrm{Node 5: } 1\\
+        & \textrm{Node 6: } 0\\
+        & \textrm{Node 7: } 0\\
+    \end{align*}
+    
+\subsection*{3.2}
+    \begin{align*}
+        & \textrm{Node 1: } LinkV= [0, 1]\\
+        & \textrm{Node 2: } LinkV= [0, 1]\\
+        & \textrm{Node 3: } LinkV= [0, 1]\\
+        & \textrm{Node 4: } LinkV= [0, 1]\\
+        & \textrm{Node 5: } LinkV= [1, 0]\\
+        & \textrm{Node 6: } LinkV= [1, 1]\\
+        & \textrm{Node 7: } LinkV= [1, 1]\\
+    \end{align*}
+and the newly classified node label is 
+    \begin{align*}
+        & \textrm{Node 1: } 0\\
+        & \textrm{Node 2: } 1\\
+        & \textrm{Node 3: } 1\\
+        & \textrm{Node 4: } 1\\
+        & \textrm{Node 5: } 0\\
+        & \textrm{Node 6: } 0\\
+        & \textrm{Node 7: } 0\\
+    \end{align*}
+    
+
+\subsection*{3.3}
+In iteration 2
+    \begin{align*}
+        & \textrm{Node 1: } LinkV= [0, 1]\\
+        & \textrm{Node 2: } LinkV= [0, 1]\\
+        & \textrm{Node 3: } LinkV= [1, 0]\\
+        & \textrm{Node 4: } LinkV= [0, 1]\\
+        & \textrm{Node 5: } LinkV= [1, 0]\\
+        & \textrm{Node 6: } LinkV= [1, 0]\\
+        & \textrm{Node 7: } LinkV= [1, 1]\\
+    \end{align*}
+and the newly classified node label is 
+    \begin{align*}
+        & \textrm{Node 1: } 0\\
+        & \textrm{Node 2: } 1\\
+        & \textrm{Node 3: } 0\\
+        & \textrm{Node 4: } 1\\
+        & \textrm{Node 5: } 0\\
+        & \textrm{Node 6: } 0\\
+        & \textrm{Node 7: } 0\\
+    \end{align*}
+    
+\subsection*{3.4}
+In iteration 3: 
+    \begin{align*}
+        & \textrm{Node 1: } LinkV= [0, 1]\\
+        & \textrm{Node 2: } LinkV= [0, 1]\\
+        & \textrm{Node 3: } LinkV= [1, 0]\\
+        & \textrm{Node 4: } LinkV= [0, 1]\\
+        & \textrm{Node 5: } LinkV= [1, 0]\\
+        & \textrm{Node 6: } LinkV= [1, 0]\\
+        & \textrm{Node 7: } LinkV= [1, 0]\\
+    \end{align*}
+But $I_0$ didn't change. So converged. 
+
+
+
+\newpage
+\section*{Problem 4}
+\subsection*{4.1}
+3 layers 
+
+\subsection*{4.2}
+    \begin{align*}
+        \begin{bmatrix}
+            0 & \frac{1}{2} & 0 & \frac{1}{3} \\
+            \frac{1}{2} & 0 & 0 & \frac{1}{3} \\
+            0 & 0 & 0 & \frac{1}{3} \\
+            \frac{1}{2} & \frac{1}{2} & 1 & 0 \\
+        \end{bmatrix}\\
+        r = [0.25, 0.25, 0.125, 0.375]\\
+        r_{normalized} = [0.471, 0.471, 0.236, 0.707]
+    \end{align*}
+
+\subsection*{4.3}
+The adjaency matrix is 
+    \begin{align*}
+        \begin{bmatrix}
+            0 & 1 & 0 & 1 \\
+            1 & 0 & 0 & 1 \\
+            0 & 0 & 0 & 1 \\
+            1 & 1 & 1 & 0 \\
+        \end{bmatrix}
+    \end{align*}
+The degree matrix is 
+    \begin{align*}
+        \begin{bmatrix}
+            2 & 0 & 0 & 0 \\
+            0 & 2 & 0 & 0 \\
+            0 & 0 & 1 & 0 \\
+            0 & 0 & 0 & 3 \\
+        \end{bmatrix}
+    \end{align*}
+The transition matrix is same as the random walk page rank matrix. 
+
+
+\subsection*{4.4}
+$\frac{1}{2} I + \frac{1}{2} old$
+
+
+\subsection*{4.5}
+
+
+\subsection*{4.6}
+Message: current node embedding as it is . 
+Aggregation: max of the node embedding. 
+Update: Change to embedding to 1 if aggregation reasult is not 0. 
+
+
+
+\section*{Problem 5}
+
+\subsection*{5.1}
+The decoder is $z_u^T z_j$
+
+
+\subsection*{5.2}
+$ZWZ = A$
+
+
+\subsection*{5.3} 
+? 
+
+\subsection*{5.4}
+$ZWZ = A^K$
+\end{document}
+
+

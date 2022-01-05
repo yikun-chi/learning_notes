@@ -1,0 +1,109 @@
+\chapter{Node \& Graph Embedding}
+\section{Node Embedding Intuition}
+In graph representation learning, we want to skip the feature engineering, and automatically learn the features. The node embedding still should encode network structure. Assume we have a graph $G$, $V$ is the vertex set, and $A$ is the adjacency matrix (assume binary). Goal is to develop an eoncoder to encode nodes to embedding. Define a node similarity function. Decoder maps from embedding to the similarity score. Finally we can optimize the parameters of the encoder so that similarity in the embedding space (e.g.: dot product) approximates similarity in the graph.
+
+\section{"Shallow Encoding}
+The simplest encoding approach is just an embedding lookup, i.e.: 
+    \begin{align*}
+        ENC(v) = z_v = Z \cdot v
+    \end{align*}
+    \begin{itemize}
+        \item $Z\in \mathbb{R}^{d \times |v|}$ matrix, each column is a node embedding (what we learn / optimize). $d$ is the dimensionality of the embedding layer. 
+        \item $v\in \mathbb{I}^{|v|}$ is just a indicator vector, all zeroes except a one in column indicating node $v$
+        \item We use methods such as DeepWalk, node2vec to directly optimzie the embedding of each node
+        \item Decoder is based on node similarity and the objective is to maximize $z_v^Tz_u$ for node pairs $(u,v)$ that are similar
+    \end{itemize}
+
+\section{Node Similarity with Random Walks}
+Quick refresher - Softmax: \\
+Softmax function turns a vector of $K$ real values into $K$ probabilities that sum to 1. 
+    \begin{align*}
+        \sigma(z)[i] = \frac{e^{z[i]}}{\sum_{j=1}^K e^{z[j]}}
+    \end{align*}
+\\ \par
+
+Quick refresher - Sigmoid: \\
+Sigmoid turns real values into the range of $(0,1)$
+    \begin{align*}
+        S(s) = \frac{1}{1 + e^{-x}}
+    \end{align*}
+\\ \par
+
+Notation: \\
+Let $z_u$ to be the embedding of node $u$, which is what we aim to find. Let $p(v|z_u)$ be the probability of visiting node $v$ on random walks starting from node $u$ (It also can be seen as the similarity between node $u$ and $v$). 
+\\ \par
+
+
+
+Feature Learning as Optimization: \\
+Given $G=(V,E)$, we want to learn a mapping $f:u \rightarrow \mathbb{R}^d:f(u)=z_u$. The log-likelihood objective is 
+    \begin{align*}
+        max_f\sum_{u\in V} log P(N_R(u)|z_u)
+    \end{align*}
+    \begin{itemize}
+        \item $N_R(u)$ is the neighborhood of node $u$ by strategy $R$
+        \item So given node $u$, we want to learn representations that are predictive of the nodes in its random walk neighborhood $N_R(u)$
+    \end{itemize}
+So in reality, we 
+    \begin{enumerate}
+        \item Run short fixed-length random walks starting from each node $u$ in the graph using some random walk strategy $R$
+        \item For each node $u$ collect $N_R(u)$, the multset (repeated visit allowed)  of nodes visited on random walks starting from $u$
+        \item Optimize embeddings according to given node $u$, predict its neighbors $N_R(u)$
+    \end{enumerate}
+This is equivalent to the overall loss function of 
+    \begin{align*}
+        L = \sum_{u\in V}\sum_{v\in N_R(u)} - \log (P(v|z_u))
+    \end{align*}
+and we can parameterize $P(v|z_u)$ with softmax: 
+    \begin{align*}
+        P(v|z_u) = \frac{e^{z_u^Tz_v}}{\sum_{n\in V} e^{z_u^Tz_n}}
+    \end{align*}
+But $\sum_{n\in V} e^{z_u^Tz_n}$ will lead to quadratic complexity to the number of nodes, so we approximate it with negative sampling: 
+    \begin{align*}
+        log( \frac{e^{z_u^Tz_v}}{\sum_{n\in V} e^{z_u^Tz_n}}) \approx log(\sigma(z_u^Tz_v)) - \sum_{i=1}^K \log(\sigma(z_u^Tz_{n_i}))
+    \end{align*}
+    \begin{itemize}
+        \item $\sigma$ is the sigmoid function
+        \item $n_i \sim P_V$ is random distribution over nodes. We want to sample $k$ negative node $n_i$ each with probability proportional to its degree. 
+        \item higher $K$ gives more robust estimates, but also corresponds to higher bias on negative events. In practice, let $k = 5-20$
+        \item Normally people just sample $K$ from any nodes, but ideally it should be nodes not on the walk
+    \end{itemize}
+We then solve $z_u$ with stochastic gradient descent (SGD)
+    \begin{itemize}
+        \item Initialize $z_u$ at some randomized value for all nodes $u$
+        \item iterate until convergence, at every step: 
+            \begin{itemize}
+                \item sample a node $u$, for all $v$, calculate derivative $\partiald{z_v}L(u)$
+                \item For all $v$, update $z_v \leftarrow z_v - \eta \partiald{z_v}L(u)$
+            \end{itemize}
+    \end{itemize}
+    
+\subsection{Random Walk Strategy: node2vec}
+The simplest random walk strategy would just be unbiased random walks (i.e.: DeepWalk). A better approach biased second order random walk $R$. We have two parameters: 
+    \begin{itemize}
+        \item Return parameter $p$: return back to the previous node 
+        \item In-out parameter $q$: Moving outwards (DFS) vs. inwards (BFS). Intuitively, $q$ is the "ratio" of BFS vs. DFS
+    \end{itemize}
+Say we start at node $u$, and after some step we are at node $v$, we travel to the following types of nodes with unnormalized probabilities: 
+    \begin{itemize}
+        \item nodes that are closer to $u$ with $\frac{1}{p}$
+        \item nodes with same distance from $u$ (1 link away) with $1$
+        \item nodes that are further away from $u$ with  $\frac{1}{q}$
+    \end{itemize}
+So the overall node2vec algorithm is 
+    \begin{enumerate}
+        \item Compute random walk probabilities
+        \item Simulate $r$ random walks of length $l$ starting from each node $u$
+        \item Optimize the node2vec objective using SGD
+    \end{enumerate} 
+    
+\section{Node Embedding to Graph Embedding} 
+Naive approach: sum up all node embedding. New approach: introduce a "virtual node" to represent the subgraph / graph, and run a standard graph embedding technique. 
+
+
+\section{Limitation of Node Embeddings}
+    \begin{itemize}
+        \item We cannot obtain embeddings for nodes not in the training set. If a new node is added, we have to recalculate all embedding with DeepWalk and node2vec
+        \item Cannot capture structural similarity. (e.g.: same node in rooted graphlet )
+        \item Cannot utilize node, edge, and graph features. 
+    \end{itemize}

@@ -1,0 +1,93 @@
+\chapter{Message Passing and Node Classification}
+\paragraph{Primer}\mbox{}\\
+Given a network with labels on some nodes, how do we assign labels to all other nodes in the network. We assume similar nodes are connected (i.e.: homophily) in the network. \\
+
+\paragraph{Homophily}\mbox{}\\
+Individual characteristics of the nodes leads to social interaction. So because nodes are similar, they are connected. 
+
+\paragraph{Influence} \mbox{}\\
+Due to connection, nodes are influencing each other. So because nodes are connected, they are similar. 
+
+
+\section{Relational Classification}
+We want to propagate node labels across the network. For labeled node $v$, initialize label $Y_v$ with ground-truth label $Y*_v$. For unlabeled nodes, initialize $Y_v = 0.5$, then update all nodes in a random order until convergence or until maximum number of iterations is reached. \\
+The update step for each node $v$ and label $c$ is :
+    \begin{align*}
+        P(Y_v = c) = \frac{1}{\sum_{(v,u)\in E} A_{v,u}} \sum_{(u,v)\in E}A_{v,u}P(Y_u = c)
+    \end{align*}
+    \begin{itemize}
+        \item If edges have strength / weight information, $A_{v,u}$ can be the edge weight between $v$ and $u$. Ohterwise, use adjaency matrix. 
+        \item Model convergence is not guaranteed
+        \item Model does not use node feature information 
+        \item Note we always uses the most upated probability. So if a node's probability is updated, then when it comes to updating the node's neighbor, we use the updated probability of the original node. 
+    \end{itemize}
+
+
+\section{Iterative Classification}
+The main idea is to classify node $v$ based on its attributes $f_v$ as well as labels $z_v$ of neighbors set $N_v$. The approach is to train two classifies: 
+    \begin{itemize}
+        \item $\phi_1(f_v)$ Predict node label based on node feature vector $f_v$. We use this to initialize our iteration. 
+        \item $\phi_2(f_v, z_v)$ Predict label based on node feature vector $f_v$ and summary $z_v$ of labels of $v$'s neighbors 
+    \end{itemize}
+
+The summary $z_v$ of labels of $v$'s neighbors $N_v$ is a vector that capture labels around node $v$, it can include 
+    \begin{itemize}
+        \item Histogram of the number / fraction of each label in $N_v$
+        \item Most common label in $N_v$
+        \item Number of different labels in $N_v$
+        \item Features from neighbor nodes 
+    \end{itemize}
+So the overall architecture is 
+    \begin{itemize}
+        \item Phase 1: Classify based on node attributes alone 
+            \begin{itemize}
+                \item On a training set, we train two classifies: 
+                \item $\phi_1(f_v)$ to predict $Y_v$ based on $f_v$
+                \item $\phi_2(f_v, z_v)$ to predict based on $f_v$ and $z_v$ (Note here we do not use $\phi_1$ result to train for $\phi_2$. $\phi_2$ is trained using only truth)
+            \end{itemize}
+        \item Phase 2: Iterate till convergence 
+            \begin{itemize}
+                \item On test set, set labels $Y_v$ based on the classifier $\phi_1$, compute $z_v$, and predict the labels with $\phi_2$
+                \item Repeat for each node $v$: 
+                    \begin{itemize}
+                        \item Update $z_v$ based on $Y_u$ for all $u\in N_v$
+                        \item Update $Y_v$ based on the new $z_v$ using $\phi_2$ if the label has no ground truth. 
+                    \end{itemize}
+                \item iterate until class labels stabilize or max number of iterations is reached
+            \end{itemize}
+    \end{itemize}
+Note we do not re-train the classifier. 
+    
+\section{Correct and Smooth}
+the base model can make different degrees of error at different location. So we need to correct the bias, and smoothen it over the graph. Correct and Smooth follows the three-step procedure: 
+    \begin{enumerate}
+        \item Train base predictor
+        \item Use the base predictor to predict soft labels of all nodes 
+        \item Post-process the predictions using graph structure to obtain the final predictions of all nodes. 
+    \end{enumerate}
+    
+\paragraph{Base Predictor}\mbox{}\\
+We train a base predictor to predict label. It could be a linear model or MLP over node features. We then use the base predictor to apply the soft labels for all the nodes. E.g.: the probability vector for a node $v$ could be $[0.95, 0.05]$ for a binary classification. 
+
+\paragraph{Correct Step} \mbox{}\\
+Compute the training errors of node as ground-truth label minus soft label. Defined as 0 for unlabeled nodes. E.g.: if a node's ground truth is $[1,0]$ and the soft label is $[0.95, 0.05]$, the error is $[0.05, -0.05]$. \\
+
+We then diffuse training error $E^{(0)}$ along the edges. Let $A$ be the adjacency matrix, $\tilde{A}$ be the diffusion matrix, then we have 
+    \begin{align*}
+        E^{(t+1)} \leftarrow (1 - \alpha) * E^{(t)} + \alpha * \tilde{A}E^{(t)}
+    \end{align*}
+    \begin{itemize}
+        \item Set adjacency matrix $A$ with self loop. i.e.: set $A_{ii} = 1$
+        \item let $D = Diag(d_1,...,d_N$ be the degree matrix 
+        \item The diffusion matrix $\tilde{A}$ could be $D^{-1/2}AD^{-1/2}$
+    \end{itemize}
+After several step of diffusion, we add a scaled diffused training errors into the predicted soft label for all nodes. So for each node, the new soft label is $old_label + s * error$. $s$ can be equal to 2, or tuned as a hyper-parameter. 
+
+
+\paragraph{Smooth Step} \mbox{}\\
+The input to smooth steps are the post-correction soft label for unlabeled nodes, and ground truth hard label for labeled nodes. We then diffuse label $Z^{(0)}$ along the graph structure with 
+    \begin{align*}
+        Z^{(t+1)} \leftarrow (1-\alpha)*Z^{(t)} + \alpha * \tilde{A} Z^{(t)}
+    \end{align*}
+
+After smooth step, we can predict based on normalized soft label. Generally, we do about 10~ iteration of correct step and smooth step. 

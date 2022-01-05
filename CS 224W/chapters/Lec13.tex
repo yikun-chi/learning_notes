@@ -1,0 +1,107 @@
+\chapter{Recommender Systems: Task and Evaluation} 
+
+\section{Top - K recommendation Setup}
+Recommender system can be modeled as a bipartie graph: 
+    \begin{itemize}
+        \item Node: user $U$ and item $V$
+        \item Edge: user item interaction $E$
+    \end{itemize}
+
+\paragraph{Challenge}: Given the size of available user and item, even we have the true fuction $f$, we can not calculate it for every user - item pair. The solution is a two-stage process 1): Candidate generation and 2): Ranking.
+
+\paragraph{Objective}: Develop a real-valued scalar score $f(u,v)$ and the corresponding candidate generation and ranking process. 
+
+\paragraph{Metrics}: Formally, we define our objective as the recall. For each user $u$, let $P_u$ be a set of positive items that user will interact in the future. let $R_u$ be a set of items recommended by the model, $|R_u|=K$. The metrics, recall, is defined as $(P_u \cap R_u) / P_u $. So what is the ratio between successfully identified product and the true set of positive items. 
+
+\section{Embedding-Based Model Intuition}
+Create $D-$ dimensional embeddings for both user $u\in U$ and item $v\in V$. Let $f_\theta(\cdot, \cdot):\mathbb{R}^D \times \mathbb{R}^D \to \mathbb{R}$ be the parameterized scoring function. 
+
+\section{Model Training Objective} 
+Embedding-based models have three kinds of parameters: 
+    \begin{itemize}
+        \item User embedding encoder
+        \item Item embedding encoder
+        \item Score function $f_\theta(\cdot, \cdot)$
+    \end{itemize}
+    
+\section{Model Loss Function}
+Ideally we want to use the recall as the objective, but recall itself is not differentiable. So two surrogate loss functions are widely-used: Binary Loss and Bayesian Personalized Ranking (BPR) loss.  
+
+\paragraph{Binary Loss} \mbox{}\\
+Let positive edges to be the ones observed / training user-item interaction. Let the negative edges to be non existent edges (in reality it is tricky because non-existent edges doesn't mean it shouldn't exist. Some strategy exists to sample negative edges, such asProduct that user looked at but never bought). Let the sigmoid function be $\sigma(x) = \frac{1}{1 + \exp(-x)}$. The binary loss is defined as 
+    \begin{align*}
+        - \frac{1}{|E|} \sum_{(u,v)\in E} \log (\sigma(f_\theta(u,v))) - \frac{1}{|E_{neg}|} \sum_{(u,v)\in E_{neg}} \log (1 - \sigma(f_\theta(u,v)))
+    \end{align*}
+The issue with binary loss is that the scores of ALL positive edges are pushed higher than those of ALL negative edges. This would penalize the model even if the model has perfect recall. Because at a user level, as long as that user's positive edge is higher than that user's negative edge, it is fine. It doesn't matter user A's positive edge has to have a higher score than user B's negative edge. 
+
+\paragraph{Bayesian Personalized Ranking (BPR) loss} \mbox{}\\
+For each user $u*\in U$, define the rooted positive/negative edges. The BPR loss for a specfic users is defined as 
+    \begin{align*}
+        Loss(u*) = \frac{1}{\abs{E}\abs{E_{neg}}} \sum_{(u*, v_{pos})\in E(u*)} \sum_{(u*, v_{neg})\in E_{neg}(u*)} -\log(\sigma(f_\theta(u*, v_{pos}) - f_\theta(u*, v_{neg})))
+    \end{align*}
+The total loss is defined as the average BPR loss of all users. This way, we restrict the order of positive to negative edges on a user basis. During mini-batch training, for each user in the mini batch, we have one positive items, and a set of negative items. The negative items can be shared across users in mini batch. 
+
+\section{Neural Graph Collaborative Filtering (NGCF)}
+\subsection{Basic Framework}
+Given a bipartie graph, NGCF has two steps: 
+    \begin{itemize}
+        \item For each user and item, prepare a shallow learnable embedding. For shallow embedding, we train it so that the score $f_\theta(u,v) \equiv z_u^Tz_v$. Note that this score is maximized when there is an edge. So it only focuses on 1st order connections. 
+        \item Use multi-layer GNNs to propagate embedding along the bipartite graph. (One GNN to propagate user nodes, and one to propagate item nodes). The final score is the dot product of the scoring function. 
+    \end{itemize}
+
+\section{Light GCN} 
+\paragraph{Adjacency Matrix} If we line up all the users, and then items, the adjacency matrix of a undirected bipartie graph can be viewed as 
+    \begin{align*}
+        \begin{bmatrix}
+            0 & R \\
+            R^T & 0
+        \end{bmatrix}
+    \end{align*}
+\paragraph{Embedding Matrix} We can have an embedding matrix E where the upper set of rows are user embedding and lower set of rows are item embedding. 
+
+\paragraph{GNN Aggregation Matrix Form} Let $D$ bt he degree matrix of $A$. The normalized adjacency matrix $\tilde{A} \equiv D^{-1/2} A D^{-1/2}$. Let $E^{(k)}$ be the embedding matrix at $k-th$ layer. Then each layer of GCN's aggregation can be written in a matrix form 
+    \begin{align*}
+        E^{(k+1)} = ReLU(\tilde{A}E^{(k)}W^{(k)})
+    \end{align*}
+So if we remove the non-linearity, the final node embedding matrix is given as 
+    \begin{align*}
+        E^{(K)} = \tilde{A}^K E W^{(0)}...W^{(K-1)} = \tilde{A}^K E W
+    \end{align*}
+In this formulation, we can see that by applying $E = \tilde{A}E$ for $K$ times, and then multiplying $W$, we can get the final embedding. This way we nver have to materlize $\tilde{A}^K$ which is a dense matrix. 
+
+\paragraph{Multi-scale Diffusion} 
+    \begin{align*}
+        \alpha_0E^{(0)} + \alpha_1 E^{(1)} + ... + \alpha_K  E^{(K)}
+    \end{align*}
+    \begin{itemize}
+        \item $\alpha_k = \frac{1}{k+1}$
+    \end{itemize}
+    
+\paragraph{Light GCN Model Overview} 
+Given adjacency matrix $A$ and initial learnable embedding matrix $E$, iteratively diffuse embedding $E$ using $\tilde{A}$ for $k=0,...,K-1$. To get the final embedding, we take the average of embedding at every step. The scoring function is still the dot product. So the only learnable parameters are in the shallow embedding portion. 
+
+\section{PinSAGE} 
+Task: Recommend related pins to users. 
+
+\subsection{PinSAGE Overview} 
+PinSage is a GNN over the pins as well as the boards. So it takes into account not only the image attribute of the self pin, but also the image attribute of other pins that was shared in the same board, and or multiple hops away. 
+
+\subsection{Curriculum Learning} 
+At $n-$the epoch, we add $n-1$ hard negative items. For each user node, the hard negatives are item nodes that are close but not connected to the user node in the graph. It can be obtained as 
+    \begin{itemize}
+        \item Compute personalized page rank for user $u$
+        \item Sort items in the descending order of their PPR scores
+        \item Randomly sample item nodes that are ranked in high but not too high, e.g.: 2000th - 5000th
+    \end{itemize}
+This is specifically designed for Pinterest. 
+
+
+\subsection{Negative Sampling}
+$(q,p)$ positive pairs are given but various methods to sample negatives to form $(p,q,n)$
+    \begin{itemize}
+        \item Distance weighted sampling 
+        \item Hard negative mining 
+        \item Semi-hard negative mining 
+        \item Random 
+    \end{itemize}
+So PinSage uses a variety of negative sampling techniques.  Also, given users in mini-batch, we want to use shared negative examples for all users to reduce data sampling. 
