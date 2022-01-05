@@ -1,0 +1,45 @@
+\chapter{PyTorch Tutorials} 
+
+\section{Toy Example with PyTorch}
+Here is the setup: 
+    \begin{align*}
+        & x = [x_1, x_2] \\
+        & y = [y_1, y_2] \\
+        & z = [x_1 y_1 , x_2 y_2 ]\\
+        & s = x_1 y_1 + x_2 y_2 \\
+    \end{align*}
+We can find the derivative of $s$ w.r.t $x$: 
+    \begin{align*}
+        \partiald{x} s = [\partiald{x_1} s , \partiald{x_2} s ] = [y_1, y_2]
+    \end{align*}
+
+In PyTorch, this can be done as 
+    \begin{python}
+    x = torch.tensor([1,2], dtype = torch.float64)
+    y = torch.tensor([3,4], dtype = torch.float64)
+    x.requires_grad = True
+    y.require_grad = True
+    
+    s = torch.sum(x * y)
+    
+    s.backward()
+    
+    x.grad
+    \end{python}
+    
+\section{Reshaping}
+We can use tensor.view to reshape the tensor. For example, if I have a tensor of length 16, I can reshape it to $2 \times 2 \times 4$. 
+    \begin{python}
+    x = torch.tensor([i for i in range(16)])
+    print(x.shape)
+    print(x.view(2,2,4))    
+    \end{python}
+
+\section{Transfer between Devices}
+We can transfer a tensor from one device to the other. 
+    \begin{python}
+    device - torch.device("cuda")
+    y = torch.ones(2).to(device)
+    z = torch.ones(2).cuda()
+    x = z.cpu()
+    \end{python}

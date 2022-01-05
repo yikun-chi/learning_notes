@@ -1,0 +1,234 @@
+\chapter{Normalizing Flow Model}
+Our latent variable has to have a model distribution $p_\theta(x)$ that is 
+    \begin{itemize}
+        \item easy to evaluate, closed form density, useful for training 
+        \item easy to sampel, useful for generation
+    \end{itemize}
+Key idea behind flow model: Map simple distributions (easy to sample and evaluate density) to complex distributions through an inevitable transformation 
+
+\section{Change of Variables Formula} 
+If $X = f(Z)$ and $f(\cdot)$ is monotone with inverse $Z = f^{-1}(X) = h(X)$, then we have 
+    \begin{align*}
+        P_X(x) = p_z(h(x)) * | h'(x)| 
+    \end{align*}
+    
+\paragraph{Example 1} \mbox{}\\
+Let $Z$ be a uniform random variable $\mathcal{U}[0,2]$ with density $p_Z$. Let $X = f(Z) = 4Z$. So $h(x) = f^{-1}(x) = \frac{1}{4}x$
+    \begin{align*}
+        p_X(X=4) = p_Z(h(4)) * |h'(4)| = p_Z(1) * \frac{1}{4} = \frac{1}{2} * \frac{1}{4}
+    \end{align*}
+    
+    
+\paragraph{Example 2} \mbox{}\\
+Let $Z$ be a uniform random variable $\mathcal{U}[0,2]$ with density $p_Z$. Let $X = f(Z) = \exp(Z)$. So $h(x) = f^{-1}(x) = \log (x)$
+    \begin{align*}
+        P_X(X=x) = p_Z(\log(x)) * |h'(x)| = \frac{1}{2} * \frac{1}{x}
+    \end{align*}
+    
+\subsection{Geometry: Determinants and volumes} 
+Let $Z$ be a uniform random vector $[0,1]^n$. Let $X=AZ$ for a square invertible matrix $A$ with inverse $W =A ^{-1}$. Geometrically, the matrix $A$ maps the unit from hypercube to paralleltotope. The volume of the parallelotope is equal to $|det(A)|$, and $X$ is uniformally distributed over the parallelotope. Hence 
+    \begin{align*}
+        p_X(x) = p_Z(Wx) / |det(A)| = p_Z(Wx) * |det(W)|
+    \end{align*}
+    \begin{itemize}
+        \item Note here $p_Z(Wx)$ is easy to compute, but $p_X(x)$ is complex
+    \end{itemize}
+
+\subsection{Generic Case: Non-linear transformation}
+For linear transformations specified via matrix multiplication $A$, change in volume is given by the determinant of $A$. But for non-linear transformation $f(\cdot)$, the linearized change in volume is given by the determinant of the Jacobian of $f(\cdot)$. \\ \par
+
+So the mapping between $Z$ and $X$, given by $f: \mathbbm{R}^n \to \mathbbm{R}^n$, is invertible such that $X = f(Z)$ and $Z = f^{-1}(X)$, we have: 
+    \begin{align*}
+        p_X(x) = p_Z(f^{-1}(x)) * |det(\partiald{x} f^{-1}(x))|
+    \end{align*}
+
+    \begin{itemize}
+        \item Unlike VAEs, $x, z$ need to be continuous, and have the same dimension. This is a huge restriction. 
+        \item For any invertible matrix $A$, $det(A^{-1}) = det(A)^{-1}$, so we have $p_X(x) = p_Z(z) * |det(\partiald{z} f(z)|^{-1}$
+    \end{itemize}
+    
+\subsection{Generic Case Example: Two dimensional} 
+Let $Z_1, Z_2$ be continuous random variables with joint density $p_{Z_1, Z_2}$. \\
+Let $u = (u_1, u_2)$ be a transform\\
+Let $v = (v_1, v_2)$ be the inverse transformation. \\
+Let $X_1 = u_1(Z_1, Z_2)$ and $X_2 = u_2(Z_1, Z_2)$, then we have $Z_1 = v_1(X_1, X_2)$ and $Z_2 = v_2(X_1, X_2)$. Then the joint probability can be represented as : 
+    \begin{align*}
+        p_{X_1, X_2}(x_1, x_2)
+        & = p_{Z_1, Z_2}(v_1(x_1, x_2), v_2(x_1, x_2)) * \left | det \left( 
+            \begin{matrix}
+                \partiald{X_1} v_1(x_1, x_2) & \partiald{X_2} v_1(x_1, x_2) \\
+                \partiald{X_1} v_2(x_1, x_2) & \partiald{X_2} v_2(x_1, x_2) \\
+            \end{matrix}
+        \right) \right| \\
+        & = p_{Z_1, Z_2}(z_1, z_2) * \left | det \left( 
+            \begin{matrix}
+                \partiald{Z_1} u_1(z_1, z_2) & \partiald{Z_2} u_1(z_1, z_2) \\
+                \partiald{Z_1} u_2(z_1, z_2) & \partiald{Z_2} u_2(z_1, z_2) \\
+            \end{matrix}
+        \right) \right| \\
+    \end{align*}
+
+
+\section{Flow Model Structure} 
+Consider a directed, latent-variable model over observed variables $X$ and latent variables $Z$. In a normalizing flow model, we assume $X=f_\theta(Z)$, AND $Z = f_\theta^{-1}(X)$. So the mapping function is deterministic and invertible. \\ \par
+
+Using change of variables, the marginal likelihood $p(x)$ is given by 
+    \begin{align*}
+        p_X(x;\theta) = p_Z(f^{-1}_\theta(x)) * |det(\partiald{x}f^{-1}_\theta(x))|
+    \end{align*}
+So now with multiple layers of invertible transformation, we have 
+    \begin{align*}
+        z_m = f_\theta^m \circ ... \circ f_\theta^1(z_0) = f_\theta(z_0)
+    \end{align*}
+By change of variables, our marginal likelihood of $x$ ($z_m$) can be calculated as 
+    \begin{align*}
+         p_X(x;\theta) = p_Z(f^{-1}_\theta(x)) * \prod_{m=1}^M |det(\partiald{z_m}(f_\theta^m)^{-1}(z_m))|
+    \end{align*}
+    
+\section{Learning and Inference} 
+We can learn via maximum likelihood over the dataset $D$
+    \begin{align*}
+        \overset{max}{\theta}p_X(D;\theta) = \sum_{x\in D}\log p_Z(f_\theta^{-1}(x)) + \log |det(\partiald{x}f^{-1}_\theta(x))|
+    \end{align*}
+We can evaluate the likelihood via invese transformation $x\to z$ and change of variables formula as seen above. \\ \par
+
+The sampling process can be achieved by $z\sim p_Z(z)$ and then do $x = f_\theta(z)$, and we can obtain the latent representation via the inverse transformation $z = f^{-1}(x)$
+
+\section{Consideration for Invertible Transformation} 
+First our transformation have to be invertible. So if we use an neural netowrk, it has to be an invertible neural network. Second, computing likelihood requires the evaluation of determinants of $n \times n$ Jacobian matrices, which is $O(n^3)$. So we want to choose transformations so that the resulting Jacobian matrix has special structure (e.g.: triangular matrix)\\ \par
+
+One example could be $x_i = f_i(z)$ only depends on $z_{\leq i}$, then the Jacobian matrix is lower triangular matrix, and we can just multiple the diagonal entry to get the determinant. \\ \par
+
+
+\subsection{Planar Flows}
+Planar flow transformation parameterized by $\theta = (w, u, b)$: 
+    \begin{align*}
+        x = f_\theta(z) = z + uh(w^Tz + b)
+    \end{align*}
+    \begin{itemize}
+        \item $h$ is non-linearity invertible function 
+    \end{itemize}
+The absolute value of the determinant of the Jacobian is given by 
+    \begin{align*}
+        |det(\partiald{z} f_\theta(z)| = |det(I + h'(w^Tz+b)uw^T)| = |1 + h'(w^Tz+b)u^Tw|
+    \end{align*}
+We also need to restrict parameters and non-linearity for the mapping to be invertible, for example, $h = tanh()$ and $h'(w^Tz+b)u^Tw \geq -1$
+
+
+\subsection{NICE}
+Partition the variable $z$ into two disjoint subsets $z_{1:d}$ and $z_{d+1:n}$ for any $1 \leq d < n$. The forward mapping $z \to x$ is defined as :
+    \begin{align*}
+        & x_{1:d} = z_{1:d} \tag{identity transformation}\\
+        & x_{d+1:n} = z_{d+1:n} + m_\theta(z_{1:d}) \\
+        & \textrm{$m_\theta(\cdot)$ is a neural network with parameters $\theta$, $d$ input units, and $n-d$ output units}\\
+    \end{align*}
+This way, the inverse mapping can be seen as: 
+    \begin{align*}
+        & z_{1:d} = x_{1:d} \\
+        & z_{d+1:n} = x_{d+1:n} - m_\theta(x_{1:d}) \\
+    \end{align*}
+The Jacobian of forward mapping: 
+    \begin{align*}
+        & J = \begin{pmatrix}
+            I_d & 0 \\
+            \partiald{z_{1:d}} x_{d+1:n} & I_{n-d} \\
+        \end{pmatrix} \\
+        & det(J) = 1
+    \end{align*}
+We then add multiple layers together with arbitrary partition of variables in each layer. Note so far we are doing volume preserving transformation since the determinant is 1. So the final layer of NICE applies a re-scaling transformation with learnable parameters $s_i$ for each dimension of $x$: 
+    \begin{align*}
+        & \textrm{Forward: } x_i = s_i z_i \\
+        & \textrm{Inverse: } z_i = \frac{x_i}{s_i} \\
+        & \textrm{Jacobian: } J = diag(s) = \prod s_i
+    \end{align*}
+Everything is trained by MLE
+
+
+
+
+\subsection{Real-NVP: Non-volume preserving extension of NICE}
+Forward mapping $z \to x$: 
+    \begin{align*}
+        & x_{1:d} = z_{1:d} \tag{identity transformation}\\
+        & x_{d+1:n} = z_{d+1:n} \odot \exp(\alpha_\theta(z_{1:d})) + \mu_\theta(z_{1:d}) \\
+        & \textrm{Same as NICE, but we add elementwise exponential scaling} \\
+        & \textrm{$\alpha_\theta(\cdot)$ and $\mu_\theta(\cdot)$ are both neural networks with d input and $n-d$ output}
+    \end{align*}
+Inverse mapping: 
+    \begin{align*}
+        & z_{1:d} = x_{1:d} \\
+        & z_{d+1:n} = (x_{d+1:n} - \mu_\theta(x_{1:d}))\odot \exp(-\alpha_\theta(x_{1:d}))
+    \end{align*}
+The Jacobian of forward mapping is 
+    \begin{align*}
+        & J = \begin{pmatrix}
+            I_d & 0 \\
+            \partiald{z_{1:d}} x_{d+1:n} & diag(\exp(\alpha_\theta(z_{1:d}))) \\
+        \end{pmatrix} \\
+        & det(J) = \prod_{i=d+1}^n \exp(\alpha_\theta(z_{1:d}))) = \exp (\sum_{i={d+1}^n} \alpha_\theta((z_{1:d})_i))
+    \end{align*}
+    
+\subsection{Masked Autoregressive Flow} 
+\paragraph{Continuous Autoregressive Models as flow models}\mbox{}\\
+Consider a Gaussian autoregressive model: 
+    \begin{align*}
+        p(x) = \prod_{i=1}^n p(x_i|x_{<i})
+    \end{align*}
+such that $p(x_i|x_{<i}) = \mathcal{N}(\mu_i(x_i, ..., x_{i-1}), \exp(\alpha_i(x_1, ..., x_{i-1}))^2)$ here $\mu_i(\cdot)$ and $\alpha_i(\cdot)$ are neural networks. \\
+We can think of the sampler for this model as : 
+    \begin{itemize}
+        \item Sample $z_i \sim \mathcal{N}(0,1)$ for $i=1,...,n$
+        \item Let $x_1 = \exp(\alpha_1)z_1 + \mu_1$, compute $\mu_2(x_1), \alpha_2(x_1)$
+        \item Let $x_2 = \exp(\alpha_2)z_2 + \mu_2$, compute $\mu_3(x_1, x_2), \alpha_3(x_1, x_2)$
+    \end{itemize}
+So essentially, we are transform a series of standard Gaussian to the $x_i$ generated from model via invertible transformation parameterized by $\mu$ and $\alpha$
+
+\paragraph{MAF}\mbox{}\\
+Forward mapping from $z \to x$ is the same process as described above. \\
+Inverse mapping from $x \to z$ (need this during training to compute likelihood) 
+    \begin{itemize}
+        \item Compute all $\mu_i$, $\alpha_i$ in parallel (e.g.: MADE)
+        \item Let $z_1 = (x_1 - \mu_1) / \exp(\alpha_1)$
+        \item Let $z_2 = (x_2 - \mu_2) / \exp(\alpha_2)$
+    \end{itemize}
+Jacobian is lower diagonal, so efficient determinant computation. 
+
+\subsection{Inverse Autoregressive Flow} 
+This is just the reverse of MAF: \\
+Forward mapping from $z \to x$ can be done in parallel: 
+    \begin{itemize}
+        \item Sample $z_i \sim \mathcal{N}(0,1)$ for $i = 1,...,n$
+        \item Compute all $\mu_i, \alpha_i$ can be done in parallel
+        \item Let $x_1 = \exp(\alpha_1)z_1 + \mu_1$
+        \item Let $x_2 = \exp(\alpha_2)z_2 + \mu_2$
+    \end{itemize}
+Inverse mapping from $x \to z$ are in sequential 
+    \begin{itemize}
+        \item Let $z_1 = (x_1 - \mu_1) / \exp(\alpha_1)$, Compute $\mu_2(z_1), \alpha_2(z_1)$
+        \item Let $z_2 = (x-2 - \mu_2) / \exp(\alpha_2)$, Compute $\mu_3(z_1, z_2), \alpha_3(z_1, z_2)$
+    \end{itemize}
+
+\subsection{Parallel Wavenet}
+Two part training with a teacher and student model. Teacher is parameterized by MAF, which can be efficiently trained via MLE. Once teacher is trained, initialize a student model parameterized by IAF, which enables efficient sampling (but can no longer efficiently evaluate density for external datapoints).\\
+Student distribution is trained to minimize the KL divergence between student $s$ and teacher $t$. i.e.: 
+    \begin{align*}
+        D_{KL}(s,t) = E_{x\sim s}[\log s(x) - \log t(x)]
+    \end{align*}
+This requires us to know: 
+    \begin{itemize}
+        \item Samples $x$ from student model (IAF) and get the density of $x$. (This is easy because $x$ is generated by IAF model itself, so we already know all the $z_i$. No need to estimate it sequentially. 
+        \item Density of $x$ from teacher model (MAF), easy to evaluate by design
+    \end{itemize}
+So the overall process is to train teacher model via MLE, and then train student model to minimize KL divergence. At test-time use student model for testing. 
+
+
+\subsection{MintNet} 
+Building invertible neural networks with masked convolutions and let the Jacobian matrix to be triangular and entries are positive. 
+
+\subsection{Gaussianization Flows}
+Let $X = f_\theta(Z)$ be a flow model with Gaussian prior $Z\sim \mathcal{N}(0,I) = P_Z$, and let $\tilde{X} \sim p_{data}$ be a random vector distributed according to the true data distribution. Flow models are trained with maximum likelihood to minimize the KL divergence $D_{KL}(p_{data}||p_\theta(X))$. Alternatively, we can think of the goal is to transform the distribution of data to Gaussian. We know that $U = F_{data}(\tilde{X})$ is uniform. We can transform $U$ into a Gaussian using the inverse CDF trick : $\phi^{-1}(U) = \phi^{-1}(F_{data}(\tilde{X}))$. So overall the process is 
+    \begin{enumerate}
+        \item Individual transform each variable into Gaussian 
+        \item Apply a rotation matrix to the transformed data
+        \item Repeat Step 1, and Step 2 (stacking learnable Gaussian copula) to transform data into a normal distribution 
+    \end{enumerate}

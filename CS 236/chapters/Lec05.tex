@@ -1,0 +1,278 @@
+\chapter{Latent Variable Models}
+Motivation: 
+We want to use neural networks to model the conditionals distribution ($p(x|z)$), $z$ is the latent variables. We sample the latent variable $z$ from some prior, then generate data $x$ based on trained neural networks and the latent variable input. The hope is that after training, $z$ will correspond to a meaningful latent factors of variation (features). Feature can be computed via $p(z|x)$ and we can then move on to other tasks such as $p(y|z)$
+
+
+
+\section{Primer: Mixture of Gaussians: Shallow Example}
+Bayes net is defined as $z \rightarrow x$. $z \sim (1,2,...,K)$ and $p(x|z=k) \sim \mathcal{N}(\mu_k, \Sigma_k)$. \\
+
+The generative process is to pick a mixture componenet $k$ by sampling $z$, and then sample $x$ from the conditional distribution. 
+
+\section{Variation autoencoder}
+VAE is a mixture of an infinite number of Gaussian. 
+    \begin{align*}
+        & Z \sim N(0, 1) \\
+        & p(x|z) = \mathcal{N}\left (\mu_\theta (z)), \Sigma_\theta(z)\right )
+    \end{align*}
+    \begin{itemize}
+        \item Note here $\mu_\theta, \Sigma_\theta$ are neural networks with $z$ as input. We may want to use $exp$ to modify the output of $\Sigma$ neural networks to make sure the network output is positive semi definite. 
+        \item $Z$ are unobserved at train time 
+        \item Suppose we have a model for the joint distribution. Given training data $\tilde{x}$, the likelihood $p(X=\tilde{x}; \theta)$ is $\int_z p(X=\tilde{x}, Z=z ; \theta) dz$ is often hard to calculate. 
+    \end{itemize}
+    
+
+
+
+\section{MLE Learning Problem with VAE and ELBO} 
+\subsection{Marginal Likelihood Problem} 
+Given joint distribution $p(X,Z;\theta)$. We have a dataset $D$ where for each datapoint the $X$ varibales are observed and the variable $Z$ are never observed. The maximum likelihood learning requires
+    \begin{align*}
+        \log \prod_{x\in D}p(x;\theta) = \sum_{x\in D}\log p(x;\theta) = \sum_{x\in D}\log \int_z p(X=x, Z=z;\theta)dz
+    \end{align*}
+    
+This marginalizing over all possible value of $z$ in reality are difficult and intractable. 
+
+\subsection{Naive Monte Carlo} 
+As discussed above, getting marginal distribution of $p(x)$ is hard. So can we just do naive monte carlo sampling? 
+    \begin{align*}
+        p_\theta(x)
+        & = \sum_{z\in Z} p_\theta(x,z) \\
+        & = |\mathcal{Z}| \sum_{z\in \mathcal{Z}} \frac{1}{|\mathcal{Z}|}p_\theta(x,z) \\
+        & = |\mathcal{Z}| E_{z \sim Uniform(\mathcal{Z})}[p_\theta(x,z)]
+    \end{align*}
+We can think of it as an intractable expectation, and we can use monte carlo to estimate. 
+    \begin{itemize}
+        \item Sample $z^{(1)}, z^{(2)}, z^{(3)}, ...$ uniformly at random 
+        \item Approximate expectation with sample average $\sum_z p_\theta(x,z) \approx |\mathcal{Z}| \frac{1}{k}\sum_{i=1}^k p_\theta(x, z^{(i)})$
+        \item In theory this works, but in practice it doesn't work. Because for most of the $z$, $p_\theta(x,z)$ is very low. So the model variance will be huge. So we need a clever way to select $z^{(1)}$ to reduce variance of the estimator
+    \end{itemize}
+
+    
+\subsection{Importance Sampling} 
+We use importance sampling to improve on naive monte carlo by sampling from another distribution $q$ instead of uniformally at random
+    \begin{align*}
+        p_\theta(x) 
+        & = \sum_{z} p_\theta(x,z) \\
+        & = \sum_{z} \frac{q(z)}{q(z)} p_\theta(x,z) \\
+        & = E_{z\sim q(z)} [\frac{p_\theta(x,z)}{q(z)}]
+    \end{align*}
+So now we can use Monte Carlo, but sample from $q(z)$ 
+    \begin{itemize}
+        \item Sample $z^{(1)}, z^{(2)}, z^{(3)}, ...$ from $q(z)$
+        \item Approximate expectation with sample average $p_\theta(x) \approx \frac{1}{k} \sum_{j=1}^{k} \frac{p_\theta(x, z^{(j)})}{q(z^{(j)})}$
+    \end{itemize}
+    
+    
+\subsection{Evidence Lower Bound (ELBO)} 
+We have shown that: 
+    \begin{align*}
+        p_\theta(x) \approx \frac{1}{k} \sum_{j=1}^{k} \frac{p_\theta(x, z^{(j)})}{q(z^{(j)})}
+    \end{align*}
+In MLE learning setting, we care about the log likelihood, so naively we hope that 
+    \begin{align*}
+        \log(p_\theta(x)) = \log \left(  E_{z\sim q(z)} [\frac{p_\theta(x,z)}{q(z)}] \right) \approx  \log \left( \frac{1}{k} \sum_{j=1}^{k} \frac{p_\theta(x, z^{(j)})}{q(z^{(j)})} \right)
+    \end{align*}
+
+However, we can image if we only take 1 sample, i.e. $k = 1$, our expected value is 
+    \begin{align*}
+        E_{z^{(1)} \sim q(z)}[\log (\frac{p_\theta(x, z^{(1)})}{q(z^{(1)})})]
+    \end{align*}
+
+But what we care about is 
+    \begin{align*}
+        \log\left(E_{z^{(1)} \sim q(z)}[\frac{p_\theta(x, z^{(1)})}{q(z^{(1)})}]\right)
+    \end{align*}
+
+Formally, the problem is that 
+    \begin{align*}
+        \log(\sum_{z\in \mathcal{Z}} p_\theta(x,z)) 
+        &= \log \left( \sum_{z\in \mathcal{Z}} \frac{q(z)}{q(z)}p_\theta(x,z)           \right)\\
+        & = \log E_{z\sim q(z)}\left[ \frac{p_\theta(x,z) }{q(z)}   \right] \\
+        & = \log E_{z\sim q(z)}\left[ f(z) \right] \tag{$f(z) = \frac{p_\theta(x,z) }{q(z)}$}\\
+        & = \log( \sum_z q(z)*f(z))\\
+        & \geq \sum_z q(z)\log f(z) \tag{The expectation (estimated by sample mean) of the log}
+    \end{align*}
+This is due to the log being a concave function. So essentially, we have the following lower bound: 
+    \begin{align*}
+        \log \left( E_{z\sim q(z)}[\frac{p_\theta(x,z) }{q(z)}] \right) \geq \ E_{z\sim q(z)}\left[ \log \frac{p_\theta(x,z) }{q(z)}\right] 
+    \end{align*}
+    \begin{itemize}
+        \item On the left is our target, the log of the marginal likelihood of the data 
+        \item On the right is our approximation, the empirical average from monte carlo simulation by sampling from $q(z)$
+        \item So the true likelihood is at least better than the likelihood estimated from monte carlo 
+    \end{itemize}
+
+To summarize, suppose $q(z)$ is any probability distribution over the hidden variables. Given the ELBO holds for any $q$, we have         
+    \begin{align*}
+        & \log p(x;\theta) \\
+        & \geq \sum_z q(z) \log (\frac{p_\theta(x,z) }{q(z)}) \tag{Empirical estimation using monte carlo}\\
+        & = \sum_z q(z) \log p_\theta(x,z) - \sum_z q(z) \log q(z)\\
+        & = \sum_z q(z) \log p_\theta(x,z) + H(q) \tag{ELBO}\\
+    \end{align*}
+So the takeaway is we want to pick $q$ such that it has high entropy, and that put a lot of probability mass on $z$ that is consistent with given data $x$. \\ \par
+The inequality become equality if $q = p(z|x; \theta)$. So intuitively, we want to sample likely completion, i.e.: $q = p(z|x)$, but this posterior could be very hard to compute because we have to invert the neural network. \\
+We use KL Divergence to measure the distance between an arbitrary $q(z)$ and ideal $q(z) = p(z|x)$
+    \begin{align*}
+        D_{KL}(q(z)||p(z|x;\theta)) = -\sum_z q(z) \log p(z,x;\theta) + \log p(x;\theta) - H(q) \geq 0
+    \end{align*}
+We want to pick a model family e.g.: $q(z;\phi) = \mathcal{N}(\phi_1, \phi_2)$ and make it as close to the true $p(z|x;\theta)$ as possible. The smaller the KL divergence we can achieve, the close ELBO will be to the actual log likelihood $\log p(x;\theta)$\\ \par
+
+Another way to see is that in general: 
+    \begin{align*}
+        \log p(z,x;\theta) = ELBO + D_{KL}(q(z)||p(z|x;\theta))
+    \end{align*}
+
+\subsection{Example / Another Perspective}
+Given an image, assume the top part is missing (think of it as latent variable). Assume $p(z,x;\theta)$ is clsoe to $p_{data}(z,x)$ (This is very important, and not true at the beginning of learning). Suppose $q(z;\phi)$ is tractable probability distribution over the hidden variables $z$ parameterized by $\phi$. (Assume latent variable is binary)
+    \begin{align*}
+        p(z;\phi) = \prod_{\textrm{unobserved variable $z_i$}} (\phi_i)^{z_i}(1-\phi_i)^{1-z_i}
+    \end{align*}
+    \begin{itemize}
+        \item Given the bottom image, at least intuitively we know $\phi_i=0.5$ is not a good idea. 
+    \end{itemize}
+We want to jointly optimize $\theta$ and $\phi$ by maximizing likelihood of the data. 
+
+
+\section{Variational Learning}
+The ELBO holds for any $q(z;\phi)$
+    \begin{align*}
+        \log p(x;\theta) \geq \sum_z q(z;\phi) \log p(z, x;\theta) + H(q(z;\phi)) = L(x;\theta, \phi)
+    \end{align*}
+    \begin{itemize}
+        \item Note that given $z$, the probability of $x$ is easy to calculate due to VAE assumption. 
+    \end{itemize}
+Ideally, we want to use maximum likelihood learning over the entire dataset 
+    \begin{align*}
+        l(\theta;D) 
+        & = \sum_{x^i\in D} \log p(x^i; \theta) \tag{Ideal goal, but this is hard to compute} \\
+        & \geq \sum_{x^i \in D} L(x^i; \theta, \phi^i) \tag{Use ELBO to approximate}\\
+    \end{align*}
+    \begin{itemize}
+        \item So the optimal loss we can achieve on the original log likelihood is definitely better than the likelihood we can achieve on the ELBO (i.e.: if ELBO likelihood is good enough, then the true likelihood is even better). 
+        \item Note we use different variational parameters $\phi^i$ for every data point $x^i$ because the true posterior $p(z|x^i;\theta)$ is different across data points. (Think of an image, if the top missing part is the latent variable, each image has a different top). 
+    \end{itemize}
+
+\subsection{Learning via Stochastic Variational Inference} 
+
+\paragraph{Motivating Example}\mbox{}\\
+MNIST dataset.  Assume $p(z,x;\theta)$ is clsoe to $p_{data}(z,x)$. Let's say $z$ is now the underlying digits, hence $z\in \{0,1,...,9\}$. Let $q(z;\phi^i)$ be a categorical probability distribution over $z$, parameterized by $\phi^i = [p_0, ..., p_9]$
+    \begin{align*}
+        q(z; \phi^j) = \prod_{k \in \{0,...,0\}} (\phi_k^i)^{\mathbbm{1}[z=k]}
+    \end{align*}
+Note we want to optimize variational parameter per data point. So for an image of 1, we want the categorical probability distribution to put a lot of focus on $p_1$
+
+
+\paragraph{Learning via stochastic variational inference (SVI)}\mbox{}\\
+We can optimize $\sum_{x^i \in D}L(x^i;\theta, \phi^i)$ as a function of $\theta, \phi^1, ..., \phi^M$ using SGD
+    \begin{align*}
+        L(x^i; \theta, \phi^i) 
+        & = \sum_{z} q(z; \phi^i) \log p(z, x^i;\theta) + H(q(z;\phi^i))\\
+        & = E_{q(z;\phi^j)}[\log p(z,x^i;\theta) - \log q(z;\phi^i)]
+    \end{align*}
+The process will be 
+    \begin{enumerate}
+        \item Initialize $\theta, \phi^1, ..., \phi^M$
+        \item Randomly sample a data point $x^i$ from $D$
+        \item Optimize $L(x^i; \theta, \phi^i)$ as a function of $\phi^i$: 
+            \begin{enumerate}
+                \item Repeat until convergence $\phi^i = \phi^i + \eta \nabla_{\phi^i}L(x^i;\theta, \phi^i)$ to get $\phi^{i*}$
+                \item If computationally expensive, we can just choose to take some steps, instead of go all the way to convergence.
+            \end{enumerate}
+        \item Compute $\nabla_\theta L(x^i;\theta,\phi^{i*})$
+        \item Update $\theta$ in the gradient direction, go back to step 2
+    \end{enumerate}
+But this process is not guaranteed to converge. (We can make progress to lower bound, but our goal is still bad since we are trying to maximize the goal and the goal's lower bound at the same time) \\
+
+Also note that this loss $L$ is an expectation. So we cannot directly compute it. We need to do Monte Carlo sampling again. 
+
+
+\subsection{Calculating Gradient for conditional distribution parameter theta} 
+Now let's say we already sampled a data $x \in D$. So everyting below is for a specific sampled given $x$. We use Monte Carlo sampling to compute the gradient because in the loss function there is an expectation and it has no closed form solution. \\ \par
+
+To evaluate the bound, we sample $z^1, ..., z^k$ from $q(z;\phi)$, and estimate 
+    \begin{align*}
+        & E_{q(z;\phi)}[\log p(z,x;\theta) - \log q(z;\phi)] \approx \frac{1}{k}\sum_{i=1}^k \log p(z^i,x;\theta) - \log q(z^i; \phi)) \\
+        & \textrm{$z^k$ is not the power, just the $i$th sampled $z$}
+    \end{align*}
+    
+The gradient w.r.t $\theta$ is easy
+\begin{align*}
+    \nabla_\theta E_{q(z;\phi)}[\log p(z,x;\theta) - \log q(z;\phi)] 
+    & = E_{q(z;\phi)}[\nabla_\theta \log p(z,x;\theta)]\\
+    & = \frac{1}{k}\sum_{i=1}^k \nabla_\theta \log p(z^i,x;\theta) \tag{Monte Carlo again}\\
+\end{align*}
+    \begin{itemize}
+        \item Expectation is w.r.t $z$, which does not depend on $\theta$, so we can bring the gradient operator $\nabla_\theta$ inside the expectation\\
+    \end{itemize}
+    
+    
+\subsection{Reparameterization in Gradient Calculation}
+The gradient w.r.t $\phi$ is not so easy because the expectation depend on $\phi$. So when we are changing $\phi$, the expectation w.r.t $z$, which is drawn from a distribution depended on $\phi$. So we introduce reparameterization techniques. \\ \par
+
+Abstractly, we want to compute a gradient w.r.t $\phi$ of 
+    \begin{align*}
+        E_{q(z;\phi)}[r(z)] = \int q(z;\phi) r(z) dz
+    \end{align*}
+where $z$ is now continuous. \\
+Suppose $q(z;\phi) = \mathcal{N}(\mu, \sigma^2I)$ with parameters $\phi = (\mu, \sigma)$ there are two equivalent way of sampling 
+    \begin{itemize}
+        \item Sample $z\sim q_\phi(z)$
+        \item Sample $\epsilon \sim \mathcal{N}(0,1)$, then $z = \mu + \sigma \epsilon = g(\epsilon;\phi)$
+    \end{itemize}
+Using this equivalence, we can transform the expectation: 
+    \begin{align*}
+         E_{z\sim q(z;\phi)}[r(z)] = E_{\epsilon \sim \mathcal{N}(0,1)}[r(g(\epsilon;\phi))] = \int p(\epsilon) r(\mu + \sigma \epsilon) d\epsilon 
+    \end{align*}
+
+So now, we can compute the gradient as below: 
+    \begin{align*}
+        \nabla_\phi  E_{z\sim q(z;\phi)}[r(z)] 
+        & = \nabla_\phi E_\epsilon[r(g(\epsilon;\phi))]\\
+        & = E_\epsilon[\nabla_\phi r(g(\epsilon;\phi))] \tag{Expectation does not depend on $\phi$}\\
+        & \approx \frac{1}{k}\sum_{i=1}^k \nabla_\phi r(g(\epsilon^i ;\phi)) & \epsilon^i \sim \mathcal{N}(0,1) \tag{Monte Carlo by sampling $\epsilon$} \\
+    \end{align*}
+Now if $r$ and $g$ are differentiable w.r.t $\phi$ and $\epsilon$ is easy to sample from, then we can run the Monte Carlo.
+
+
+
+\subsection{Calculating Gradient for ELBO parameter phi} 
+We have : (remember below is all for a sampled $x\in D$, we are optimize $\phi$ for each data point $x$)
+    \begin{align*}
+        L(x;\theta,\phi) 
+        & = \sum_z q(z;\phi) \log p(z,x;\theta) + H(q(z;\phi))\\
+        & = E_{q(z;\phi)}[\log p(z,x;\theta) - \log q(z;\phi)] \\
+    \end{align*}
+Compare to previous reparameterization case, our case is a bit complicated because we have $r(z,\phi) = \log p(z,x;\theta) - \log q(z;\phi)$ instead of just $r(z)$. But we can still use reparameterization. Assume $z = \mu + \sigma \epsilon = g(\epsilon; \phi)$ like before, then 
+    \begin{align*}
+    E_{q(z;\phi)}[r(z,\phi)] = E_\epsilon[r(g(\epsilon;\phi),\phi)] \approx \frac{1}{k}\sum_{i=1}^k r(g(\epsilon^i ;\phi),\phi)
+    \end{align*}
+
+
+\subsection{Amortized Inference} 
+So far we have used a set of variational parameters $\phi^j$ fpr each data point $x^i$. Does not scale to large datasets. So we want to learn a single parametric function $f_\lambda$ that maps each $x$ to a set of good variational parameters. So training a model to generate $\phi^*$ given $x^i$. We approximate the posteriors $q(z|x^i)$ using this distribution $q_\lambda(z|x)$. In the literature, $q(z; f_\lambda(x^i))$ often denoted as $q_\phi(z|x)$. 
+
+So overall our loss become 
+    \begin{align*}
+        E_{q_\phi(z;\phi)}[\log p(z,x;\theta) - \log q_\phi(z|x)]
+    \end{align*}
+The procedure is 
+    \begin{enumerate}
+        \item Initialize $\theta^{(0)}, \phi^{(0)}$
+        \item Randomly sample a data point $x^i$ from $D$
+        \item Compute $\nabla_\theta L(x^i;\theta,\phi)$ and $\nabla_\phi L(x^i;\theta, \phi)$ using reparameterization 
+        \item Update $\theta, \phi$ in the gradient direction 
+    \end{enumerate}
+    
+\section{VAE at High Level} 
+\begin{align*}
+    L(x;\theta, \phi) 
+    & = E_{q_\phi(z|x)}[\log p(z,x;\theta) - \log q_\phi(z|x)]\\
+    & = = E_{q_\phi(z|x)}[\log p(z,x;\theta)]  - D_{KL}(q_\phi(z|x) || p(z))
+\end{align*}
+\begin{enumerate}
+    \item We take a data point $x^i$
+    \item Map it to $\hat{z}$ by sampling from $q_\phi(z|x^i)$ (encoder)
+    \item Reconstruct $\hat{x}$ by sampling from $p(x|\hat{z};\theta)$ (decoder)
+\end{enumerate}
+The first term of the training objective encourages $\hat{x} \approx x^i$, and the second term encourages $\hat{z}$ to be likely under the prior $p(z)$

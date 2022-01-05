@@ -1,0 +1,51 @@
+\chapter{Primer}
+
+\section{Representing a Distribution}
+\paragraph{Goal} \mbox{}\\
+We want to learn a probability distribution $p(x)$ over images x such that
+    \begin{itemize}
+        \item Generation: if we sample x from the distribution, x should look like the training data 
+        \item Density estimation: p(x) should be high if x looks like training data, e.g.: a dog, and low otherwise
+        \item Unsupervised representation learning: We should be able to learn what the input images have in common. 
+    \end{itemize}
+
+
+\paragraph{Simplifying Probability Distribution}\mbox{}\\
+Directly model joint distribution requires too many parameters. For example, modeling a single pixel's color will need $256^3-1$ number of parameters. So we want to simplify the parameters required through: 
+    \begin{itemize}
+        \item chain rule: $p(x_1,...,x_n) = p(x_1)*p(x_2|x_1)*p_(x_3|x_1, x_3)\cdots$
+        \item Using DAG to represent a Bayesian network, introduce conditional independence. So we have $p(x|Parent(x))$ is independent from all others. Our joint distribution is $p(x_1,...,x_n) = \prod_{i} p(x_i|Parent(x_i))$
+    \end{itemize}
+    
+    
+\section{Generative vs. Discriminative Model Example}
+
+\subsection{Generative Model - Naive Bayes}
+Assume features are conditionally independent given the label, then we have 
+    \begin{align*}
+    p(y, x_1, ...,x_n) = p(y) * \prod_{i=1}^{n} p(x_i|y)
+    \end{align*}
+We can estimate parameters from the training data, then predict with Bayes rule
+    \begin{align*}
+        p(Y=1|x_1,...,x_n) = \frac{p(Y=1)\prod p(x_i|Y=1)}{\sum_{y=\{0,1\}} p(Y=y)*\prod p(x_i|Y=y)}
+    \end{align*}
+We call this a generative model because we have learned the full distribution of the data and label. If we want, we can generate new data by sampling the distribution. 
+
+\subsection{Discriminative Model - Logistic Regression} 
+Discriminative model is just a different usage of chain rule. In chain rule, we have 
+    \begin{align*}
+        p(Y,X) 
+        &= P(X|Y) * P(Y) \tag{Generative Model} \\
+        &= P(Y|X) * P(X) \tag{Discriminative Model} 
+    \end{align*}
+For discriminative model, we can say since $X$ is normally given, we don't care about $P(X)$, so we only need to estimate $p(Y|X)$. In logistic regression, we model $Y = \sigma(AX+b)$
+
+\subsection{Geneative Model - Neural Model} 
+Using Chain Rule, we have 
+    \begin{align*}
+        p(x_1, x_2, x_3, x_4) = p(x_1) * p(x_2|x_1) * p(x_3|x_1, x_2) * p(x_4 | x_1, x_2, x_3)
+    \end{align*}
+We already discussed it is possible to use Bayes net to simplify when assuming some conditional independence. In neural model approach, we use a neural network to approximate the conditional function. I.e.: 
+    \begin{align*}
+        p(x_1, x_2, x_3, x_4) = p(x_1) * p(x_2|x_1) * p_{Nueral}(x_3|x_1, x_2) * p_{Nueral}(x_4 | x_1, x_2, x_3)
+    \end{align*}    

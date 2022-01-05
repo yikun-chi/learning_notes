@@ -1,0 +1,233 @@
+\chapter{Energy Based Models} 
+\section{Creating Arbitrary Probability Distributions} 
+Let $g_\theta(x) \geq 0$, then we can define a probability distribution as follows: 
+    \begin{align*}
+        p_\theta(x) = \frac{1}{\int g_\theta(x) \, dx} g_\theta(x)
+    \end{align*}
+This way, if we can choose $g_\theta(x)$ such that we know the volume (integration result), we can easily create the probability distribution. \\
+
+We can create more complicated probability distribution via the following approach: \\
+Autoregressive: Given $p(x,y) = p(x) * p(y|x)$, We can let each component to be a arbitrary probability distribution 
+    \begin{align*}
+        \int_x \int_y p_\theta(x) p_{\theta'(x)}(y) \, dydx
+        & = \int_x p_\theta(x) \int_y p_{\theta'(x)}(y) \,dy dx
+    \end{align*}
+
+Latent variable model: Mixtures of normalized objects: 
+    \begin{align*}
+        \alpha p_\theta(x) + (1-\alpha)p_{\theta'}(x)
+    \end{align*}
+    
+\section{Energy-based Model} 
+Let $f_\theta(x)$ to be any arbitrary function, define the probability distribution as 
+    \begin{align*}
+        p_\theta(x) = \frac{1}{\int \exp(f_\theta(x)) \, dx}\exp(f_\theta(x)) = \frac{1}{Z(\theta)}\exp(f_\theta(x))
+    \end{align*}
+    \begin{itemize}
+        \item $Z(\theta) = \int \exp(f_\theta(x))\,dx$ is called the partition function. Now we can assume this function is not easy to evaluate. 
+        \item $-f_\theta(x)$ is called the energy. 
+        \item Sample from $p_\theta(x)$ is hard
+        \item Evaluating and optimizing likelihood $p_\theta(x)$ is hard
+        \item But notice the ratio $\frac{p_\theta(x)}{p_theta(x')}=\exp(f_\theta(x) - f_\theta(x'))$ is easy
+    \end{itemize}
+    
+\section{Training EBM with Contrastive Divergence} 
+Original goal is 
+    \begin{align*}
+        \max_\theta \log \frac{\exp(f_\theta(x))}{Z(\theta)} = \max_\theta f_\theta(x_{train}) - \log Z(\theta)
+    \end{align*}
+Looking at the gradient of the log-likelihood, we have 
+    \begin{align*}
+        & \nabla_\theta f_\theta(x_{train}) - \nabla_\theta \log Z(\theta)\\
+        & =  \nabla_\theta f_\theta(x_{train}) - \frac{\nabla_\theta Z(\theta)}{Z(\theta)}\\
+        & = \nabla_\theta f_\theta(x_{train}) - \frac{1}{Z(\theta)}\int \nabla_\theta \exp(f_\theta(x)) \, dx\\
+        & = \nabla_\theta f_\theta(x_{train}) - \frac{1}{Z(\theta)}\int \exp(f_\theta(x)) \nabla_\theta f_\theta(x) \, dx\\
+        & =  \nabla_\theta f_\theta(x_{train}) - \int \frac{\exp(f_\theta(x)) }{Z(\theta)} \nabla_\theta f_\theta(x) \, dx\\
+        & = \nabla_\theta f_\theta(x_{train}) - E_{x \sim sample}[\nabla_\theta f_\theta(x_{sample})]
+    \end{align*}
+So now the first term can be evaluated using training data, and second term can be evaluate by Monte Carlo Sampling from the distribution $p_\theta(x) = \frac{\exp(f_\theta(x))}{Z(\theta)}$
+
+
+\subsection{Sampling from EBMs - Metropolis-Hasting Markov Chain Monte Carlo (MCMC)} 
+    \begin{itemize}
+        \item $x^0 = \pi(x)$
+        \item $x' = x^t + noise$
+        \item $x_{t+1} = x'$ if $f_\theta(x') \geq f_\theta(x^t)$. Otherwise, set $x^{t+1} = x'$ with probability $\exp(f_\theta(x') - f_\theta(x^t))$, and $x^{t+1}=x^t$ with the remaining probability. 
+        \item quite slow
+    \end{itemize}
+
+\subsection{Sampling in Contrastive Divergence} 
+We can not directly calculate $p_\theta(x) = \frac{\exp(f_\theta(x))}{Z(\theta)}$, so this means we cannot directly sample from it. The solution is to use Langevin MCMC
+    \begin{itemize}
+        \item Let $\pi(x)$ be a prior distribution that is easy to sample from, e.g.: standard normal\\
+        \item $x^0 \sim \pi(x)$
+        \item Repeat $x^{t+1} \sim x_t + \epsilon \nabla_x \log p_\theta(x^t) + \sqrt{2 \epsilon} z^t$ where $z^t\sim \mathcal{N}(0,I)$.
+        \item if $\epsilon \to 0$ (normally decay with $\frac{1}{t}$), and $T\to \infty$, we have $x_T\sim p_\theta(x)$. In reality we repeat 10~100 times. 
+        \item Note that gradiet w.r.t $x$ is easy. In log likelihood term, we have $\nabla_x f_\theta(x) - \nabla_x\log Z(\theta) = \nabla_x(f_\theta(x))$
+        \item Somewhat slow
+    \end{itemize}
+    
+\section{Training EBM without Sampling: Score function} 
+\paragraph{Intuition} \mbox{}\\
+So far we have been trying to minimize the KL divergence of the data distribution and the generator distribution (equivalent to contrastive divergence). This process is very slow due to sampling process. So we want to use a different metrics. \\
+
+\paragraph{Score Function} \mbox{}\\
+The Stein score function is defined as the gradient w.r.t input $x$:
+    \begin{align*}
+        & s_\theta(x) := \nabla_x \log p_\theta(x) \\
+        & = \nabla_x f_\theta(x) - \nabla_x \log Z(\theta) = \nabla_x f_\theta(x) \tag{for EBM}
+    \end{align*}
+So if we use a deep neural network to parameterize $f_\theta$, then the score function is just the back propagation. \\
+
+\paragraph{Fisher Divergence}\mbox{}\\
+The Fisher Divergence between $p(x)$ and $q(x)$: 
+    \begin{align*}
+        D_F(p,q) := \frac{1}{2} E_{x\sim p}[\norm{\nabla_x \log p(x) - \nabla_x \log q(x)}_2^2]
+    \end{align*}
+    \begin{itemize}
+        \item If $p=q$, then $D_F(p,q)=0$, and vice versa. 
+        \item $D_F(p,q)$ is not symmetric
+    \end{itemize}
+    
+\paragraph{Fisher Divergence for Training EBM}\mbox{}\\
+So in training EBM with Fisher Divergence, we want to minimize the divergence between $p_{data}$ and $p_{\theta}$
+    \begin{align*}
+        & \frac{1}{2} E_{x\sim p_{data}}[\norm{\nabla_x \log p_{data}(x) - s\theta(x)}_2^2]\\
+        & = \frac{1}{2} E_{x\sim p_{data}}[\norm{\nabla_x \log p_{data}(x) - \nabla_x f_\theta(x)}_2^2]\\
+    \end{align*}
+We can obtain $\nabla_x \log p_{data}(x)$ using integration by parts. Using univariate case as an example: 
+    \begin{align*}
+        & \frac{1}{2} E_{x\sim p}[\norm{\nabla_x \log p_{data}(x) - \nabla_x p_\theta(x)}_2^2]\\
+        & = \frac{1}{2} \int p_{data}(x) [(\nabla_x \log p_{data}(x) - \nabla_x p_\theta(x))^2] \, dx\\
+        & = \frac{1}{2} \int p_{data}(x) (\nabla_x \log p_{data}(x))^2 \, dx + \frac{1}{2} \int p_{data}(x) (\nabla_x \log p_\theta(x))^2 \, dx -  \\
+        &\qquad \int p_{data}(x)\nabla_x \log p_{data}(x) \nabla_x \log p_\theta(x) \,dx
+    \end{align*}
+Notice that the first term $\frac{1}{2} \int p_{data}(x) (\nabla_x \log p_{data}(x))^2 \, dx$ is not dependent on the model parameters, so it will not have any contribution during optimization (since we are tuning $\theta$). The second term $ \frac{1}{2} \int p_{data}(x) (\nabla_x \log p_\theta(x))^2 \, dx$ is easy to handle, because it essentially an expectation, which we can use Monte Carlo Sampling. \\
+
+Now for the last term: 
+    \begin{align*}
+        & - \int p_{data}(x)\nabla_x \log p_{data}(x) \nabla_x \log p_\theta(x) \,dx\\
+        & = - \int p_{data}(x) \frac{1}{p_{data}(x)} \nabla_x p_{data}(x) \nabla_x \log p_\theta(x) \,dx \\
+        & = - \int \nabla_x p_{data}(x) \nabla_x \log p_\theta(x) \,dx \\
+        & = -p_{data}(x) \nabla_x \log p_\theta(x)|_{x=-\infty}^\infty + \int p_{data}\nabla_x^2\log p_\theta(x) \, dx \tag{Integration by parts} \\
+        & =\int p_{data}\nabla_x^2\log p_\theta(x) \, dx \tag{Some weak assumption on $p_{data}$} \\
+    \end{align*}
+Now this term is also an expectation, which can be estimated via Monte Carlo sampling. In summary for multivariate case, 
+    \begin{align*}
+        & \min_\theta \frac{1}{2} E_{x\sim p_{data}}[\norm{\nabla_x \log p_{data}(x) - \nabla_x \log p_\theta(x)}_2^2]\\
+        & = \min_\theta E_{x\sim p_{data}}[\frac{1}{2} \norm{\nabla_x \log p_\theta(x)}_2^2 + tr(\nabla_x^2 \log p_\theta(x))] \tag{Second component is Hessian of $\log p_\theta(x)$}
+    \end{align*}
+In practice 
+    \begin{itemize}
+        \item Sample a min-batch of datapoints $\{ x_1, ..., x_n \} \sim p_{data}(x)$
+        \item Estimate the score matching loss with the empirical mean $\frac{1}{n} \sum_{i=1}^{n}\left(\frac{1}{2}\norm{\nabla_x f_\theta(x_i)}_2^2 + tr(\nabla_x^2 f_\theta(x_i) \right)$
+            \begin{itemize}
+                \item Note $\nabla_x p_\theta(x) = \nabla_x f_\theta(x) - \nabla_x \log Z(\theta) = \nabla_x f_\theta(x)$
+            \end{itemize}
+        \item Stochastic gradient descent
+        \item Note in all the steps, we did not do any sampling from EBM
+    \end{itemize}
+But computing the trace of Hessian $tr(\nabla_x^2 \log p_\theta(x))$ is in general very expensive for large models. We will discuss solution later. 
+
+
+\subsection{Score matching for learning implicit VAEs} 
+Given an implicit VAE model $p(z), p_\theta(x|z), q_\phi(z|x)$, and let sampling from $q_\phi(z|x)$ is easy, but actual probability calculation is hard. E.g.: $q_\phi(z|x) = \delta(z = f_\phi(x, \epsilon))$ where $\epsilon$ is a Gaussian noise. \\
+Given the setup, the goal would be maximize the ELBO: 
+    \begin{align*}
+        E_{z\sim q_\phi(z|x)}[\log p_\theta(x|z) p(z)] - E_{z\sim q_\phi(z|x)}\log q_\phi(z|x)
+    \end{align*}
+But calculating $\log q_\phi(z|x)$ is hard given the setup. So we want to estimate the gradient of the entropy term by training an energy-based model: 
+    \begin{align*}
+        \nabla_\phi H(q_\phi(z|x)) 
+        & = -\nabla_\phi E_{z\sim q_\phi(z|x)}[\log q_\phi(z|x)]\\
+        & = -\nabla_\phi E_\epsilon[\log q_\phi(f_\phi(x,\epsilon)|x)]\\
+        & = - E_\epsilon[\nabla_\phi\log q_\phi(f_\phi(x,\epsilon)|x)]\\
+        & = - E_\epsilon[\nabla_z \log q_\phi(z|x)|_{z=f_\phi(x,\epsilon)} \nabla_\phi f_\phi(x,\epsilon)]\\
+    \end{align*}
+Note that the first term $\nabla_z \log q_\phi(z|x)|_{z=f_\phi(x,\epsilon)}$ is the score function of $q_\phi(z|x)$. So this can be an energy based model.  The second term $\nabla_\phi f_\phi(x,\epsilon)$ normally can be obtained via back propagation. 
+
+
+\section{Training EBM without Sampling: Noise Contrastive Estimation} 
+We can learn an energy-based model by contrasting it with a noise distribution: 
+    \begin{itemize}
+        \item Data distribution: $p_{data}(x)$
+        \item Noise distribution: $p_n(x)$ Should be analytically tractable and easy to sample from 
+        \item Training a discriminator $D_\theta(x)\in [0,1]$ to distinguish between data samples and noise samples
+        \item Training objective: $\max_\theta E_{x\sim p_{data}}[\log D_\theta(x)] + E_{x\sim p_n}[\log(1-D_\theta(x))]$
+        \item Optimal discriminator $D_{\theta*}(x)$ has the form $\frac{p_{data}(x)}{p_{data}(x) + p_n(x)}$
+        \item So we can parameterize a discriminator to be in the form of $\frac{p_{\theta}(x)}{p_{\theta}(x) + p_n(x)}$. In the end, the $p_{\theta*}$ from optimal discriminator will be equal to $p_{data}(x)$
+    \end{itemize}
+In Energy-based model: 
+    \begin{align*}
+        p_\theta(x) = \frac{\exp(f_\theta(x))}{Z(\theta)}
+    \end{align*}
+The constraint $Z(\theta) = \int e^{f_\theta(x)} \,dx$ is hard to satisfy. So we model $Z(\theta)$ with an additional trainable parameter $Z$ that disregards the constraint $Z = \int e^{f_\theta(x)} \, dx$. \\
+
+
+Now the model form become 
+    \begin{align*}
+        p_{\theta, Z}(x) = \frac{\exp(f_\theta(x))}{Z}
+    \end{align*}
+Note that right now this $p_{\theta,Z}$ is unormalized. But it doesn't matter in Noise Contrastive Estimation. But the optimal $Z*$ will become the proper partition function. \\
+
+
+In summary, we build a discrminator $D_{\theta,Z}(x)$ for probabilistic model $p_{\theta,Z}(x)$ as 
+    \begin{align*}
+        D_{\theta,Z}(x) = \frac{\frac{\exp(f_\theta(x))}{Z}}{\frac{\exp(f_\theta(x))}{Z} + p_n(x)}
+        & = \frac{\exp(f_\theta(x))}{\exp(f_\theta(x)) + p_n(x)Z}
+    \end{align*}
+The Noise contrastive estimation training objective is 
+    \begin{align*}
+        & \max_{\theta,Z} E_{x\sim p_{data}}[\log D_{\theta,Z}(x)] + E_{x\sim p_n}[\log (1 - D_{\theta,Z}(x))]\\
+        & = \max_{\theta,Z}E_{x\sim p_{data}}[f_\theta(x) - \log(\exp(f_\theta(x)) + Zp_n(x))] +  E_{x\sim p_n}[\log(Zp_n(x))  - \log(\exp(f_\theta(x)) + Zp_n(x))]
+    \end{align*}
+We use log-sum-exp trick for numerical stability:
+    \begin{align*}
+        \log(\exp(f_\theta(x)) + Zp_n(x)) 
+        & = \log(\exp(f_\theta(x)) + \exp(\log Z + \log p_n(x))) \\
+        & = logsumexp(f_\theta(x), \log Z + \log p_n(x))\\
+    \end{align*}
+    
+Training overall procedure: 
+    \begin{itemize}
+        \item Sample a mini-batch of datapoints $x_1, ..., x_n \sim p_{data}(x)$
+        \item Sample a mini-batch of noise samples $y_1,...,y_n \sim p_n(y)$
+        \item Estimate the Noise Contrasitive Estimation loss
+            \begin{itemize}
+                \item $\frac{1}{n}\sum_{i=1}^n[f_\theta(x_i) - logsumexp(f_\theta(x_i),\log Z + \log p_n(x_i)) + \log Z + p_n(y_i) - logsumexp(f_\theta(y_i),\log Z + \log p_n(y_i))]$
+            \end{itemize}
+        \item Stochastic gradient ascent 
+        \item Notice this process does not need to sample from the EBM
+    \end{itemize}
+    
+\subsection{Flow contrastive estimation}
+We can parameterize the noise distribution with a normalizing flow model $p_{n,\phi}(x)$. This we we can expand our noise distribution family. Subsequently parameterize the distriminator $D_{\theta,Z,\phi}(x) $ as 
+    \begin{align*}
+        D_{\theta, Z, \phi}(x) = \frac{\frac{\exp(f_\theta(x)}{Z}}{\frac{\exp(f_\theta(x)}{Z} + p_{n, \phi}(x)} = \frac{\exp(f_\theta(x))}{\exp(f_\theta(x)) + p_{n,\phi}(x)Z}
+    \end{align*}
+We can train the flow model to minimize $D_{JS}(p_{data}, p_{n,\phi})$: 
+    \begin{align*}
+        \min_\phi \max_{\theta,Z} E_{x\sim p_{data}}[\log D_{\theta,Z,\phi}(x)] + E_{x\sim p_{n, \phi}}[\log (1-D_{\theta,Z,\phi}(x)]
+    \end{align*}
+    
+    
+\section{Adversarial Training for EBMs} 
+Energy-based model has the form: 
+    \begin{align*}
+        p_\theta(x) = \frac{\exp(f_\theta(x))}{Z(\theta)}
+    \end{align*}
+We can develop an upper bound with a variational distribution $q_\phi(x)$: 
+    \begin{align*}
+        E_{x\sim p{data}}[\log p_\theta(x)]
+        & = E_{x\sim p{data}}[f_\theta(x) - \log Z(\theta)]\\
+        & =  E_{x\sim p{data}}[f_\theta(x)] - \log \int e^{f_\theta(x)} \, dx\\
+        & = E_{x\sim p{data}}[f_\theta(x)] - \log \int q_\phi(x) * \frac{\exp(f_\theta(x))}{q_\phi(x)}\, dx\\
+        & \leq  E_{x\sim p{data}}[f_\theta(x)] - \int q_\phi(x) *\log  \frac{\exp(f_\theta(x))}{q_\phi(x)}\, dx\\
+        & \leq  E_{x\sim p{data}}[f_\theta(x)] - \int q_\phi(x) (f_\theta(x) - \log q_\phi(x))\, dx\\
+        & = E_{x\sim p{data}}[f_\theta(x)] - E_{x\sim q_\phi(x)}[f_\theta(x)] + H(q_\phi(x))
+    \end{align*}
+So the Adversarial training can be defined as  max min operation (first we need to tighten the upper bound, then we maximize the likelihood of the bound):
+    \begin{align*}
+        \max_\theta \min_\phi E_{x\sim p_{data}}[f_\theta(x)] - E_{x\sim q_\phi(x)}[f_\theta(x)] + H(q_\phi(x))
+    \end{align*}
+Note here for $q_\phi(x)$, we need to sample from it very efficiently, and we need to compute its entropy efficiently. But note we only need to compute the entropy for the sample of $q_\phi(x)$ (so we can do inverse autoregressive flow model)
