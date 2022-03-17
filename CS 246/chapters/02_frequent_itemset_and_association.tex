@@ -1,0 +1,107 @@
+\chapter{Frequent Itemset Mining \& Association Rules} 
+
+\section{Intro}
+\subsection{Setup}
+Given a large set of items and a large set of baskets. Each basket is a small subset of items. We want to discover association rules, which is people who bought $\{x, y, z \}$ tend to buy $\{v, w\}$. This is a general many-to-many mapping. It can be applied to many areas such as words/documents, drugs/patients, products/shopping carts and etc. 
+
+\subsection{Frequent Itemsets} 
+\textbf{Support} for itemset $I$ is defined as number of baskets containing all items in $I$ (sometime expressed as a fraction of the total number of baskets). The \textbf{support threshold} $s$ is the threshold for the itemsets to be considered frequent. Note that itemset $I$ could be a set with only one item. 
+
+\subsection{Association Rules} 
+An association rule is a if-then rules in the form of $\{ i_1, ..., i_n \} \rightarrow j$, meaning if the basket containing item $i_1, ...$, it will likely to contain $j$. \\
+
+The problem of association rule mining is to find all association rules with support $\geq c$ and confidence $\geq c$. The support of an association rule is the support of the set of items in the rule. The hard part of this problem is finding the frequent itemsets. 
+
+\subsubsection{Confidence}
+The confidence of association rule is defined as 
+    \begin{align*}
+    p(j|I) = \frac{support(I \cup j)}{support(I)}
+    \end{align*}
+    
+\subsubsection{Interest}
+The interest of an association rule is defined as 
+    \begin{align*}
+        \abs{Conf(I\rightarrow j) - P(j)}
+    \end{align*}
+It is used to filter out high confidence items that are due to the fact that they are in every basket. The absolute value capture both positive and negative associations between itemsets and items. In general, interest above 0.5 is good. 
+
+
+\section{Mining Association Rules}
+
+The rules have two steps: 
+    \begin{enumerate}
+        \item Find all frequent itemsets $I$
+        \item Rule generation
+            \begin{itemize}
+                \item For every subset $A$ of $I$, generate a rule $A \rightarrow I - A$
+                \item Intuition: since $I$ is frequent, $A$ is also frequent. 
+                \item Variant 1: Single pass to compute the rule confidence 
+                \item Variant 2: Notice that the confidence of rule $A, B, C \rightarrow D$ is always bigger than the confidence of rule $A, B \rightarrow C, D$. Because in the formula, the top is always the support of $A, B, C,D$. The support of $A, B, C$ is definitely smaller or equal to the support of $A, B$. So if $A, B \rightarrow C, D$ is above confidence, then so is $A, B, C \rightarrow D$
+            \end{itemize} 
+        \item Output the rules above the confidence threshold
+    \end{enumerate}
+To reduce the number of rules, we can post-process them and only output: 
+    \begin{itemize}
+        \item Maximal frequent itemsets: No immediate superset is frequent 
+        \item Closed itemsets: No immediate superset has the same support
+    \end{itemize}
+    
+\section{Finding Frequent Itemsets} 
+Setup: Items are positive integers. Baskets configurations are just a long sequence of integers, and use -1 to indicate a basket break. We measure the cost of the algorithm by the number of passes it makes over the data (map to number of disk I/Os). \\
+
+For many frequent-itemset algorithms, main-memory is the critical resource. The number of different pairs we can count is limited by main memory. \\
+
+Overall intuition: We want to generate all itemsets, but only keep count on the ones that will in the end turn out to be frequent (above certain support). 
+
+\subsection{A - Priori Algorithm} 
+We start with A-Priori algorithm for frequent pairs, and then extend to itemset. 
+
+\paragraph{Monotoncity} 
+If a set of items $I$ appears at least $s$ times, so does every subset $J$ of $I$. The contrapositive statement for pairs is that if item $i$ does not appear in $s$ baskets, then no pair including $i$ can appear in $s$ baskets. In terms of support, this means that if $i$ has support of $s$, then no combination including item $i$ can have support larger than $s$. 
+
+\paragraph{Algorithm} \mbox{}\\
+The key insight from monotonciy is that a pair can only be frequent item if both items in the pair are frequent. 
+    \begin{itemize}
+        \item Pass 1: Read baskets and count in main memory the number of occurrences of each individual item 
+        \item Identify frequent items with support threshold
+        \item Pass 2: Read baskets again and keep track of the count of only those pairs where both elements are frequent. (Note this requires memory proportional to square of the number of frequent items, not the square of total items)
+        \item Identify frequent pairs. 
+    \end{itemize}
+    
+\paragraph{Extending to Triples and etc.}\mbox{}\\
+We can use an iterative process to obtain frequent $k$ items. For each $k$, we start out by constructing candidate $k-$ tuples by using the information from pass for $k-1$, then we count all the candidate to obtain the set of truly frequent $k-$ tuples. \\
+
+Using $k=3$ as an example, we already have a list of frequent pairs. We now generate all possible $3-$ tuples candidate, and then do a pass on on all candidates and obtain the true pairs. Note that when we are generating possible $3-$ tuples, any candidate containing a pair that is not in the frequent pair list is not valid. 
+
+
+
+\subsection{Park-Chen-Yu Algorithm} 
+\paragraph{Modification to A-Priori} During the first pass, maintain a hash table with as many buckets as we can fit into the idle memory. For each pair of items in the basket, increase the count of the bucket that the pair will hash to. During second pass, only count pairs that hash to frequent buckets. 
+
+\paragraph{Reasoning} If a bucket count is less than $s$, then we know the sum of the occurrence of all pairs that would hash into the bucket is less than $s$. So none of its pairs can be frequent. Between passes, we can also replace the count of the bucket with a bit indicator. 
+
+\section{Finding Frequent Itemsets (non-comprehensively)}
+If we have a lot of data, can we use 2 or fewer passes if we allow missing some frequent itemsets. 
+
+\subsection{Random Sampling Algorithm} 
+Take a random sample of the market baskets and run a-priori or one of its improvements. We can reduce the support threshold proportionally to match the sample size. We can then do a second pass of the entire data set to verify if the selections are truly frequent. 
+
+
+\subsection{Savasere, Omiecinski, and Navathe}
+Two pass algorithm on the entire dataset 
+    \begin{itemize}
+        \item Pass 1: Repeatedly read small subsets of the baskets into main memory and run an in-memory algorithm to find all frequent itemsets(With a proportional support threshold ).
+        \item Pass 2: Count all the candidate itemsets and determine which are frequent in the entire set (Essentially pigenon hole principle). 
+    \end{itemize}
+
+
+\subsection{Toivonen} 
+
+    \begin{itemize}
+        \item Pass 1: Start with a random sample, but lower the threshold slightly for the sample. E.g.: if the sample is 1 \%,  use $s / 125$ as the support threshold. Find frequent itemsets in the sample. 
+            \begin{itemize}
+                \item Find all frequent itemsets in the sample 
+                \item Add the negative border to the itemsets that are frequent in the sample. (Negative border contains itemsets that are not frequent in the sample, but ALL of its immediate subsets are)
+            \end{itemize}
+        \item Pass 2: Count the frequency of all candidate as well as the negative borders. If no itemset from the negative border turns out to be frequent, then we found all the frequent itemsets. Otherwise, start over again with another sample. 
+    \end{itemize}

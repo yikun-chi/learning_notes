@@ -1,0 +1,151 @@
+\chapter{Clustering}
+Corresponding text: \href{http://infolab.stanford.edu/~ullman/mmds/ch7.pdf}{Chapter 7 of } Mining Massive Datasets 
+
+
+\section{Intro to Clustering} 
+Two types of clustering techniques: 
+    \begin{itemize}
+        \item Hierarchical / agglomerative algorithm: Start with each point in its own cluster and combine cluster step by step. Better when the cluster shapes are weird. 
+        \item Point Assignment: Points are considered in some order, and each one is assigned to the cluster into the best fit
+    \end{itemize}
+Some other consideration: 
+    \begin{itemize}
+        \item Euclidean space or not. Euclidean space cluster have a centroid, but non-Euclidean space might not necessarily have one. 
+        \item Can all the points fit into main memory 
+    \end{itemize}
+    
+\section{The Curse of Dimensionality} 
+At high dimensional Euclidean space and many other non-Euclidean space, we have the following properties: 
+    \begin{itemize}
+        \item Almost all pairs of points are equally far away from one another, and they are really far.
+        \item Almost any two vectors are almost orthogonal 
+    \end{itemize}
+    
+    
+\section{Hierarchical Clustering} 
+\subsection{Overall Structure}
+Begin with every points in its own cluster. At every step, pick two best cluster to merge. 
+
+\subsection{Rules for Merging Cluster} 
+\paragraph{Shortest distance between two centroids} If we are in Euclidean space, we can define distance between two clusters as the Euclidean distance between their centroids. So we pick the two clusters at the shortest distance. 
+
+\paragraph{Minimum Minimum distance between any two points} Let the distance of two clusters to be defined as the minimum distance between any two points from each cluster. 
+
+\paragraph{Minimum Average distance between all pairs of points} Let the distance of two clusters to be defined as the average distance between all pairs of points in the cluster. Works better for weird structure such as rings. 
+
+\paragraph{Minimum radius of combined cluster} Let radius of a cluster be the maximum distance between all the points and the centroid. Combine two clusters whose resulting cluster has the lowest radius. 
+
+A slight modification is to combine the clusters whose result has the lowest average distance between a point and the centroid.  
+
+Another modification could be to use the sum of the squares of the distances between the points and centroid
+
+\paragraph{Minimum diameter of combined cluster} Let the diameter of a cluster be the maximum distance between any two points of the cluster. Combine two cluster whose resulting cluster has the lowest diameter. 
+
+
+
+\subsection{Rules for Stopping} 
+\paragraph{Pre-defined number of clusters} We stop when we reached the pre-defined number of clusters
+
+\paragraph{Threshold: Average distance between centroid and points} Take the average distance between the centroid and its points, if the distance across the threshold, stop. 
+
+\paragraph{Diameter / radius threshold} Stop if the diameter / radius of the result cluster exceeds a threshold. 
+
+\paragraph{Density threshold} Stop if the density of the result cluster is below some threshold. The density can be defined in many ways, but roughly it should be estimated by the number of points divided by some power of the diameter or radius of the cluster. 
+
+\paragraph{Evidence based} Keep track of some metrics such as average diameter of all current cluster. If we combine two clusters that in reality should be separate, we expect a sudden jump of the metrics. 
+
+\subsection{Efficiency Modification} 
+Naive algorithm will take $O(n^2)$ time for the first step since each point is its own cluster and we need to compute the distance between each pair of cluster. Subsequent steps take $O((n-1)^2), O((n-2)^2)...$. So overall the algorithm is in $O(n^3)$. But we can run the below modification to get a better result; 
+    \begin{enumerate}
+        \item Compute distance between all pairs of points $O(n^2)$ and insert the pairs and their distance into a priority queue
+        \item When we merge cluster $C$ and $D$, remove all entries in the priority queue involving one of those two clusters $O(n\log n)$ since there are at most $2n$ deletions to be performed and priority queue deletion is $O(\log n)$
+        \item Compute all the distance between the new cluster and the remaining clusters $O(n\log n)$ time. 
+    \end{enumerate}
+The last two step is executed at most $n$ times. So overall we have $O(n^2 \log n)$
+
+\subsection{Hierarchical Clustering in Non-Euclidean Spaces} 
+In non-Euclidean space, we no longer have cluster centroid. Instead, we can pick a point within the cluster to be the clustroid. Generally, points are picked to 
+    \begin{itemize}
+        \item Minimize sum of the distances to the other points in the cluster
+        \item Minimize the maximum idstance to another point in the cluster
+        \item Minimize the sum of the squares of the distance to the other points in the cluster 
+    \end{itemize}
+All the rules rely on distance measure and they are valid as long as we swap it with the correct distance definition. 
+
+Alternatively, we can keep cluster just as a group of points. e.g.: 
+    \begin{itemize}
+        \item Distance between cluster is the minimum / average distance between any two points in the cluster
+    \end{itemize}
+
+
+
+\section{Points Assignment: K-means Algorithm}
+\subsection{Overall Structure} 
+\begin{itemize}
+    \item Initially choose $k$ points that are likely to be in different clustes and make them the centroid 
+    \item For each remaining point, find the centroid to which $p$ is closest, add $p$ to the cluster, adjust the centroid. Repeat the process until convergence. 
+    \item OPTIONAL: fixed the centroid and re-cluster all points 
+\end{itemize}
+
+\subsection{Initialization Strategy} 
+\paragraph{Distance Based} Randomly pick the first point, and keep picking the next point as the one that maximzies the minimum distance between the new point and the existing pool of points. Another way is to set the probability of addinga new point $p$ is proportional to $D(p)^2$ where the $D(p)$ is the distance between $p$ and nearest point in the sample pool. 
+
+\paragraph{Hierarchical clustering based} Cluster a sample of data, and pick the point closest to the centroid from each cluster. 
+
+\subsection{Picking the Right Value of K} 
+Try different value of $k$, and access the quality through metrics (e.g.: average distance to centroid for all centroid). We know that this metric is largest when $k=1$ and smallest when $k=N$. As we increase $k$, the average distance to centroid will rapidly fall. This is where $k$ should be. 
+
+
+\subsection{Bradley, Fayyad, and Reina (BFR) Algorithm} 
+BFR is used when centroids information can be stored in main memory, but the overall data is too large to be fit into memory
+\paragraph{Assumptions} 
+    \begin{itemize}
+        \item Euclidean space 
+        \item Normally distributed around a centroid
+        \item Independent means and standard deviation along each dimension 
+    \end{itemize}
+
+\paragraph{Key Objects and representation in BFR} 
+    \begin{itemize}
+        \item Discard Set: Summaries of the clusters themselves
+        \item Compressed Set: Summaries of sets of points that have been found close to one another, but not close to any existing cluster
+        \item Retained Set: Points neither be assigned to a cluster nor are they sufficiently close to any other points to be forming compressed set. 
+    \end{itemize}
+The Discard Set and Compressed Set are represented by $2d + 1$ in a $d$ dimensional dataset. The numbers are: 1) The number of points in the set $N$, 2) The sum of the components of all the point in each dimension, 3) The sum of the squares of the components of all the point. 
+    \begin{itemize}
+        \item Given those stats, we can calculate each component of the centroid location as $frac{sum}{N}$, the variance as $\frac{sumsq}{N} - (\frac{sum}{N})^2$
+    \end{itemize}
+The points in Retained Set are held in main memory exactly as they appear in the input file. 
+
+\paragraph{Algorithm} 
+Assuming there are multiple chunks of data, for each chunk that we read in
+    \begin{enumerate}
+        \item All points that are sufficiently close to the centroid of a cluster (stored in Discard Set) are added to that cluster. Adjust that cluster's $N$, $SUM$, and $SUMSQ$
+        \item Cluster remaining points, along with points in the retained set. Any main-memory clustering algorithm can used. Clusters of more than one points are summarized and added to Compressed set. Singleton clusters become the retained set 
+        \item Check if we can merge any mini-cluster in the compressed set (consists of old compressed set + new cluster from previous step) using certain criteria
+        \item Points that are assigned to a cluster or a minicluster (in the compressed set) are written out, with their assignment to secondary memory. 
+    \end{enumerate}
+After last chunk of data, either treat compressed and retain set as outliers, or assign each point to the nearest centroid 
+
+\paragraph{Deciding when to add point to a cluster}
+In the previous algorithm, the first step is to add a point to the cluster if it is sufficiently close to the centroids. There are two approaches: 
+    \begin{itemize}
+        \item Add $p$ to a cluster if it has the centroid closest to $p$, and very unlikely that after all the points have been processed, some other cluster centroid will be found nearer to $p$  (harder to calculate)
+        \item Based on the probability that if $p$ belongs to a cluster, it would be found as far as it is from the centroid of that cluster
+    \end{itemize}
+For the second approach, we can use the Mahalanobis distance. Let $c$ be the centroid, with standard deviation $\sigma_i$ in each dimension. The Mahalanobis distance between $c$ and $p$ is 
+    \begin{align*}
+        \sqrt{\sum_{i=1}^d \frac{p_i - c_i}{\sigma_i}^2}
+    \end{align*}
+So we want add $p$ to cluster $c$ if it has the lowest Mahalanobis distance, and the distance is less than a threshold, e.g.: 4 (which means the probability of false negative is 1 in a million assuming normal distribution). 
+
+\section{Clustering Using REpresentatives (CURE) Algorithm} 
+CURE is also to be used in Euclidean space, but assumes no distribution form of the cluster
+\paragraph{Process} 
+    \begin{enumerate}
+        \item Take a small sample of the data and cluster in main memory, ideally with hierarchical method. 
+        \item Select a small set of points from each cluster to be representative points. Those points should be chosen to be as far from one another as possible. 
+        \item Move each of the representative points a fixed fraction of the distance between its location and the centroid of its cluster (e.g.: 20\%). 
+        \item Merge two clusters if they have a pair of representative points that are sufficiently close. Repeat this step until convergence. 
+        \item Bring in each point from the secondary storage, and compared with the representative points. Assign $p$ to the cluster of the representative point that is closest to $p$. 
+    \end{enumerate}

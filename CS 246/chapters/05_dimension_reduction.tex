@@ -1,0 +1,74 @@
+\chapter{Dimension Reduction} 
+Corresponding Text: \href{http://infolab.stanford.edu/~ullman/mmds/ch11.pdf}{Chapter 11 of MMDS}
+
+\section{Eigenvalue and Eigenvector For Symmetric Matrices} 
+
+\subsection{Through determinant} 
+The roots of the determinant of $M - \lambda I$ as an $n$th-degree polynomial in $\lambda$ are the eigenvalues of $M$. We can then solve for $Me = c e$ where $c$ is a known eigenvalue. This is a system of $n$ equations and $n$ unknowns, and then normalize $e$ at the end. 
+
+\subsection{Power Iteration} 
+\begin{enumerate}
+    \item Initialize a non-zero vector $x_k$
+    \item Iterate $x_{k+1} = \frac{M x_k}{\norm{M x_k}}$ (Frobenius norm) until converge
+    \item Get eigenvalue by  $\lambda_1 = x^T M x$
+    \item Create new matrix $M^* = M - \lambda_1 xx^T$, repeat previous step with the new matrix.
+\end{enumerate}
+Side note: eigenvectors are orthogonal to each other, so a matrix of eigenvector $E$ has the property of $EE^T = E^TE=I$
+
+
+
+\section{Principal-Component Analysis} 
+Eigenvector matrix $E$ (column ordered by decreasing eigenvalue) of $M^TM$ can be seen as a rotation and/or reflection of the original space. So $ME$ is the original data transformed into a new coordinate space and the axis are in decreasingly important fashion. Let $E_k$ be the first $k$ columns of $E$, then $ME_k$ is a $k-$ dimensional principal component representation of $M$. 
+
+
+
+\paragraph{Sidenote: Connection between $MM^T$ and $M^TM$} : If $e$ is an eigenvector of $M^TM$ and $Me \neq 0$, then $Me$ is an eigenvector of $MM^T$ with $\lambda$ as eigenvalue. Conversely, if $e$ is an eigenvector of $MM^T$ and $M^Te \neq 0$, then $M^Te$ is an eigenvector of $M^TM$. 
+
+The eigenvalues of $MM^T$ are the eigenvalues of $M^TM$ plus additional 0's. If the dimension of $MM^T$ is less than the dimension of $M^TM$, then the reverse is true. 
+
+
+\section{Singular-Value Decomposition} 
+\subsection{Definition}
+Let $M$ be an $m\times n$ matrix with rank $r$, then we can have the following decomposition $M = U\Sigma V^T$ where $U,V$ are $m\times r, n \times r$ column-orthonormal matrix, and $\Sigma$ is a diagonal matrix. 
+
+\subsection{Interpretation} 
+If we assumes that there are underlying concepts within the data, then $SVD$ has the following interpretation: 
+    \begin{itemize}
+        \item $U$ matrix connects observation to concept. The value of $M_{ij}$ is how much person $i$ is tied to concept $j$
+        \item $\Sigma$ gives the strength of each concept
+        \item $V$ matrix connects features to concepts.  The value of $V_{ij}$ is how much feature $i$ is tied to concept $j$
+    \end{itemize}
+    
+\subsection{Dimensionality Reduction with SVD}
+Set $s$ to be the smallest singular value and make it 0. Eliminate the corresponding $s$ column of $U$ and $V$. The result is equivalent to minimize the rmse / Frobenius norm of the difference between original matrix $M$ and the approximation matrix $M'$
+
+\subsection{Querying with SVD} 
+Example: 
+    \begin{itemize}
+        \item Given a partial observation vector $q = [0, 0, ..., \lambda, 0, 0...]$, we can get the person's interest mapping through $qV$, and further recommendation through $qVV^T$
+        \item We can obtain how similiar person $a$ to person $b$ by comparing their concept mapping $aV$ and $bV$
+    \end{itemize}
+
+\subsection{Computing SVD} 
+The SVD of a matrix $M$ can be computed using the eigenvalues of $M^TM$ or $MM^T$. Specifically: 
+    \begin{itemize}
+        \item $V$ is the matrix of eigenvectors of $M^T M$
+        \item $\Sigma^2$ is the diagonal matrix whose entries are the corresponding eigenvalues. 
+        \item $U$ is the matrix of eigenvectors of $MM^T$
+    \end{itemize}
+    
+\section{CUR Decomposition} 
+\subsection{Definition} 
+Let $M$ be a matrix of $m$ rows and $n$ columns. Let $r$ be the target number of concepts. A CUR-decomposition of $M$
+    \begin{itemize}
+        \item $C$, a $m\times r$ matrix from randomly chosen set of $r$ columns of $M$,  
+        \item $R$, a $r \times n$ matrix from randomly chosen set of $r$ rows of $M$ 
+        \item $U$, a $r \times r$ matrix constructed the following way: 
+            \begin{itemize}
+                \item Let $W$ be the $r \times r$ matrix from $M$ by taking the corresponding columns and rows 
+                \item Compute SVD of $W = X \Sigma Y^T$
+                \item Compute $\Sigma^+$, the Moore-Penrose psudoinverse of the diagional matrix (transpose and change the non-zero diagonal entry to inverse)
+                \item $U = Y (\Sigma^+)^2X^T$
+            \end{itemize}
+    \end{itemize}
+The rows and columns are chosen independely (each row can be chosen multiple times) and proportionally to the Frobenius norm. So the probability of picking row $i$ is $q_i = \frac{\sum_{j} m_{ij}^2}{\norm{M}_f}$ and same goes for column. In addition, we normalize the chosen row/column by the $\sqrt{r * q_i}$ where $r$ is the number of concept. In the event of duplicated rows / columns, we can merge them together. If we merge $k$ rows of $R$ into a single row, then the remaining row in $R$ needs to be multiplied by $\sqrt{k}$. Finally, the consequence is that $W$ is not a square matrix, but the decomposition still works. 

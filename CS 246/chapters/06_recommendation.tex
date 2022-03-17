@@ -1,0 +1,97 @@
+\chapter{Recommendation Systems} 
+Corresponding Text: \href{http://infolab.stanford.edu/~ullman/mmds/ch9.pdf}{Chapter 9 of MMDS}
+
+\section{Utility Matrix}
+Utility matrix is a matrix with items as columns and users as rows. The cell value can be 
+    \begin{itemize}
+        \item Binary indicating like / dislike
+        \item 1 for user like the item, 0 for user did not choose the item 
+        \item Rating of the item 
+    \end{itemize}
+
+
+\section{Content-Based Recommendations} 
+Content based recommendations aims to generate a profile for item. Recommendations are based on similarity of the items. 
+
+\subsection{Item Profiles} 
+Item profile is a vector that describes the item. 
+\subsubsection{Generating Profile} 
+Categorical features can be encoded using one-hot encoding. For documents, we can use the top n / top n percent of the word measured by TF.IDF score as feature. Jaccard distance / cosine distance can be used to measure similarity. For images, we can rely on human tagging. 
+
+\subsubsection{Scaling}
+Numerical features has to be scaled properly (tuning). Different scaling will impact similarity measures. 
+
+\subsection{User Profile} 
+User profile is a vector with the same component as item profile that describes user preference. 
+\begin{itemize}
+    \item For Boolean utility matrix, user profile is the average of the components of the item profile for the items in which the utility matrix has 1 for that user. 
+    \item For non-Boolean utility matrix, we can weight the utility matrix by subtracting the average value for a user. Then use this weight to take the average of the item profile. 
+\end{itemize}
+
+\subsection{Building content-based recommendations}
+We can produce recommendations either based on the cosine distance between the user's and item's vectors. Alternatively, we can build a classification algorithms for it using algorithms such as decision tree. 
+
+
+\section{Collaborative Filtering}
+We want to focus on the similarity of the user ratings for two items. Use columns of utility matrix as item profile and rows of utility matrix as user profile. Recommendation for a user is then made by looking at the users that are most similar. 
+
+\subsection{Measuring Similarity} 
+Similarity can be measured using Jaccard Distance or Cosine distance depends on the utility matrix. Some additional pre-processing of the matrix can include 
+    \begin{itemize}
+        \item Rounding: put low ratings as 0 and high ratings as 1
+        \item Normalize: Subtract each rating from the average rating of that user. 
+    \end{itemize}
+
+\subsection{The Duality of Similarity} 
+Collaborative Filtering can be considered from either finding common user or finding common items. 
+    \begin{itemize}
+        \item Given a user $U$ and item $I$, we can find $n$ similar users, and average their ratings for item $I$ (counting only those who have rated $I$). We can get a recommendation directly this way. But intuitively, user to user similarity is less reliable since users can have complicated preferences. 
+        
+        \item Alternatively, we can find $m$ similar items, and take the average rating among the $m$ items of the rating that $U$ has given. But now we have to repeat this process for all items becore we can estimate the row for $U$. 
+        
+    \end{itemize}
+    
+\subsection{Clustering Users and Items} 
+We can choose to cluster the users and items in a iterative process. 
+    \begin{enumerate}
+        \item Cluster the columns together
+        \item Clustering the rows together using post clustered columns 
+        \item Repeat until desired extent, and then use the collaborative filtering technique for unknown cell values. 
+    \end{enumerate}
+    
+\section{Dimensionality Reduction} 
+Another approach for estimating the blank entries in the utility matrix can be seen as estimating the UV-decomposition of the matrix. I.e.: decomposing a $n \times m$ matrix into $n \times d$ and $d \times m $matrix. 
+\subsection{UV Decomposition Evaluation} 
+We use RMSE of the non-blank entries to evaluate the quality of UV decomposition. Mathematically, it is also the same as minimizing the sse. 
+
+\subsection{Optimizing an arbitrary element} 
+We can iteratively optimizing arbitrary elements of the $U$ and $V$ matrix. Suppose we want to vary $u_{rs}$, note that it only affects the row $r$ of the product. We have 
+    \begin{align*}
+        p_{rj} = \sum_{k=1}^d u_{rk} v_{kj}
+    \end{align*}
+Let $u_{rs} = x$, we have 
+    \begin{align*}
+        p_{rj} = \sum_{k\neq s}u_{rk} v_{kj}  + x v_{sj}
+    \end{align*}
+The rmse is 
+    \begin{align*}
+        (m_{rj} - p_{rj})^2 
+    \end{align*}
+After taking derivative, we have 
+    \begin{align*}
+        x = \frac{\sum_j v_{sj} (m_{rj} - \sum_{k \neq s} u_{rk} v_{kj})}{\sum_j v^2_{sj}}
+    \end{align*}
+For element $v_{rs}$, the formula is 
+    \begin{align*}
+        y = \frac{\sum_i u_{ir} (m_{is} - \sum_{k \neq r} u_{ik} v_{ks})}{\sum_i u^2_{ir}}
+    \end{align*}
+    
+\subsection{Pre-processing}
+In general, we want to normalize the matrix by 
+    \begin{enumerate}
+        \item Subtract from each nonblank element $m_{ij}$ the average rating of user $i$ 
+        \item Subtract the average rating of item $j$
+    \end{enumerate}
+
+\subsection{Initialization} 
+Normally we initialize $U$ and $V$ to be $\sqrt{a/d}$ where $a$ is the average nonblank element of $M$ and $d$ with some pertubation. 
