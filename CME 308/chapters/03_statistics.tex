@@ -1,0 +1,570 @@
+\chapter{Statistics}
+
+\section{Frequentist Parametric Estimators}
+
+\subsection{Maximum Likelihood} 
+Estimate the parameter $\hat{\theta}$ via the value that maximize the likelihood of observing the dataset. Generally we ended up maximizing the log likelihood. 
+
+\paragraph{Example: MLE for Uniform Distribution} 
+Assume the data are drawn from uniform distribution in $[0, \theta]$
+    \begin{align*}
+        L_n(\theta) 
+        & = \prod_{i=1}^n \frac{\indic{0 \leq x_i \leq \theta}}{\theta}\\
+        & = \indic{\theta \geq \max{X_i}} * \frac{1}{\theta^n}
+    \end{align*}
+So the $\theta$ that minimze the likelihood is the minimum $\theta$ which satisfies the indicator variable. Hence $\hat{\theta} = \max{X_i}$. Notice that this particular estimator actually converges in $n$ to exponential distribution instead of the slower $\sqrt{n}$ with CLT. 
+
+\subsection{Method of Moments}
+The general method of moments is pick $k(x)$ such that $E_{\theta_1}[k(x)] = E_{\theta_2}[k(x)] \Longleftrightarrow \theta_1 = \theta_2$. Then we have 
+    \begin{align*}
+        \frac{1}{n} \sum k(x_i) \approx E_\theta[k(x)]
+    \end{align*}
+
+So we use the theoretical result of the first $t$ moments and equalizing them to the empirical sample moments in order to solve for $\theta$. 
+
+\subsection{Estimating Equations} 
+Estimating equation generalizes both Method of Moments and MLE. 
+    \begin{align*}
+        E_{\theta_1}[g(\theta_2, X)] = 0 \text{ iff } \theta_1 = \theta 2
+    \end{align*}
+So then we can estimate $\theta_1$ with the root $\hat{\theta}$ of the equation: 
+    \begin{align*}
+        \frac{1}{n} \sum_{i=1}^n g(\hat{\theta}, X_i) = 0
+    \end{align*}
+In MLE, we have 
+    \begin{align*}
+        g(\theta, x) = \frac{\nabla_\theta f(\theta,x)}{f(\theta,x}
+    \end{align*}
+where as in MoM, we have 
+    \begin{align*}
+        g(\theta, x) = E_\theta[k(X)] - k(x)
+    \end{align*}
+\subsubsection{Large Sample Behavior of Estimator} 
+In estimating equation framework, assuming consistency, i.e.: $\hat{\theta}_n \overset{P}{\to} \theta^*$ the estimator is a root of:
+    \begin{align*}
+        \frac{1}{n} \sum g(\hat{\theta}_n, x_i) = 0
+    \end{align*}
+So now we can expand to look at the convergence 
+    \begin{align*}
+        & \frac{1}{n} \sum \left( g(\hat{\theta}_n, x_i) - g(\theta^*, x_i)\right) = -\frac{1}{n} \sum g(\theta^*, x_i)\\
+        & \frac{1}{n}\sum g'(\xi_n, x_i)(\hat{\theta}_n - \theta^*) = -\frac{1}{n} \sum g(\theta^*, x_i) \tag{By mean value theorem} \\
+        & \frac{1}{n}\sum g'(\xi_n, x_i)\sqrt{n}(\hat{\theta}_n - \theta^*) = -\frac{1}{\sqrt{n}} \sum g(\theta^*, x_i)\\
+        & \frac{1}{n}\sum g'(\xi_n, x_i)\sqrt{n}(\hat{\theta}_n - \theta^*) = -\frac{1}{\sqrt{n}} \left(\sum g(\theta^*, x_i) - n * E[g(\theta^*, x_i)] \right) \tag{Expectation = 0 due to estimating equation setup} \\
+        & \frac{1}{n}\sum g'(\xi_n, x_i)\sqrt{n}(\hat{\theta}_n - \theta^*) = N(0, Var_{\theta^*}(g(\theta^*, x_i)) \tag{By CLT}\\
+        & \frac{1}{n}\sum g'(\xi_n, x_i)\sqrt{n}(\hat{\theta}_n - \theta^*) = N(0, E_{\theta^*}[g(\theta^*, X_i)^2]
+    \end{align*}
+Now couple observations: 
+    \begin{enumerate}
+        \item $\frac{1}{n}\sum g'(\xi_n, x_i) \overset{P}{\to} E_{\theta^*}[g'(\theta^*, X_1)]$ (shown later)
+        \item $\hat{\theta}_n - \theta^* \overset{P}{\to} 0$ by consistency
+        \item The RHS converged to a normal random variable 
+    \end{enumerate}
+So we can use Slutsky's algorithm to actually establish the convergence 
+    \begin{align*}
+        \sqrt{n}(\hat{\theta}_n - \theta^*) 
+        & \Rightarrow \frac{N(0, E_{\theta^*}[g(\theta^*, X_i)^2] }{E_{\theta^*}[g'(\theta^*, X_i)]}\\
+        & \overset{D}{=} N\left(0, \frac{E_{\theta^*}[g(\theta^*, X_i)^2]}{E_{\theta^*}[g'(\theta^*, X_i)]^2} \right)
+    \end{align*}
+Therefore, we can establish the confidence interval for estimating equation estimator $[\hat{\theta}_n - 2 \frac{\hat{S}_n}{\sqrt{n}}, \hat{\theta}_n + 2 \frac{\hat{S}_n}{\sqrt{n}}]$ where 
+    \begin{align*}
+        \hat{S}_n 
+        & = \sqrt{\frac{E_{\theta^*}[g(\theta^*, X_i)^2]}{E_{\theta^*}[g'(\theta^*, X_i)]^2}} \\
+        & \approx \sqrt{\frac{\frac{1}{n} \sum g(\hat{\theta}_n, x_i)^2}{(\frac{1}{n}\sum g'(\hat{\theta}_n, x_i))^2}}
+    \end{align*}
+
+Now just the last bits of clean up: Proving $\frac{1}{n}\sum g'(\xi_n, x_i) \overset{P}{\to} E_{\theta^*}[g'(\theta^*, X_1)]$. Notice that $g'(\xi_n, x_i)$is not iid becuase $\xi_n$ is constructed based on $\hat{\theta}_n$, which is dependent on all $x_i$. We can do something similar by subtracting certain terms from both side. i.e.: We want to show  
+    \begin{align*}
+        & \frac{1}{n}\sum g'(\xi_n, x_i) - \frac{1}{n} \sum g'(\theta^*, x_i)\overset{P}{\to} E_{\theta^*}[g'(\theta^*, X_1)] -  \frac{1}{n} \sum g'(\theta^*, x_i) \\
+        & \frac{1}{n}\sum g''(\beta_n, x_i)(\xi_n - \theta^*) \overset{P}{\to} E_{\theta^*}[g'(\theta^*, X_1)] -  \frac{1}{n} \sum g'(\theta^*, x_i) \tag{By mean value theorem}
+    \end{align*}
+Notice that the right hand side converges to 0 by SLLN. So now we just need to show that the left hand side also converges to 0. Notice that $\beta_n$ is between $\hat{\theta}_n$ and $\xi_n$. If we assume that the second derivative is global bounded, hence $\sup_\theta \abs{g''(\theta,x)} \leq s(x)$, then we have 
+    \begin{align*}
+        \abs{\frac{1}{n}\sum g''(\beta_n, x_i)(\xi_n - \theta^*)} \leq \frac{1}{n}\sum s(x_i) \abs{\xi_n - \theta^*}
+    \end{align*}
+Notice on the right hand side, the first part converges to $E_{\hat{\theta}_n}[s(X_i)]$ and the second part converges to 0. So by Slutsky the product converge to 0. 
+
+
+\subsubsection{Asymptotic Variance of MLE in Estimating Equation Format} 
+In MLE formulation of Estimating equation, we already have 
+    \begin{align*}
+        & E_{\theta^*}[\frac{f'(\hat{\theta}_n, x_1)}{f(\hat{\theta}_n, x_1)}] = 0 \\
+        & g(\theta, x) = \frac{f'(\theta, x_1)}{f(\theta, x_1)}\\
+        & g'(\theta, x) = \frac{f''(\theta,x)}{f(\theta,x)} - (\frac{f'(\theta,x)}{f(\theta,x})^2 \\
+        & E_{\theta^*}[g(\theta^*, X_1)^2] = E[\left(\frac{f'(\theta, x_1)}{f(\theta, x_1)}\right)^2]\\
+    \end{align*}
+First we simplify $E[g'(\theta,x)]$: 
+    \begin{align*}
+        E_{\theta^*}[g'(\theta,x)]
+        & = E_{\theta^*}[\frac{f''(\theta,x)}{f(\theta,x)} - (\frac{f'(\theta,x)}{f(\theta,x)})^2] \\
+        & = E_{\theta^*}[\frac{f''(\theta,x)}{f(\theta,x)}] - E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]\\
+        & = \int_{\mathbbm{R}} \frac{f''(\theta,x)}{f(\theta,x)} f(\theta, x) \,dx - E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]\\ 
+        & = \int_{\mathbbm{R}} \partiald{\theta} \partiald{\theta} f(\theta, x) \,dx - E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]\\ 
+        & = \partiald{\theta} \partiald{\theta} \int_{\mathbbm{R}} f(\theta, x) \,dx - E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]\\ 
+        & = \partiald{\theta} \partiald{\theta} 1 - E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2] \\
+        & = - E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]
+    \end{align*}
+So now we can start to simplify the previous variance $\frac{E_{\theta^*}[g(\theta^*, X_i)^2]}{E_{\theta^*}[g'(\theta^*, X_i)]^2}$: 
+    \begin{align*}
+        \frac{E_{\theta^*}[g(\theta^*, X_i)^2]}{E_{\theta^*}[g'(\theta^*, X_i)]^2}
+        & = E[\left(\frac{f'(\theta, x_1)}{f(\theta, x_1)}\right)^2] * \frac{1}{E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]^2}\\
+        & = \frac{1}{E[ (\frac{f'(\theta,x)}{f(\theta,x)})^2]}\\
+    \end{align*}
+Hence the asymptotic variance $\hat{\theta}_n$ for MLE is 
+    \begin{align*}
+        \frac{1}{n} \frac{1}{E_{\theta^*}\left[ \left(\frac{f'(\theta,x)}{f(\theta,x)}\right)^2 \right]}
+    \end{align*}
+    
+    
+\subsection{Cramer-Rao Bound}
+Cramer-Rao bound establishes that MLE is the best estimator for unbiased estimator. Let $\hat{\theta}_n = w_n(X_1, ..., X_n)$ and assume that the estimator is unbiased at every point $\theta \in \Lambda$. We have 
+    \begin{align*}
+        & \theta = E_\theta[w_n(X_1, ..., X_n)]
+        = \int_{\mathbbm{R}^n} w_n(x_1, ..., x_n) \prod_{i=1}^n f(\theta, x_i) \, dx_1, ...dx_n \\
+        & \Longrightarrow  \int_{\mathbbm{R}^n} w_n(x_1, ..., x_n) \sum_{i=1}^nf'(\theta,x_i)\prod_{j\neq i}f(\theta,x_j)\, dx_1, ...dx_n = 1 \tag{Chain rule and derivative both side} \\
+        & \Longrightarrow \int_{\mathbbm{R}^n} w_n(x_1, ..., x_n) \sum_{i=1}^n \frac{f'(\theta,x_i)}{f(\theta,x_i)} * \prod_{j=1}^n f(\theta,x_j) \, dx_1, ...dx_n = 1\\
+        & \Longrightarrow E_\theta\left[w_n(X_1, ..., X_n) \sum_{i=1}^n \frac{f'(\theta,X_i)}{f(\theta,X_i)} \right] = 1\\
+        & A \equiv w_n(X_1, ..., X_n)  \\
+        & B \equiv  \sum_{i=1}^n \frac{f'(\theta,X_i)}{f(\theta,X_i)}
+    \end{align*}
+Notice that we care about the variance of our estimator, hence $E[A^2] = E_\theta[w_n(X_1, ..., X_n)^2]$. By Cauchy Schwartz we have 
+    \begin{align*}
+        \sqrt{E[A^2] E[B^2]} \geq \abs{E[AB]} = 1
+    \end{align*}
+Notice that 
+    \begin{align*}
+        E_[B^2] 
+        & = E\left[ \left( \sum_{i=1}^n \frac{f'(\theta,X_i)}{f(\theta,X_i)} \right)^2 \right]\\
+        & = Var\left(\sum_{i=1}^n \frac{f'(\theta,X_i)}{f(\theta,X_i)}  \right) \tag{Mean 0} \\
+        & = n * Var\left(\frac{f'(\theta,X_1)}{f(\theta,X_1)} \right) \\
+        & = n * E\left[\left(\frac{f'(\theta,X_1)}{f(\theta,X_1)} \right)^2 \right]
+    \end{align*}
+So we have 
+    \begin{align*}
+        E_\theta[\hat{\theta}^2] = E[A^2] \geq \frac{1}{n * E\left[\left(\frac{f'(\theta,X_1)}{f(\theta,X_1)} \right)^2 \right]}
+    \end{align*}
+We can look at the connection to fisher information. Individual variable in B can be seen as the score function 
+    \begin{align*}
+        E[\partial{\theta} \log f(X, \theta)]
+        & = \int_{\mathbbm{R}} \frac{f'(x, \theta}{f(x,\theta)} f(x,\theta) \, dx\\
+        & =  \int_{\mathbbm{R}} \partiald{\theta} f(x,\theta) \, dx \\
+        & = 0
+    \end{align*}
+and the variance is the of the score, which is $E\left[\left(\frac{f'(\theta,X_1)}{f(\theta,X_1)} \right)^2 \right]$. 
+
+
+
+\section{Frequentist Non-parametric Perspective} 
+
+\subsection{Setup and Glivenko–Cantelli theorem}
+In frequentist non-parametric perspective, we have $X_i$ iid from an unknown distribution $F$. We attach mass $\frac{1}{n}$ to each point $X_i$. So the empirical CDF is defined as 
+    \begin{align*}
+        F_n(x) = \frac{1}{n} \sum \indic{x_i \leq x}
+    \end{align*}
+From SLLN, we know that as $n \to \infty$, $\forall x\in \mathbbm{R}$ (note that below theorem is for a given $x$), we have
+    \begin{align*}
+        F_n(x) \overset{a.s.}{\to} F(x) 
+    \end{align*}
+But Glivenko-Cantelli Theorem provides a stronger point that says 
+    \begin{align*}
+        \sup_{x \in \mathbbm{R}}\abs{F_n(x) - F(x)} \overset{a.s.}{\to} 0
+    \end{align*}
+The proof can be found \href{chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://home.uchicago.edu/~amshaikh/webfiles/glivenko-cantelli.pdf}{here}. \\
+
+Another restatement of GC theorem is that 
+    \begin{align*}
+        & \sup_{h \in S} \abs{\int h(x) F_n(dx) - \int h(x) F(dx)} \overset{a.s.}{\to} 0 \\
+        & S = \{ h: h(y) = \indic{y \leq x} \text{ for some } x \in \mathbbm{R} \}
+    \end{align*}
+Notice that this result also applies to a broader function space (GC class), but not to every function. 
+
+\subsection{Plug-in Principle}
+For any fixed function $h$, we have that 
+    \begin{align*}
+        \int h(x) F_n(dx) = \frac{1}{n} \sum h(x_i) \to \int h(x)F(dx)
+    \end{align*}
+So if we want to estimate a function of the distribution $T(F)$, we can just use the empirical distribution $T(F_n)$. So if we want to calculate the median of $F$, we can esimate it with sample median. 
+    \begin{align*}
+        & T(F) = \int_{\mathbbm{R}} h(x) F(dx) = E[h(x)] \\
+        & T(F_n) = \frac{1}{n} \sum h(x_i) \\
+        & \sqrt{n} (T(F_n) - T(F)) \Rightarrow \sqrt{Var(h(x))}N(0,1) \tag{CLT} \\
+        & \Rightarrow CI: [T(F_n) \pm Z \frac{\sigma(F_n)}{\sqrt{n}}]
+    \end{align*}
+
+
+\subsection{Skorokhod space}
+A Skorokhod space e.g.: $D(-\infty, \infty)$ is a space of all functions $Z$ such that 
+    \begin{itemize}
+        \item $Z$ is right continuous: $\lim_{t \downarrow s}z(t) = z(s)$
+        \item $Z$ has left limit wverywhere: $\lim_{t \uparrow s}z(t) = z(s-)$ exists
+    \end{itemize}
+$Z$ is defined on the interval of the real line (e.g.: $(-\infty, \infty)$), and takes values on the real line or some metric space. 
+
+\subsection{Alternative Definition of Weak Convergence} 
+An alternative definition of weak convergence is $Y_n \Rightarrow Y_\infty$ in $\mathbbm{R}$ iff: 
+    \begin{align*}
+    E[g(Y_n)] \to E[g(Y_\infty]
+    \end{align*}
+for all $g$ that are bounded converges. This allows us to think about convergence of random variable when they are in a more complicated space such as the Skorokhod space. 
+
+\subsection{Convergence in abstract metric space}
+Given a metric space $S$ and a distance measure $d: S \times S \to \mathbbm{R}$. The distance $d$ has to satisfies: 
+    \begin{itemize}
+        \item $d(x,x) = 0$
+        \item $d(x,y) = d(y,x)$
+        \item $d(x,y) \leq d(x,z) + d(z,y)$
+    \end{itemize}
+then we have 
+    \begin{align*}
+        y_n \to y_\infty \text{ iff } d(y_n, y_\infty) \to 0 \text{ as } n \to \infty
+    \end{align*}
+    
+\subsection{Completeness}
+Cauchy Sequence is defined as :
+    \begin{align*}
+        \forall \epsilon > 0 \,, \exists n = n(\epsilon) \, s.t. \, m_1, m_2 \geq n(\epsilon) \Longrightarrow \abs{X_{m_1} -X_{m_2}} < \epsilon
+    \end{align*}
+The completeness of real line means that Cauchy sequence on real line always converges to an element in real. Equivalently convergence sequence in real line has to be a Cauchy Sequence. This definition of completeness can be extended to abstract metric space $S$ by replacing the definition of $-$ in Cauchy sequence with general distance measurement. 
+
+\subsection{Separability} 
+Metric space $S$ is separable iff a countable set of element in $S$ can be used to approximate all element in $S$ (have a dense countable subset). 
+
+
+
+\subsection{Convergence in Polish Space} 
+Let metric space $S$ with measurement $d$ be a complete separable metric space (Polish Space), then 
+    \begin{align*}
+        Y_n \Rightarrow Y_\infty \text{ in } (s,d)
+    \end{align*}
+iff
+    \begin{align*}
+        E[g(Y_n)] \to E[g(Y_\infty)] \forall g\in b.c. \text{(bounded converges)}
+    \end{align*}
+iff 
+    \begin{align*}
+        & \exists \text{ a probability space supporting sequence $Y_n$' s.t. } Y'_n \overset{D}{=} Y_n \\
+        & \text{and } d(Y'_n, Y_\infty) \to 0 \, a.s. \text{ as $n \to \infty$}
+    \end{align*}
+
+\subsection{Skorokhod's Representation}
+Let $\mu_n$ be a sequence of probability measures on a metric space $S$ such that $\mu_n$ converges weakly to some probability measure $\mu_\infty$ on $S$ as $n \to \infty$. Suppose that the support of $\mu_\infty$ is separable. Then there exists S-valued random variables $X_n$ defined a a common probability space such that the law of $X_n$ is $\mu_n$ for all $n$ and $X_n \to X_\infty$ almost surely. 
+
+\subsection{Brownian Motion}
+A standard Wiener process(Brownian Motion) is a stochastic process $\{W_t\}$ indexed by nonnegative real numbers $t$ with the following propertyies: 
+    \begin{itemize}
+        \item $W_0 = 0$
+        \item With probability 1, the function $t \to W_t$ is continuous in $t$ 
+        \item Stationary independent increment 
+        \item $W_{t+s} - W_{s}$ has $N(0, t)$ distribution 
+    \end{itemize}
+Some result include that if $X_n \Rightarrow X_\infty$, then it must be that $X_\infty$ is Gaussian, $E[X_\infty] = 0$ with finite variance $\sigma^2 t$. \\
+
+Another result is that 
+
+
+
+\subsection{Donsker's Theorem} 
+Donsker's theorem is a function extension of the CLT. Let $X_i$ be iid r.v. with mean 0 and variance 1. Define the diffusively rescaled random walk as 
+    \begin{align*}
+        & W^{(n)}(t) := \frac{S_{\lfloor nt \rfloor}}{\sqrt{n}} \quad t\in[0,1] \\
+        & S_n := \sum_{i=1}^n X_i 
+    \end{align*}
+    
+CLT: $W^{(n)}(1)$ converges in distribution to standard Gaussian r.v. $W(1)$ as $n\to\infty$. Donsker's invariance principle extends this converges to the whole function.  \\
+
+First notice that $S_n$ and $W^{(n)}(t)$ both have independent increment property (i.e.: $S_{m+n} - S_m $ is independent from $S_m - S_0$).  $W^{(n)}(t) \in D[0, \infty)$ due to the floor function. \\
+
+Donsker's provides convergence in the Skorokhod space. 
+    \begin{align*}
+        & W^{(n)}(t) \Rightarrow W_\infty \text{ in } (D[(0, \infty), d) \\
+        & W^{(n)}(t) \Rightarrow \sigma B \tag{Standard Brownian Motion}
+    \end{align*}
+The Skorokhod representation further says that there exists 
+    \begin{align*}
+        & W^{'(n)} \overset{a.s.}{\to} \sigma B'\\
+        & d(W^{'(n)}, \sigma B') \overset{a.s.}{\to} 0
+    \end{align*}
+For $y\in D[0, \infty)$, let $h(y) = \max_{0 \leq t \leq 1}y(y)$, then we have 
+    \begin{align*}
+        y(W^{(n)}(t)) \Rightarrow y(\sigma B)
+    \end{align*}
+
+\subsection{Application: Quantile Estimation}
+Estimate $q$ such that $F(q) = p$ with empirical estimator $F_n(Q_n) = p$. Note that $\sqrt{n}(F_n(x) - F(x)) = X_n \Rightarrow Z$ if $x$ is in finite dimension, in infinite dimension, we know that $ X_n \Rightarrow Z$ in D space (because $Q_n$) is discontinuous. 
+    \begin{align*}
+        \sqrt{n}\left((F_n(Q_n) - F(Q_n)) - (F_n(q) - F(q)) + (F(Q_n) - F(q)) + (F_n(q) - F(q)) \right) = \sqrt{n}(F_n(Q_n) - F(q))
+    \end{align*}
+Observation: 
+    \begin{align*}
+        & F_n(Q_n) - F(Q_n) = X_n(Q_n) \\
+        & (F_n(q) - F(q)) = X_n(q) \\
+        & (F(Q_n) - F(q)) = (Q_n - q)f(q) + O(f''(q)(Q_n - q)^2) \tag{Taylor Expansion} \\
+        & F_n(q) - F(q) \text{can use CLT} \\
+        & F_n(Q_n) \text{ is } O(\frac{1}{n})p 
+    \end{align*}
+So we have 
+    \begin{align*}
+        \sqrt{n}(X_n(Q_n) - X_n(q)) + \sqrt{n}(Q_n - q)f(q) + \sqrt{F(q)(1 - F(q))}N(0,1) = 0 
+    \end{align*}
+So now if we can show $X_n(Q_n) - X_n(q) \overset{P}{\to} 0$, then we can apply Slutsky Theorem and have 
+    \begin{align*}
+        Q_n - q \Rightarrow \frac{\sqrt{p(1-p)}}{f(q)} N(0,1)
+    \end{align*}
+We can show $X_n(Q_n) - X_n(q) \overset{P}{\to} 0$ by the following argument: Assume $F$ is continuous everywhere, from Densker we know that $X_n \Rightarrow Z$ in D space, and subsequently have uniform convergence in a compact set. From Skorhod Representation we know that there exists 
+    \begin{align*}
+        d(X_n', Z') \to 0 \text{ a.s. }
+    \end{align*}
+So we have 
+    \begin{align*}
+        & (X_n, Q_n) \Rightarrow (Z, q) \tag{From Slutksy in multiple dimension} \\
+        & (X_n', Q_n') \to (Z', q) \text{ a.s.} \\
+        & X_n'(Q_n') \to Z'(q) \\
+        & X_n'(q) \to Z'(q) \\
+        & \Rightarrow X_n'(Q_n') - X_n'(q) \to 0 a.s. \\
+        & \Rightarrow X_n(Q_n) - X_n(q) \overset{P}{\to} 0
+    \end{align*}
+    
+
+\subsection{Kolmogorov-Smirnov Test} 
+K.S. test whether $X_1, ..., X_n$ is iid from $F$.
+
+\paragraph{Intuition} How big is $\sup_{x\in \mathbbm{R}} \sqrt{n}\abs{F_n(x) - F(x)} = \sup_{x\in \mathbbm{R}}\abs{X_n(x)} \Rightarrow \sup_{x\in\mathbbm{R}}\abs{Z(x)}$. Then we can set up confidence interval through $P(\sup_{x} \abs{Z(x)} > w) = 0.01$. All we need to know is the limit distribution $Z$ (Densker only gives us its existence). 
+
+\paragraph{Equivalent} Turns out that if $Z$ is the limit associate with $F$, let $\tilde{Z}$ be the limit associate with uniform $[0,1]$, then 
+    \begin{align*}
+        Z(x) = \tilde{Z}(F(x)) \quad \forall x
+    \end{align*}
+So we have 
+    \begin{align*}
+        \sup_x \abs{Z(x)} \overset{D}{=} \sup_x \abs{\tilde{Z}(F(x))} = \sup_{y \in [0,1]}\abs{\tilde{Z}(y)}
+    \end{align*}
+To summarize, as long as we can find the limit distribution $\tilde{Z}$ for uniform iid, we can apply KS test for every distribution. Turns out that such $\tilde{Z}$ has a closed form and can be easily computed. 
+
+
+\subsection{Estimating Density Through Kernel Density Estimation}
+\subsubsection{Formulation}
+Let $X_i$ be iid from unknown distribution. We can estimate the density by put a continuous distribution (e.g.: $N(x_i, h_n^2)$) around each point $x_i$. 
+    \begin{align*}
+        P(N(x_i, h^2) \leq y)
+        & = P(x_i + h * N(0,1) \leq y) \\
+        & = P(N(0,1) \leq \frac{y - x_i}{h}) \\
+        & = \Phi(\frac{y - x_i}{h}) \\
+        \partiald{y}\Phi(\frac{y - x_i}{h}) 
+        & = \frac{1}{h}\phi(\frac{y-x_i}{h})
+    \end{align*}
+The final density is the weighted sum of the density: 
+    \begin{align*}
+        f_n(y) = \frac{1}{h} \frac{1}{n} \sum_{i=1}^n \phi(\frac{y-x_i}{h}) 
+    \end{align*}
+
+\subsubsection{Convergence}
+In general, we can decompose MSE: 
+    \begin{align*}
+        E[f_n(y) - f(y)]^2 
+        & = E\left[f_n(y) - E[f_n(y)] + E[f_n(y)] - f(y)\right]^2 \\
+        & = E[f_n(y) - E[f_n(y)]]^2 + E[E[f_n(y)] - f(y)]^2 + 2 * E[f_n(y) - E[f_n(y)]] E[E[f_n(y)] - f(y)] \\
+        & = E[f_n(y) - E[f_n(y)]]^2 + E[E[f_n(y)] - f(y)]^2 \\
+        & = Var(f_n(y)) + Bias^2
+    \end{align*}
+The expected value of the estimator is : 
+    \begin{align*}
+        E[f_n(y)] 
+        & = E[\phi(\frac{y - x_1}{h}) \frac{1}{h}]\\
+        & = \int_{-\infty}^\infty \phi(\frac{y-x}{h}) \frac{1}{h} f(x) \, dx \\
+        & = \int_{-\infty}^\infty \phi(z) f(y-zh) \, dz \tag{$z = \frac{y-x}{h}$} \\
+        & = \int_{-\infty}^\infty \phi(z)\left( f(y) - zh f'(y) + \frac{z^2 h^2}{2} f''(y) + o(h^2) \right) \, dz \tag{Taylor Expansion} \\
+        & = f(y) \int_{-\infty}^\infty \phi(z) \, dz - f'(y)h\int_{-\infty}^\infty z \phi(z) \, dz + \frac{f''(y)h^2}{2}\int_{-\infty}^\infty z^2 \phi(z) \, dz + o(h^2) \\
+        & = f(y) - f'(y)h\int_{-\infty}^\infty z \phi(z) \, dz + \frac{f''(y)h^2}{2}\int_{-\infty}^\infty z^2 \phi(z) \, dz + o(h^2)  \tag{Integral of a pdf}\\
+        & = f(y) + \frac{f''(y)h^2}{2}\int_{-\infty}^\infty z^2 \phi(z) \, dz + o(h^2) \tag{Property of $\phi$} \\
+        & = f(y) + \frac{h^2}{2}f''(y) + o(h^2) \tag{Property of $\phi$} \\
+    \end{align*}
+So the intuition is that we want to have small $h$, as little smoothing as possible. The variance of the estimator is: 
+    \begin{align*}
+        \frac{1}{n} Var\left(\frac{1}{h} \phi(\frac{y-x_1}{h}) \right) 
+        & = \frac{1}{nh^2} Var\left(\phi(\frac{y-x_1}{h}) \right)\\
+        & = \frac{1}{nh^2} \left(E[\phi^2(\frac{y-x_1}{h})] - E[\phi(\frac{y-x_1}{h})]^2 \right) \\
+        & = \frac{1}{nh^2} \left(\int_{-\infty}^\infty \phi^2(\frac{y-x}{h}) f(x) \, dx - E[\phi(\frac{y-x_1}{h})]^2 \right)\\
+        & = \frac{1}{n} \left( \frac{1}{h}\int_{-\infty}^\infty \phi^2(z) f(y-zh) \, dz - \frac{1}{h}E[\phi(\frac{y-x_1}{h})]^2 \right)\\
+        & = \frac{1}{n}(\frac{1}{h} O(1) + O(h)) \\
+        & \approx \frac{1}{nh} \text{ as } h \to 0
+    \end{align*}
+So the variance is $O(\frac{1}{nh})$, which means we want to have $h$ big, as much smoothing as possible. 
+
+\subsubsection{Bias Variance Tradeoff} 
+Given above result, we can set the bias squared equal to variance to get the optimal $h$ 
+    \begin{align*}
+    \frac{1}{nh} \approx h^4 \Longrightarrow h \approx n^{-1/5}
+    \end{align*}
+The optimal RMSE under this condition is 
+    \begin{align*}
+        \frac{1}{nh} + h^4 = \sqrt{n^{-4/5}} = n^{-2/5}
+    \end{align*}
+The optimal $h$ will give us CLT $n^{2/5}(f_n(y)-f(y))\Rightarrow N(a, b^2)$. In reality, bias is hard to estimate and the variance is easier to estimate. So we might want to set $h > n^{-1/5}$ to have a low bias high variance estimator. 
+
+
+\subsection{Estimating Mode} 
+Mode is defined as 
+    \begin{align*}
+        m = \argmax_x pdf(x)
+    \end{align*}
+The intuition is to estimate $f'(x)$ through: 
+    \begin{align*}
+        & \frac{f_n(y+r_n) - f_n(y)}{r_n}  \\
+        & h_n \to 0 \tag{Used for estimate $f_n$} \\
+        & r_n \to 0
+    \end{align*}
+But notice tha t as $r_n\to0$, the variance of this estimator gets big. So we need to let $h_n \to 0$ slower compare to the previous optimal $h$. In general, as we estimate high order derivative of pdf, we depend more on local structure and requires smoother curve, i.e.: bigger $h$. 
+
+
+\subsection{CDF Estimation: Integrating PDF vs. Plug In} 
+So far we have two CDF estimator: 
+    \begin{align*}
+        & F_n(y) = \frac{1}{n}\sum \indic{x_i \leq y} \tag{Plug In Estimator $h=0$} \\
+        & \hat{F}_n(y) = \int_{-\infty}^y f_n(z) \, dz \tag{pdf Estimator $h \propto n^{-1/5}$}
+    \end{align*}
+Here we demonstrate why the plug in estimator is better: 
+    \begin{align*}
+        \hat{F}_n(y)
+        & = \frac{1}{n} \sum_{i=1}^n \int_{-\infty}^y \phi(\frac{z-x_i}{h}) \frac{1}{h} \, dz \\
+        & = \frac{1}{n} \sum_{i=1}^n \Phi(\frac{y-x_i}{h})
+    \end{align*}
+Notice that as $h \to 0$, $\Phi(\cdot)$ will either goes to 1 (if $x_i < y$) or to 0 otherwise. So the function is bounded and we can apply bounded convergence theorem: 
+    \begin{align*}
+        & E[\Phi(\frac{y-x_i}{h})] \to E[\indic{x_i \leq y}] = P(X_i \leq y) \\
+        & E[\Phi^2(\frac{y-x_i}{h})] \to P(X_i \leq y) \tag{By the same 0, 1 argument} 
+    \end{align*}
+We can then look at variance of the estimator: 
+    \begin{align*}
+        Var(F_n(y))
+        & = \frac{1}{n} Var(\indic{X_i \leq y}) \\
+        Var(\hat{F}_n(y)) 
+        & = \frac{1}{n} Var(\Phi(\frac{y-x_i}{h})) \\
+        & \to \frac{1}{n}(P(X_i \leq y) - P^2(X_i \leq y))
+    \end{align*}
+Now for bias: 
+    \begin{align*}
+        E[\hat{F}_n(y) - F(y)]
+        & = E[\Phi(\frac{y-x}{h})] - F(y) \\
+        & = \int_{-\infty}^\infty \Phi(\Phi(\frac{y-x}{h}) f(x) \, dx - F(y) \\
+        & = h\int_{-\infty}^\infty \Phi(z) f(y-zh) \, dz - F(y) \\
+        & = h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz + \int_{0}^\infty \Phi(z)f(y-zh) \, dz \right) - F(y) \\
+        & = h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz + \int_{0}^\infty (1 - \bar{\Phi}(z))f(y-zh) \, dz \right) - F(y) \tag{$\bar{\Phi}(x) \equiv 1 - \Phi(x)$} \\
+        & = h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz - \int_{y}^{-\infty} (1 - \bar{\Phi}(\frac{y-\omega}{h}))f(\omega) \frac{1}{h} \, d\omega \right) - F(y) \\
+        & =  h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz + \int_{y}^{-\infty}  \bar{\Phi}(\frac{y-\omega}{h})f(\omega) \frac{1}{h} \, d\omega \right)  \\
+        & =  h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz + \int_{0}^{\infty}  \bar{\Phi}(z)f(y-zh) \, dz \right)  \\
+        & =  h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz + \int_{0}^{-\infty}  \bar{\Phi}(-t)f(y+th) * -1 \, dt \right)  \\
+        & =  h\left(\int_{-\infty}^0 \Phi(z)f(y-zh) \, dz + \int_{0}^{-\infty}  \Phi(t)f(y+th) \, dt \right) \tag{$\bar{\Phi(-x)}=\Phi(x)$} \\
+        & =  h\left(\int_{-\infty}^0 \Phi(z)(f(y-zh) - f(y + zh)) \, dz \right)
+    \end{align*}
+So bias squared is in $h^2 = n^{-2/5}$ term, and variance is in $\frac{1}{n}$ term.
+
+\subsection{Multidimensional density estimation with Multivariate Normal Smoother} 
+Result: bias $O(h^2)$ and variance $O(\frac{c}{nh^d})$ where $d$ is the dimension. RMSE is $O(n^{-2/(d+4)})$. So as $d$ increases, we will have less and less convergence. 
+
+
+\section{Bayesian Statistics} 
+\subsection{General Formulation} 
+    \begin{align*}
+        f(p|data) = \frac{p(data|p) * f(p) }{p(data)}
+    \end{align*}
+On the top is the data's likelihood times the prior. The bottom is the likelihood of the data times prior integrated over entire support. 
+
+\subsection{Example}
+Setup: Bernoulli trial with result 1, 1, 1, 1. Let $f(p) = unif[0,1]$ to be the prior (uninformative prior). The posterior distribution is :
+    \begin{align*}
+        f(p|data) 
+        & = \frac{p(data|p) * p(p)}{p(data)} \\
+        & = \frac{p^4 * 1}{\int_0^1 1 * p^4 \, dp} \\
+        & = 5p^4
+    \end{align*}
+So the posterior mode is 
+    \begin{align*}
+        \argmax_p 5p^4 = 1
+    \end{align*}
+The posterior mean is 
+    \begin{align*}
+    \int_0^1 p * f(p|data) \,dp = \int_0^1 5p^5\, dp = \frac{5}{6}
+    \end{align*}
+
+\subsection{Beta Distribution as Conjugate Prior for Binomial Distribution} 
+Beta distribution with parameter $\alpha, \beta$ is defined as:
+    \begin{align*}
+        f(p) = \frac{p^{\alpha-1}(1-p)^{\beta-1}}{Beta(\alpha, \beta)}
+    \end{align*}
+If an experiment has $k$ success and $n-k$ failure. The likelihood of the data is: 
+    \begin{align*}
+        p^k (1-p)^{n-k}
+    \end{align*}
+The posterior can always be looked at from proportion perspective (since $p(data)$ is a constant): 
+    \begin{align*}
+    f(p|data) 
+    & \propto p(data|p) * f(p) \\
+    & = p^k (1-p)^{n-k} p^{\alpha-1}(1-p)^{\beta-1}\\
+    & = p^{\alpha + k - 1} (1-p)^{\beta + n - k - 1}
+    \end{align*}
+So the posterior distribution is also a new beta density with $\alpha' = \alpha + k$ and $\beta' = \beta + n - k$
+
+\subsection{Gaussian Distribution as Conjugate Prior for Gaussian} 
+Let $X_i$ be iid from $N(\mu^*,1)$, and assume the prior distribution for $\mu^*$ to be $N(0,1)$. The posterior is 
+    \begin{align*}
+        f(\mu|data) 
+        & \propto f(data|\mu) *f(\mu) \\
+        & = (\frac{1}{\sqrt{2\pi}})^n\exp(-\sum \frac{(x_i-\mu)^2}{2}) \frac{1}{\sqrt{2\pi}}\exp(-\mu^2/2)\\
+        & \propto \exp(-\sum \frac{(x_i-\mu)^2}{2}) \exp(-\mu^2/2) \\
+        & =\exp(-\frac{1}{2} (\mu^2 + \sum x_i^2 + n*\mu^2 - 2\mu \sum x_i))\\
+        & \propto \exp(-\frac{1}{2} ((n+1)\mu^2 - 2\mu \sum x_i))\\
+        & = \exp(-\frac{n+1}{2} (\mu^2 - \frac{2\mu \sum x_i)}{n+1})\\
+        & \propto \exp(-\frac{n+1}{2}(\mu-\frac{\sum x_i}{n+1})^2)
+    \end{align*}
+So this is a new Gaussian distribution with $\mu' = \frac{\sum x_i}{n+1}$ and $\sigma' = \frac{1}{n+1}$
+
+\subsection{Gamma Distribution as Conjugate Prior} 
+Overall result: If $X_i$ are iid from $Gamma(\lambda, \alpha)$, then there exists a conjugate prior on $\lambda^*$ which is Gamma distribution.  
+
+
+\subsection{Bayesian Regression}
+
+\subsubsection{Non-Bayesian Regression Formulation}
+Regression normally has the form of 
+    \begin{align*}
+        Y_i = \alpha_0 x_0 + \alpha_1 x_1 + ... + \alpha_d x_d + \epsilon_i
+    \end{align*}
+where $x_0 = 1$ and $\epsilon_i$ is iid $N(0, \sigma^2)$. The goal is to estimate $\alpha_i$ and $\sigma$. By setting the equation to be the form of $\epsilon_i = \cdot$, we can get Gaussian likelihood 
+    \begin{align*}
+        L(\alpha_0, ..., \alpha_d, \sigma^2) 
+        & = \prod_{i=1}^n\left(\frac{1}{\sqrt{2\pi}\sigma} \exp\left(-\frac{1}{2}(\frac{y_i - \sum_{j=0}^{d} \alpha_j x_{ji}}{\sigma})^2  \right) \right) \\
+        l(\alpha_0, ..., \alpha_d, \sigma^2)
+        & = \log(\frac{1}{\sqrt{2\pi}\sigma}) - \sum_{i=0}^n \frac{1}{2} \left(\frac{y_i - \sum_{j=0}^d \alpha_j x_{ji}}{\sigma} \right)^2 \\
+    \end{align*}
+Notice that the $\alpha_{j}$ that maximizes the log likelihood is equivalent to minimize $\sum_{i=0}^n(y_i - \sum_{j=0}^{d} \alpha_j x_{ji})^2$.\\
+In matrix vector formulation, we let $Y$ and $a$ be a $n \times 1$ matrix, $X$ is $n\times d$ matrix. So we have 
+    \begin{align*}
+        & Y = Xa + \Sigma \tag{$\Sigma \sim N(0, \sigma^2 C)$}\\
+        & \text{$C$ in general is a known typically diagonal non-identity matrix}
+    \end{align*}
+Then the MLE estimator is equivalent to minimize 
+    \begin{align*}
+        (Y-Xa)^T C^{-1} (Y-Xa)
+    \end{align*}
+    
+\subsubsection{Bayesian Regression Formulation}
+In Bayesian formulation, we have 
+    \begin{align*}
+        & Y = Xa + \Sigma\\
+        & \Sigma \sim N(0, \sigma^2 C) \tag{$C$ is known, but $\sigma^2$ is unknown} \\
+        & a \sim N(O, I) \tag{Gaussian Prior} 
+    \end{align*}
+From this formulation, we know that the posterior is 
+    \begin{align*}
+        f(\alpha|data) \propto \exp\left(-\frac{\sum_{j=0}^d \alpha_i^2}{2} - \frac{(Y-X\alpha)^TC^{-1}(Y-X\alpha)}{2\sigma^2} \right)
+    \end{align*}
+Notice that the first part is from $f(a)$, and the second part is from $p(data|a)$. So we can derive the mode of the posterior (the $a$ that maximizes the probability) to be 
+    \begin{align*}
+        \argmin_\alpha (Y-X\alpha)^T C^{-1} (Y-X\alpha) + \frac{1}{2}\sum_{j=0}^d \alpha_i^2
+    \end{align*}
+Hence Regression with Gaussian prior is equivalent to regression with L2 regularization. \\
+
+If we use Laplace distribution as prior, such as $\frac{1}{2}e^{-\abs{\alpha}}$, then the final mode is equivalent to L1 regularization. 
+    \begin{align*}
+        \argmin_\alpha (Y-X\alpha)^T C^{-1} (Y-X\alpha) + \frac{1}{2}\sum_{j=0}^d \abs{\alpha_i}
+    \end{align*}        
+    

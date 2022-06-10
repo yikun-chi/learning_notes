@@ -1,0 +1,791 @@
+\chapter{Markov Chains}
+
+\section{Primer: Dynamical System} 
+In discrete time, a deterministic dynamical system can be modeled as 
+    \begin{align*}
+        & X_{n+1} = f(X_n) \tag{Time invariant version} \\
+        & X_{n+1} = f_n(X_n) \tag{Time variant version} 
+    \end{align*}
+We can add a sequence of iid random variables $Z_i$ to obtain stochastic model
+    \begin{align*}
+        & X_{n+1} = f(X_n, Z_{n+1}) \tag{Time invariant version} \\
+        & X_{n+1} = f_n(X_n, Z_{n+1}) \tag{Time variant version}        
+    \end{align*}
+In continuous time, we can model a deterministic dynamical system via differential equation
+    \begin{align*}
+        & \partiald{t} x(t) = f(x(t)) \tag{Time invariant version} \\
+        & \partiald{t} x(t) = f(t, x(t)) \tag{Time variant version} \\
+    \end{align*}
+We can add white noise, which is continuous analog to a sequence of iid r.v. to obtain stochastic version 
+    \begin{align*}
+        & \partiald{t} x(t) = f(x(t)) + \epsilon(t) \tag{Time invariant version} \\
+        & \partiald{t} x(t) = f(t, x(t)) + \epsilon(t) \tag{Time variant version} \\
+    \end{align*}
+
+
+\section{Markov Property}
+Markov property essentially says that the future state only depend on the most recent past state (asymptotically loss of memory / asymptotic independence). In discrete time:
+    \begin{align*}
+        P(X_{n+1} \in \cdot | X_0, ..., X_n) = P(X_{n+1} \in \cdot | X_n)
+    \end{align*}
+In continuous time: 
+    \begin{align*}
+        P(X(t+s) \in \cdot | X(u), 0 \leq u \leq t) = P(X(t+s)\in \cdot | X(t))
+    \end{align*}
+
+\section{Discrete One-step transition Kernel} 
+The one step transition kernel denotes the probability of next state given the current state. Generally it is defined as 
+    \begin{align*}
+        P(n+1, x, B) = P(X_{n+1} \in B|X_n = x)
+    \end{align*}
+In stationary transition setting, the time doesn't matter, hence regardless what $n$ is, we have the transition kernel: 
+    \begin{align*}
+        P(x, B) = P(X_{n+1} \in B | X_n = x)
+    \end{align*}
+So the matrix $[P(n+1)]$ is defined as 
+    \begin{align*}
+        [P(n+1, x, y) : x,y\in S]
+    \end{align*}
+The stationary transition probability matrix is 
+    \begin{align*}
+        [P(x,y):x,y \in S]
+    \end{align*}
+
+\section{Forward and Backward Equation} 
+\paragraph{Motivation} Suppose we want to compute distribution of 
+    \begin{align*}
+        X_2 | X_0 = x
+    \end{align*}
+We can obtain it via the product of one-step transition matrix: 
+    \begin{align*}
+        P(X_2 = y | X_0 = x) 
+        & = \sum_{z\in S} P(1, x, z) * P(2, z, y) \\
+        & = P(1) * P(2) \tag{$P^2$ if process is stationary} 
+    \end{align*}
+We define the n step transition probability matrix as 
+    \begin{align*}
+        P_n = P(1) * P(2) ... * P(n)
+    \end{align*}
+But notice this is $O(nd^3)$ operation. We want to compute $P(1)...P(n)$ recursively via matrix vector instead of matrix matrix computation. 
+
+\paragraph{Forward Equation} Let $\mu_0$ be a row vector on $S$ represent as the initial probability distribution, then we have 
+    \begin{align*}
+        & \mu_0 P(1)...P(n) = \mu_n \\
+        & \Longrightarrow \mu_n = \mu_{n-1}P(n) \tag{Forward Equation} \\
+        & \mu_0(x) = P(X_0 = x) \\
+        & \mu_n(x) = P(X_n = x)
+    \end{align*}
+So for a specific $x$, we have: 
+    \begin{align*}
+        \mu_i(x) = (\mu_0 P(1)...P(i))(x) 
+    \end{align*}
+The alternative form is 
+    \begin{align*}
+        \mu_{i+1} - \mu_i = \mu_i(P(i+1)-I)
+    \end{align*}
+In stationary transition probability setting $P(i) = P$, the simplifed form is 
+    \begin{align*}
+        \mu_{i+1} - \mu_i = \mu_i(P-I)
+    \end{align*}
+
+\paragraph{Backward Equation} Let $r(x):x\in S$ be a column vector on $S$ represent  reward function of state $x\in S$. then we can calculate the utility $u_i$ via 
+    \begin{align*}
+        & u_n = P(1)...P(n)r \\
+        & u_0 = r \\
+        & \Longrightarrow \mu_i = P(n-i+1) ... P(n-1) P(n) r \tag{Backward Equation}
+    \end{align*}
+The interpretation of $u_i(x)$ is the expected reward at step $X_n$ given $n-i$ step ago $X_{n-i}=x$
+    \begin{align*}
+        u_1(x)
+        & = (P(n)r)(x)\\
+        & = \sum_{y\in S} p(n, x, y) r(y)\\
+        & = E[r(X_n)|X_{n-1}=x]\\
+        u_n(x) 
+        & = E[r(X_n)|X_0 = x]
+    \end{align*}
+The alternative form is 
+    \begin{align*}
+        u_i - u_{i-1} = (P(n-i+1) - I)u_{i-1}
+    \end{align*}
+In stationary transition probability setting $P(i) = P$, the simplifed form is 
+    \begin{align*}
+        u_i - u_{i-1} = (P - I)u_{i-1}
+    \end{align*}
+
+\section{Intuition for Markov Convergence} 
+In deterministic system $X_n = f(X_{n-1})$, converges means that if $X_n \to X_\infty$, then $x_\infty = f(x_\infty)$. In Markov Chain setting $X_{n+1}=f(X_n, Z_{n+1})$, since at each time $n+1$ we introduce a noise $Z_{n+1}$, strictly as surely convergence won't be possible. So we have that 
+    \begin{align*}
+        & X_n \Rightarrow X_\infty \\
+        & \text{then } X_\infty \overset{D}{=}f(X_\infty, Z) \tag{a fresh $Z$}
+    \end{align*}
+\paragraph{Example: 2 State Markov Chains} Suppose we have only two state, with transition probability matrix 
+    \begin{align*}
+        P = 
+        \begin{bmatrix}
+            1 - \alpha & \alpha \\
+            \beta & 1-\beta\\
+        \end{bmatrix}
+    \end{align*}
+First notice that $P$ will always be a stochastic matrix (cell value $\geq 0$ and row sums to 1). For any stochastic matrix, we have 
+    \begin{align*}
+        Pe = e \tag{$e = $ col vector with all 1} 
+    \end{align*}
+So we know $1$ is an eigenvalue of $P$ and $e$ is the associated eigenvector. We can easily get the decomposition $\lambda_2 = 1 - \alpha - \beta$
+    \begin{align*}
+        R = \begin{bmatrix} 1 & \frac{-\alpha}{\alpha + \beta} \\ 1 & \frac{\beta}{\alpha + \beta}\end{bmatrix}
+    \end{align*}
+So after n steps, we have 
+    \begin{align*}
+        P^n = 
+            \begin{bmatrix} 
+                \frac{\beta}{\alpha+\beta} & \frac{\alpha}{\alpha+\beta} \\
+                \frac{\beta}{\alpha+\beta} & \frac{\alpha}{\alpha+\beta}
+            \end{bmatrix} 
+            + 
+            (1-\alpha - \beta)^n * 
+            \begin{bmatrix}
+                \frac{\alpha}{\alpha+\beta} & \frac{-\alpha}{\alpha+\beta} \\
+                \frac{-\beta}{\alpha+\beta} & \frac{\beta}{\alpha+\beta}        
+            \end{bmatrix}
+    \end{align*}
+So if $|1-\alpha-\beta| < 1$, then: 
+    \begin{align*}
+        P^n(x,y) = P(X_n = y|X_0 = x) =  \begin{cases} \frac{\beta}{\alpha+\beta} & y=1 \\ \frac{\alpha}{\alpha+\beta} & y = 2\end{cases}
+    \end{align*}
+So the final state after $n$ steps is independent of the initial state $X_0$. The other two conditions are 
+    \begin{itemize}
+        \item $1-\alpha-\beta = 1$ which means $\alpha = \beta = 0 $. So the 2 state markov chains can be reduced to two 1-state chain that always transition to self state. 
+        \item $1 - \alpha - \beta = -1$ which means $\alpha = \beta = 1$. So it is always transit to the other state. Which means in even n, we have $X_n = X_0$
+    \end{itemize}
+
+
+
+\section{Example of Markov Chain} 
+Notice the setup itself gives us stationary transition probability: 
+
+\subsection{Autoregressive Process} 
+    \begin{align*}
+        X_{n+1} = \rho x_n + Z_{n+1}
+    \end{align*}
+We can get its distribution (transition density) by differentiating the CDF of $Z$
+    \begin{align*}
+        p(x,y) 
+        & = \partiald{y} P_x( X_1 \leq y) \tag{$P(X_1 \leq y |X_0 = x$} \\
+        & = \partiald{y} P(\rho x + z_1 \leq y ) \\
+        & = \partiald{y} P(z_1 \leq y - \rho x) \\
+        & = f_z(y-\rho x) \\
+        & \Longrightarrow p(x, B) = \int_B f_z(y-\rho x) \, dy
+    \end{align*}
+
+\subsection{Storage Model} 
+Let $S_n$ be the amount stored at time $n$, $Z_n$ is the inflow at time $n$, generally modeled as iid, and $O_n$ is the out flow, generally modeled as $a S_n^b$
+    \begin{align*}
+        & S_{n+1} = S_n + Z_{n+1} - O_{n-1} \tag{New = Old + In - Out}  \\
+        & \Longleftrightarrow \\
+        & S_{n+1} + a S_{n+1}^b = S_n + Z_{n+1} 
+    \end{align*}
+We can again start with the cdf. Let $g(x) = x + ax^b$
+    \begin{align*}
+        p(x,y) 
+        & = \partiald{y}P_x(S_1 \leq y) \\
+        & = \partiald{y} P_x(g(S_1) \leq g(y)) \\
+        & = \partiald{y} P_x(S_1 + a S_1^b \leq y + ay^b) \\
+        & = \partiald{y} P(x + Z_1 \leq y + ay^b)\\
+        & = \partiald{y} F_z(y + ay^b - x)\\
+        & = f_z(y + ay^b - x) (1 + aby^{b-1})
+    \end{align*}
+So the transition probability is : (notice we have to do $P(x,B)$ because in continuous setting, $P(x,y)=0$ just like in continuous distribution $P(X=x)=0$ technically. 
+    \begin{align*}
+        P(x, B) = \int_B f_z(y + ay^b - x) (1 + aby^{b-1}) \, dy
+    \end{align*}
+    
+\subsection{Congestion Modeling} 
+This congestion model will have a mixed distribution as result instead of one $P(x,B)$. The setting consists of a waiting room with infinite capacity, and a single server using FIFO order: 
+    \begin{align*}
+        & W_n \tag{Waiting time for customer $n$} \\
+        & A_n \tag{Arrival time for customer $n$} \\
+        & D_n \tag{Departure time for customer $n$} \\
+        & X_n \equiv A_n - A_{n-1} \tag{iid Inter arrival time between customer $n$ and $n-1$} \\
+        & V_n \tag{iid service time for customer $n$} 
+    \end{align*}
+In general, we have 1) departure time = arrival + wait + service and 2): If customer $n$ departs before $n+1$ arrivals, then wait time is 0. Otherwise, the wait time is the difference between $n$ departure and $n+1$ arrival:   
+    \begin{align*}
+        & D_{n+1} = A_{n+1} + W_{n+1} + V_{n+1} \\
+        & W_{n+1} = max(0, D_n - A_{n+1}) = [D_n - A_{n+1}]^+
+    \end{align*}
+Combine together we have 
+    \begin{align*}
+        W_{n+1} 
+        & = [A_n + W_n + V_n - A_{n+1}]^+ \\
+        & = [W_n + V_n - X_{n+1}]^+ \\
+        & =  [W_n + Z_{n+1}]^+  \tag{$ Z_{n+1} \triangleq V_n - X_{n+1}$} 
+    \end{align*}
+Assume $y \geq 0$
+    \begin{align*}
+        P_x(W_1 \leq y) 
+        & = P(x + Z_1 \leq y)  \\
+        & = F_z(y-x)  \\
+        P_x(W_1 = 0) 
+        & = P_X(W_1 \leq 0) \\
+        & = F_z(-x)\\
+    \end{align*}
+Taking partial derivative: 
+    \begin{align*}
+        \partiald{y} P_x(W_1 \leq y) = f_z(y-x)
+    \end{align*}
+So we have: 
+    \begin{align*}
+        & P(x, dy) =F_z(-x) \zeta_0(dy) + f_z(y-x)dy\\
+        & \zeta_0(A) = \begin{cases} 1 & 0\in A \\ 0&  \text{else} \end{cases}\\
+        & P(x, B) = F_z(x) \zeta_0(B) + \int_B f_z(y-x) dy
+    \end{align*}
+    
+
+\section{Markov Chain Convergence Proof} 
+\paragraph{Statement}: 
+Let $\Lambda$ be a stochastic matrix with identical rows, and $\delta > 0$, then as $n\to \infty$ : 
+    \begin{align*}
+        P \geq \delta \Lambda \Longrightarrow P^n \to \Pi 
+    \end{align*}
+where $\Pi$ is a stochastic matrix with identical rows (For each row, each column has the same value). This means that the chain converge to state that is independent of initial state.
+
+\paragraph{Proof} 
+We can represent $P$ as: 
+    \begin{align*}
+        & P = \delta \Lambda + (1 - \delta) Q \\
+        & Q \triangleq \frac{(P - \delta \Lambda)}{1-\delta}
+    \end{align*}
+Lemma 1: Note that if $J$ is a stochastic rank 1 matrix with identical rows, then $RJ=J$ for any stochastic matrix $R$.
+    \begin{align*}
+        P^2 
+        & = P\left( \delta \Lambda + (1 - \delta) Q  \right) \\
+        & = \delta \Lambda + (1-\delta) PQ \tag{$P\Lambda = \Lambda$ due to lemma 1}\\
+        & = \delta \Lambda + (1-\delta) (\delta \Lambda + (1 - \delta) Q) Q\\
+        & = \delta \Lambda + \delta (1 - \delta)\Lambda Q + (1-\delta)^2 Q^2
+    \end{align*}
+By induction, we can derive that 
+    \begin{align*}
+        P^n = \delta \Lambda + \delta (1-\delta) \Lambda Q + ... + \delta(1-\delta)^{n-1}\Lambda Q^{n-1} + (1-\delta)^n Q^n
+    \end{align*}
+Define a new norm of max matrix row sum 
+    \begin{align*}
+        \lvert\lvert\lvert A \rvert\rvert\rvert \triangleq  \max_{x\in S}\sum_y \abs{A(x,y)}
+    \end{align*}
+Given the nature of Stochastic matrix, we know that 
+    \begin{align*}
+        \lvert\lvert\lvert \Lambda Q^n \rvert\rvert\rvert = 1
+    \end{align*}
+Given the boundness,  we have 
+    \begin{align*}
+        \delta \Lambda + \delta (1-\delta) \Lambda Q + ... + \delta(1-\delta)^{n-1}\Lambda Q^{n-1} + (1-\delta)^n Q^n \to \sum_{j=0}^\infty \delta(1-\delta)^j\Lambda Q^j \triangleq \Pi
+    \end{align*}
+Hence $P^n \to \Pi$ and $\lvert\lvert\lvert P^n - \Pi \rvert\rvert\rvert = O(\abs{1-\delta}^n)$. 
+
+\paragraph{Extension 1: } Suppose that $\exists m \geq 1$ s.t. $P^m \geq \delta \Lambda$, then we also have $P^n \to \Pi$ as $n \to \infty$. 
+
+\paragraph{Extension 2: } $\exists \, y$ s.t. $P_x(X_m = y) \geq \delta \quad \forall x$ iff $P^m \geq \delta \Lambda$. This former statement is also equivalent to $\min_{x\in S} P_x(X_n = y) > 0$. 
+
+\section{Markov Chain Convergence in Infinite State Space} 
+Let $|S|=\infty$ and $S$ is discrete, then the condition is $\exists \, y \in S \, m \geq 1$ such that 
+    \begin{align*}
+        \inf_{x\in S} P_x(X_m = y) > 0
+    \end{align*}
+i.e.: Uniformly high probability that the chain will hit $y$ in $m$ steps. Then we know that $P^n \to \Pi$ , the difference is still in order $O(\abs{1-\delta}^n)$
+
+\section{Markov Chain Convergence in General State Space} 
+More formally, the distribution $\Pi$ is a stationary distribution of $P$ if 
+    \begin{align*}
+        \Pi(A) = \int_{x\in S} \Pi(dx) P(x, A)
+    \end{align*}
+We first define total variation metric as 
+    \begin{align*}
+        \sup_{A\subseteq S, x\in S} \abs{P_x(X_n, A) - \Pi(A)}
+    \end{align*}
+We can then define Doeblin minorization condition as $\exists \epsilon > 0$ and a probability measure $\mu(\cdot)$ such that for all $x\in S$ and measurable subsets $A \subseteq S$, we have 
+    \begin{align*}
+        P(x, A) \geq \epsilon \mu(A)
+    \end{align*}
+The convergence theorem says that if above condition is met, then for any $x\in S$ and given the stationary distribution $\Pi(\cdot)$ we have 
+    \begin{align*}
+         \sup_{A\subseteq S, x\in S} \abs{P_x(X_n, A) - \Pi(A)} \leq (1-\epsilon)^m
+    \end{align*}
+    
+We can apply Doeblin minorization condition on the Markov chain, then the rate of convergence can be bounded by a function that goes to 0. 
+
+
+
+\section{Martingale Sequence} 
+
+\subsection{Definition}
+Sequence $(M_n: n \geq 0)$ is a martingale adapted to sequence $(Z_n: n \geq 0)$ if
+    \begin{itemize}
+        \item Adaptedness: For each $n\geq 0$, there exists a deterministic function $f_n$ such that $M_n = f_n(Z_0, ..., Z_n)$.
+        \item Finite expectation: $E[M_n] < \infty , n > 0$ 
+        \item Stable expectation: $E[M_{n+1}|Z_0, ..., Z_n] = M_n$.
+            \begin{itemize}
+                \item Sub-Martingale: $E[M_{n+1}|Z_0, ..., Z_n] \geq M_n$.
+                \item Super-Martingale: $E[M_{n+1}|Z_0, ..., Z_n] \leq M_n$.
+            \end{itemize}
+    \end{itemize}
+
+\subsection{Examples} 
+\subsubsection{Random Walk} 
+    \begin{align*}
+        & S_n = Z_1 + ... + Z_n \\
+        & Z_i \sim iid Z\\
+        & E[Z] = 0
+    \end{align*}
+Adaptedness (sum function) and finite expectation (0) is trivial. For stable expectation: 
+    \begin{align*}
+        E[S_{n+1}| Z_0, ..., Z_n] 
+        & = E[S_n + Z_{n+1} | Z_0, ..., Z_n] \\
+        & = S_n + E[Z_{n+1} | Z_0, ..., Z_n]\\
+        & = S_n 
+    \end{align*}
+
+\subsubsection{Random Walk 2} 
+    \begin{align*}
+        & S_n = Z_1 + ... + Z_n \\
+        & Z_i \sim iid Z\\
+        & E[Z] = 0 \\
+        & E[Z^2] < \infty \\
+        & M_n = S_n^2 - n\sigma^2
+    \end{align*}
+Adaptedness is easy. For expectation: 
+    \begin{align*}
+        E[M_n]
+        & = E[S_n^2] - n * Var(Z) \\
+        & = E[S_n]^2 + Var(S_n) - n * Var(Z) \\
+        & = n^2 * Var(Z) - n Var(Z) < \infty
+    \end{align*}
+For conditional expectation 
+    \begin{align*}
+        E[M_{n+1} | Z_0, ..., Z_n]
+        & = E[S_{n+1}^2 - (n+1) \sigma^2 | Z_0, ..., Z_n] \\
+        & = E[(S_n + Z_{n+1})^2 - (n+1) \sigma^2 | Z_0, ..., Z_n] \\
+        & = E[S_n^2 + Z_{n+1}^2 - 2 S_n Z_{n+1} - (n+1) \sigma^2 | Z_0, ..., Z_n]\\
+        & = S_n^2 + E[Z_{n+1}^2 | Z_0, ..., Z_n] - 2 S_n E[Z_{n+1}|Z_0, ..., Z_n] - (n+1)\sigma^2 \\
+        & = S_n^2 + \sigma^2 - (n+1)\sigma^2 \\
+        & = S_n^2 - n\sigma^2 = M_{n}
+    \end{align*}
+
+\subsubsection{Markov Chain}
+Let $f:S \to \mathbbm{R}$ be a bounded function that $Pf = f$. Notice adaptedness is trivial, finite expectation is given by boundness. For conditional expectation: 
+    \begin{align*}
+        E[f(X_{n+1}) | X_1, ..., X_n]
+        & = \sum_{y\in S} f(y) P(X_{n+1}=y | X_1, ..., X_n) \tag{Notice the probability is the $(X_n, y)$ entry in $P$} \\
+        & = (Pf)(X_n) \tag{Entry associated with $X_n$ in vector $Pf$} \\
+        & = f(X_n)
+    \end{align*}
+
+
+\subsection{Represent Martingale as Sum of Differences} 
+Martingale sequence can be re-written as 
+    \begin{align*}
+        & M_n = M_0 + D_1 + ... + D_n \\
+        & D_n = M_n - M_{n-1}
+    \end{align*}
+Notice that $E[D_n] = 0$ given how Martingale sequence is defined. Also, $Cov(D_i, D_j) = 0$ given the history.
+Proof: Assume $i < j$ and that MG is square integrable ($E[M_n^2] < \infty$) : 
+    \begin{align*}
+        E[D_i D_j | Z_0, ..., Z_{j-1}] 
+        & = D_i * E[D_j | Z_0, ..., Z_{j-1}] \\
+        & = D_i * E[M_j - M_{j-1} | Z_0, ..., Z_{j-1}] \\
+        & = D_i * (E[M_j | Z_0, ..., Z_{j-1}] - M_{j-1}) \\
+        & = D_i * 0 = 0
+    \end{align*}
+Another point is $Cov(M_0, D_i) = 0, i \geq 1$. So overall we have 
+    \begin{align*}
+        Var(M_n) = Var(M_0) + \sum_{i=1}^n Var(D_i)
+    \end{align*}
+
+\subsection{WLLN For Martingale Sequence} 
+Assume $Var(D_i) \leq c < \infty$:
+\begin{align*}
+    P(\abs{\frac{M_n}{n}} > \epsilon) 
+    & \leq \frac{Var(M_n)}{\epsilon^2n^2} \tag{Chebyshev's Inequality}\\
+    & = \frac{Var(M_0) + \sum_{i=1}^n E[D_i^2]}{n^2\epsilon^2}\\
+    & = 0
+\end{align*}
+Hence $\frac{M_n}{n}\overset{P}{\to} 0$
+
+
+\subsection{SLLN For Martingale Sequence} 
+Martingale Converge Theorem: Let $M_n: n\geq 0$ be a generic Martingale sequence adopted to $Z_n, n \geq 0$ and $\sup_{n\geq 0}E[\abs{M_n}] < \infty$, then there eixtis a finite-valued r.v. $M_\infty$ such that 
+    \begin{align*}
+        M_n \overset{a.s.}{\to} M_\infty
+    \end{align*}
+
+\paragraph{Some Intuition} a value higher then interval $[a,b]$ is called an upcrossing of $[a,b]$. Martingale have finite number of upcrossing (upcrossing inequality). A sequence doesn't converge iff it osscilates or go up / down infinitey. The former is prevented by the upcrossing inequality of MG, and the later is prevented by the finite upper bound $\sup_{n\geq 0}\abs{E[M_n]} < \infty$
+
+\paragraph{Proof Intuition}: Notice that $\frac{1}{n} M_n$ is not Martingale, so we can't directly use Martingale Convergence Theorem. We need to construct $\alpha_j, j \geq 0$ deterministicly such that 
+    \begin{align*}
+        \hat{M}_n = \alpha_0 M_0 + \sum_{i=1}^n \alpha_jD_j
+    \end{align*}
+is always a MG sequence. 
+
+\paragraph{Formal Proof} 
+Let $\hat{M}_n = M_0 + \sum_{j=1}^n \frac{1}{j} D_j$. 
+    \begin{align*}
+        Var(\hat{M}_n) 
+        & = Var(M_0) + \sum_{j=1}^n \frac{1}{j^2} E[D_j^2] \tag{Assume bounded}\\
+        & \leq var(M_0) + \sum_{j=1}^\infty \frac{1}{j^2} c \\
+        & \Longrightarrow \sup_{n\geq 1} E[\hat{M}_n^2] < \infty \\
+        & \Longrightarrow \sup_{n \geq 1} E[\abs{\hat{M}_n}] < \infty \tag{By Cauchy-Schwartz Inequality} \\
+    \end{align*}
+So by Martingale Convergence Theorem, we know that there exists finite valued r.v. $\hat{M}_\infty$ such that 
+    \begin{align*}
+        & \hat{M}_n \overset{a.s.}{\to} \hat{M}_\infty \\
+        & \Longrightarrow M_0 + \sum_{j=1}^n \frac{1}{j} D_j \overset{a.s.}{\to} \hat{M}_\infty 
+    \end{align*}
+Apply Kronecker's lemma path by path ($\alpha_j = j, x_j = D_j$), we have 
+    \begin{align*}
+        M_0 + \frac{1}{n} (D_1 + ... + D_n) \overset{a.s.}{\to} 0
+    \end{align*}
+
+\paragraph{Kronecker's Lemma} 
+Let $\alpha_n, n \geq 0$, $\alpha_n \nearrow \infty$, and 
+    \begin{align*}
+        \sum_{j=1}^n \frac{X_j}{\alpha_j} \to c < \infty
+    \end{align*}
+then 
+    \begin{align*}
+        \frac{1}{\alpha_n} * \sum_{i=1}^n x_i \to 0
+    \end{align*}
+
+
+\subsection{CLT For Martingale} 
+Let $M_n: n \geq 0$ adopted to $Z_n: n \geq 0$, and $M_n$ is square-integrable.$D_i$ form a stationary sequence, then 
+    \begin{align*}
+        & \frac{1}{\sqrt{n}}M_n \Rightarrow \sigma N(0,1) \\
+        & \sigma^2 = Var(D_1) = E[D_1^2]
+    \end{align*}
+    
+\section{Connect Martingale to Markov Chains} 
+
+\subsection{Reward function difference as MG difference}
+Let $g: S \to \mathbbm{R}$ and bounded. $D_i = g(X_i)-E[g(X_i)|X_{i=1}]$, then $D_i$ is a MG differences adopted to Markov Chain $X_n: n \geq 0$ 
+
+\paragraph{Proof}
+The adaptedness and finite expectation are obvious. Now we want to show stable expectation, hence 
+    \begin{align*}
+        & 0 
+        & = E[D_i | X_0, ..., X_{i-1}]   \tag{Notice $D_i$ is the MG difference} \\
+        & = E[g(X_i)|X_0, ..., X_{i-1}] - E[g(X_i)|X_{i-1}]\\
+        & = E[g(X_i)|X_{i-1}] - E[g(X_i)|X_{i-1}] \tag{Markov Property}\\
+        & = 0
+    \end{align*}
+Example if $S$ is discrete, we have 
+    \begin{align*}
+        E[g(X_i)|X_{i-1}]
+        & = \sum_{y\in S}P(X_{i-1}, y) g(y)\\
+        & = (Pg)(X_{i-1}) \tag{The $X_{i-1}$ corresponding entry to Matrix Vector product}
+    \end{align*}
+
+\subsection{Construct Markov Chain}
+We have $D_i = g(X_i) - E[g(X_i)|X_{i-1}]$ is a MG difference, we can get a MG by 
+    \begin{align*}
+        M_n 
+        & = \sum_{i=1}^n D_i\\
+        & = \sum_{i=1}^n \left[g(X_i) - (Pg)(X_{i-1}) \right]\\
+        & = \sum_{i=0}^{n-1}\left[g(X_i) - (Pg)(X_{i-1}) \right] - g(X_0) + g(X_n)
+    \end{align*}
+
+\section{Markov Chains Reward Function Converges}
+We know that if $p^m \geq \delta \Lambda$, then $p^n \to \Pi$, hence $P_x(X_n = y) \to \pi(y)$ as $n \to \infty$. This is the convergence of probability distribution function. If we look at the backward function, the intuition is follows: \\
+
+Let $r(x)$ be a function $S\to \mathbbm{R}$, let $r(X_n)$ denotes the entry in vector $r$ associated with state $X_n$. (Notice $X_n \in \S$). Let $\pi$ be a row in stable distribution $\Pi$.  Then LLN of Markov Chains states: 
+    \begin{align*}
+        \frac{1}{n} \sum_{j=0}^{n-1} r(X_j) \overset{P}{\to} \sum_{x\in S} \pi(x) r(x) = \pi r
+    \end{align*}
+
+In another word, the long term cumulative reward of each state can be decomposed into the probability at that state times the reward at that state. 
+
+\paragraph{Proof}
+Let 
+    \begin{align*}
+        r_c(x) \triangleq r(x) - \sum_{y\in S} \pi(y) r(y)
+    \end{align*}
+Then we can represent $\sum_{j=0}^{n-1} r_c(X_j)$ in terms of MG sequence if we could find $g$ such that $(I-P)g = r_c$ This is also called the poission equation. Then 
+    \begin{align*}
+        \sum_{i=0}^{n-1} r_c(X_i) - g(X_1) + g(X_0)
+    \end{align*}
+would be MG sequence, then we have 
+    \begin{align*}
+        \frac{1}{n} \sum_{i=0}^{n-1} r_c(X_i) \overset{a.s.}{\to} 0
+    \end{align*}
+So now we need to shown the existence of $g$. We know that $\abs{S}>\infty$ and  $p^m \geq \delta \Lambda$. Notice sicne $P$ is a stochastic matrix, we have $Pe = e$, 1 is an eigenvalue of $P$. So $P-I$ is a singular matrix, so we cannot just take inverse to obtain the solution to $(I-p)g = r_c$. In another word, any solution of $g$ is not unique, because $\hat{g} = g + ce$ is also a solution. \\
+
+Also notice $(I-P)g = h$ will not be solvable for all $h$. Because $p^n \to \Pi$, we have $p^{n+1} = p^np = pp^n \Rightarrow \Pi = \Pi p = p \Pi$. Since $\Pi$ has identical rows, let $\pi$ be a row of $\Pi$. Apply to $(I-P)g=h$ we get $0 = \pi h$. So $h$ has to satisfies $\pi h = 0$, which $r_c$ satisfies. 
+
+From $p^n \to \Pi$ we have 
+    \begin{align*}
+        (P-\Pi)^2 = P^2 - p\Pi - \Pi p + \Pi^2 = p^2 - \Pi
+    \end{align*}
+by induction, we have 
+    \begin{align*}
+        (P-\Pi)^n = p^n - \Pi
+    \end{align*}
+Notice due to convergence, $p^n - \Pi$ goes to 0 geometrically fast, so norm of $||P-\Pi||^r < 1$ for some $r \geq 1$. So $\sum_{n=0}^\infty (P-\Pi)^n$ converges and to $(I - (P-\Pi))^{-1}$ (inverse also exists). \\
+
+Let $\tilde{g} = g + \Pi g$ (if $g$ is a solution, $\tilde{g}$ is also a solution). We have 
+    \begin{align*}
+        & (I-P)(g + \Pi g) = r_c \\
+        & \Longrightarrow (I - P + \Pi)g = r_c \\
+        & \Longrightarrow g = (I - P + \Pi)^{-1}r_c
+    \end{align*}
+So overall with $g = ( I - p + \Pi)^{-1} r_c$ we have the following MG sequence
+    \begin{align*}
+        \sum_{i=1}^{n-1} r_c(X_i) + g(X_n) - g(X_0)
+    \end{align*}
+and 
+    \begin{align*}
+        \frac{1}{n} \sum_{i=0}^{n-1} r(X_i) \overset{a.s.}{\to} \sum_{x\in S} \pi(x) r(x)
+    \end{align*}
+    
+    
+\section{CLT for Markov Chains} 
+If $|s| < \infty$, $p^m \geq \delta \Lambda$, then we know that $g=(I-P+\Pi)^{-1} r_c$ exists. \\
+Let $r(x)$ be a function $r\to \mathbbm{R}$, let $r(X_n)$ denotes the entry in vector $r$ associated with state $X_n$. (Notice $X_n \in \S$). Let $\pi$ be a row in stable distribution $\Pi$.  Then CLT of Markov Chains states: 
+    \begin{align*}
+        & \sqrt{n} \left( \frac{1}{n}\sum_{j=0}^{n-1} r(X_j) - \pi r) \right) \Rightarrow \sigma N(0,1)\\
+        & \sigma^2 = E_\pi[D_i^2]
+    \end{align*}
+    
+    
+
+\section{First Transition Analysis}
+
+\subsection{Recursion Equation} 
+Let $u^*(x) = E_x[T]$ and $T=inf \{ n\geq 0: x_n \in C^c \}$. I.e.: $u^*$ is the expected value of starting from $x$, first time step into $C^c$. Notice that given the setup, $u^*$ has to satisfies the recursion 
+    \begin{align*}
+        & u(x) = 1 + \sum_{y\in C}P(x,y) u(y)\\
+    \end{align*}
+Let $u$ be a vector represent $(u(x), x\in C)$, $B$ be the block in transition matrix represent the transition probability from $C$ to $C$, then we can also written the above recursion as 
+    \begin{align*}
+        & u = e + Bu\\
+    \end{align*}
+Alternatively, let $u'$ be a vector represent $(u(x), x \in S)$ (notice here we are in space $S$ instead of $C$), then we have 
+    \begin{align*}
+       & u' = e + Pu'\\
+       & u'(x) = 
+           \begin{cases}
+           1 + \sum_{y}P(x,y)u'(y) & x\in C \\
+           0 & x \in C^c
+           \end{cases}
+    \end{align*}
+Note here we shown that $u^*(x)$ is a solution to the above recursion equation. Later we show that it is the minimal non-negative solution. 
+
+\subsection{Potential Complication Example of FTA} 
+
+\subsubsection{Infinity} 
+Let $|S|=2$, and each state will only transition back to itself. Let $C^c=\{2\}$, $u^*(1) = E_1[T]$. Given the setup, it is obvious to see that $u^*(1) = \infty$. This showcases complication 1: $\infty$ can be a legit solution and always will be a solution to $u = e + Bu$ for non=trivial $u$. 
+\subsubsection{Non-uniqueness}
+Let $|S|$ be a infinite birth-death chain. At any state $m$ there is $p$ go to state $m+1$ and $q$ go to state $m-1$. At 0, there is $Q$ go to sate $0$ again. Let $C^c = \{ 0 \} $. $u^*(x) = E_x[T]$. So we have 
+    \begin{align*}
+        & u(x) =
+            \begin{cases}
+             1 + p u(x+1) + qu(x-1) & x \geq 1 \\
+             0 & x = 0
+            \end{cases}
+    \end{align*}
+Notice that this equation has non-unique solutions since it only has 1 boundary condition. 
+
+
+
+\subsection{Minimal Solution to Recursive Equation} 
+\begin{align*}
+    u^*(x) 
+    & = E_x[T] \\
+    & = E_x[\sum_{j=0}^{T-1} 1] \\
+    & = E_x[\sum_{j=0}^\infty \indic{T > j}] \\
+    & = \sum_{j=0}^\infty p_x(T > j) \tag{Recall $T = inf\{n \geq 0: x_n \in C^c\}$}\\
+    & = \sum_{j=0} \sum_{y_1, ..., y_{j-1}\in C}p(x,y_1)p(y_1,y_2)...p(y_{j-2},y_{j-1})\\
+    & = \sum_{j=0}^\infty  \sum_{y_1, ..., y_{j-1}} B(x,y_1)...B(y_{j-2}, y_{j-1})\\
+    & = \sum_{j=0}^\infty B^j e
+\end{align*}
+Notice above derivation will give us the same recursion equation 
+    \begin{align*}
+        u^*
+        & = \sum_{j=0}^\infty B^j e\\
+        & = e + \sum_{j=1}^\infty B^j e \\
+        & = e + B \sum_{j=0}^\infty B^j e\\
+        & = e + B u^*
+    \end{align*}
+\paragraph{Theorem}: $u^*$ is the minimal non-negative solution of $u = e + B u$. Equivalently, if $u'\geq 0$ satisfies $u' = e + Bu'$, then $u'(x) \geq u^*(x), x\in C$
+
+\paragraph{Proof}: Let $u'\geq 0$ be a solution to $u = e + Bu$
+    \begin{align*}
+        u' 
+        & = e + Bu'\\
+        & = e + B(e + Bu')\\
+        & = E + Be + B^2 u'\\
+        & ...
+        & = e + Be + ... + B^ne + B^{n+1}u'\\
+        & \geq  e + Be + ... + B^ne \tag{Both $B$ and $u'$ is non-negative} \\
+        & = u^*
+    \end{align*}
+    
+\subsection{Relation to Reward Function} 
+If we now think about reward function. 
+    \begin{align*}
+        & u^*(x) = E_x[\sum_{j=0}^{T-1} r(x_j)]\\
+        & u(x) = r(x) + \sum_{y\in C}P(x,y)u(y)
+    \end{align*}
+So the recursive equation becomes 
+    \begin{align*}
+        u = r + Bu
+    \end{align*}
+Following the same set of derivation, we have 
+    \begin{align*}
+        u^*(x) = \sum_{n=0}^\infty B^n r
+    \end{align*}
+    
+\subsection{Example: Gambler's ruin problem} 
+Let state 0 be gambler 1 loose all money, and state $N$ be gambler 2 loose all money. Then the game between two gambler can be representd as Markov Chain with state 0 to $N$. At each state $m\neq 1 \neq N$, there is $p$ chance to mvoe to $m+1$, and $q$ chance to move to $m-1$. State $0$ and $N$ are absorbing states. \\
+
+Let $x_i \in S$ be the wealth of gambler 1 at time $i$. Let $T = inf\{n\geq 0: x_n \in C^c\}$, $C^c = \{ 0, N \}$. Let $u^*(x) = P_x(X_T = 0)$, hence the probability of gambler 1 ruined. Notice this setup is a specific version of P(x enter $C^c$ through A). So let $A = \{ 0 \}$. Hence $u^*(x) = p_x(X_T\in A)$. \\
+
+We know it has to satisfies recursion (step into $A$, or step int something that is not $A$)
+    \begin{align*}
+        u(x) = \sum_{y\in A} P(x,y) + \sum_{y\in C} P(x,y) u(y)
+    \end{align*}
+As a result, we will have linear system: 
+    \begin{align*}
+        & u = f + B u \\
+        & f = (f(x) : x\in C)\\
+        & f(x) = \sum_{y\in A} P(x,y) \\
+        & u^* = \sum_{n=0}^\infty B^n f
+    \end{align*}
+    
+
+\subsection{High Level FTA} 
+At high level, we can summarize FTA as 
+    \begin{align*}
+        & u = f + G u \\
+        & G \geq 0, f \geq 0 \\
+        & u^* = \sum_{n=0}^\infty G^n f
+    \end{align*}
+If $G^n \to 0$, then $\sum_{n=0}^\infty G^n = (I-G)^{-1}$ and $(I-G)^{-1}$ is non-negative. Conversely, if $(I-G)^{-1}$ is singular or has negative entries, then $G^n$ does not converges to 0,the infinite sum does not converge and $u^* \neq (I-G)^{-1} f$
+
+\paragraph{Proof}: $G^n \to 0$, so $||G^m||< 1$ for some $m \geq 1$
+\begin{align*}
+    \sum_{r=0}^\infty \sum_{e=0}^{m-1} ||G^{rm + e}|| 
+    & \leq \sum_{r=0}^\infty \sum_{e=0}^{m-1} || G^e|| * || G^m||^r \\
+    & \leq \sum_{r=0}^\infty \sum_{e=0}^{m-1} || G^l|| * || G^m||^r\\
+    & \leq \sum_{r=0}^\infty c * || G^m||^r \\
+    & \text{Converges, so the infinite sum is finite}
+\end{align*}
+Now we want to show that $\sum_{n=0}^\infty G^n = (I-G)^{-1}$. We have 
+    \begin{align*}
+        & (I - G) (I + G + ... + G^n) = I-G^{n+1}\\
+        & \Rightarrow (I-G)\sum_{n=0}^\infty G_n = I
+    \end{align*}
+    
+\paragraph{Proof Converse}: Suppose $(I-G)^{-1}$  exists and is non-negative. We have 
+    \begin{align*}
+        & (I-G)(I+ G + ... + G^n) = I - G^{n+1} \leq I \\
+        & \Longrightarrow (I-G)^{-1}(I-G)(I+G+...+G^n)\leq (I-G)^{-1}
+    \end{align*}
+    
+\subsection{Lyapunov Bound}
+So if we have $u^* = \sum_{n=0}^\infty G^n f$, how can I guarantee that $u^*$ is finite-valued and can obtain an upper bound. It is not always easy to solve $u = f + G u$ directly (for which $u^*$ is the minimum non-negative solution). So we can relax the equality to inequality. \\
+
+Suppose we have $h \geq 0$ such that $Gh \leq h-f$, $h$ is finite-valued, then 
+    \begin{align*}
+        u^* = \sum_{n=0}^\infty G^n f \leq h
+    \end{align*}
+    
+\paragraph{Proof} 
+\begin{align*}
+    & Gh \leq h - f\\
+    & \Longrightarrow Gh \leq h \tag{$f$ is non-negative} \\
+    & \Longrightarrow G^2h \leq Gh \leq h \\
+    & \Longrightarrow G^nh \leq h
+\end{align*}
+Since $h$ is finite valued, so $G^nh$ is also finite valued. 
+\begin{align*}
+    & f \leq h - Gh \tag{Assumption} \\
+    & \Longrightarrow Gf \leq Gh - G^2h \\
+    & ...
+    & \Longrightarrow G^n f \leq G^nh - G^{n+1}h\\
+\end{align*}
+If we sum over all the inequalities (notice how $h - Gh + Gh - G^2h$ cancels). we have 
+    \begin{align*}
+        \sum_{i=0}^n G^if \leq h - G^{n+1} h \leq h
+    \end{align*}
+    
+\paragraph{Example}
+Look at the infinite birth death chain again with transition probability $p,q$. Notice if $p > q$, the the process will go to infinity with probability 1, so we only look at the cases of $p < q$. Let $u^*(x) = E_x[T]$. So we have 
+    \begin{align*}
+        & ph(x+1) + qh(x-1) \leq h(x) - 1 & x \geq 2 \\
+        & p h(2) \leq h(1) - 1 & x = 1 \\
+    \end{align*}
+If we guess $h(x) = cx$, then we can solve it get $c$ has to satisfies $c \geq \frac{-1}{p-q}$. So we have $E_x[T] \leq \frac{x}{q-p}$
+
+
+\section{General Reducible Markov Chain Decomposition} 
+We know that in discrete state space: 
+    \begin{align*}
+        & p^m \geq \delta \Lambda, \delta > 0, m \geq 1, \Lambda \text{rank one stochastic matrix with identical rows} \\
+        & \Longleftrightarrow \\
+        & \exists y \in S s.t. \inf_{x\in S} p^m(x,y) > 0\\
+        & \Longleftrightarrow \\
+        & |S| < \infty, \text{$X$ is irreducible and aperiodic} \\
+    \end{align*}
+
+\section{Principle of Regeneration}
+$|S|=\infty$ or $S$ is continuous and non compact. How do we reason its convergence? 
+
+\subsection{Motivation}
+Let $X_{n+1} = [X_n + Z_{n+1} - 1]^+$, $S = \{ 0, 1, ...\}$ We know that this chain is irreducible if $Z_{n+1}$ has non-zero probability mass on $0$ and $2$.\\
+
+Let's pick an arbitrary benchmark $c$ and let $T(0)$ be the first time $X_n = c$, and $T(1)$ will be the second time and so on. Notice that the distribution of $X_n$ from $T(0)$ to $T(1)$ is the same as the distribution of $X_n$ from $T(1)$ to $T(1)$, and each distribution is independent from the other. \\
+
+\subsection{Recurrent}
+Let $X$ be an irreducible MC, $x\in S$ is recurrent if $P_x(\tau(x) < \infty) = 1$ where $\tau(x) = inf\{ n\geq 1: x_n = x \}$.  Notice this definition is a class property. If it is true for one state, it is true for all states. 
+
+\subsection{LLN}
+Let $\tau_i = T(i) - T(i-1), i \geq 1$, let $r_i: S \to \mathbbm{R}_+$, let $y_i = \sum_{j=T(i-1)}^{T(i)-1} r(x_j)$. If $X$ is irreducible and recurrent, then $(y_i, \tau_i)$ are iid sequence. Notie tht $y_i$ and $\tau_i$ are correlated, longer sequence generally means bigger reward. But each pair is indpendent from the other pair. The final convergence theorem is 
+    \begin{align*}
+        \frac{1}{n} \sum_{i=0}^{n-1} r(x_i) \overset{a.s.}{\to} \frac{E_z\left[\sum_{j=0}^{\tau(z)-1}r(x_j) \right] }{E_z\left[ \tau(z)\right]}
+    \end{align*}
+Extension: If $X$ is irreducible and positive recurrent, then 
+    \begin{align*}
+    & \frac{1}{n} \sum_{i=0}^{n-1} r(x_i) \overset{a.s.}{\to} \sum_{x\in S}\pi(x)r(x) \\
+    & \pi(x) = \frac{E_z\left[\sum_{j=0}^{\tau(z)-1} I(X_j = x) \right]}{E_z[\tau(z)]}
+    \end{align*}
+    
+\section{MC Chain Stability and Equilibrium Behavior} 
+In discrete space, stability is equivalent to positive recurrence, and equilibrium is equivalent to $\pi = \pi P$. \\
+
+Let $X= (X_n: n \geq 0)$ be s-valued. $|S|<\infty$, $X$ is irreducible and aperiodic (equivalent to $p^m \geq \delta \Lambda)$, then there exists a pmf $\Pi$ such that as $n\to\infty$
+    \begin{align*}
+        & p^n(x,y)\to \pi(y) \\
+        & \frac{1}{n}\sum_{j=0}^{n-1}r(x_j) \overset{a.s.}{\to} \sum_{x\in S}\pi(x) r(x)
+    \end{align*}
+
+If we let $|s|\geq \infty$ (so include infinite), and $X$ is still irreducible, then TFAE: 
+    \begin{itemize}
+        \item MC positive recurrence: $E_z[\tau(z)]<\infty$ 
+        \item Exists a pmf solution $\pi$ to $\Pi = \Pi P$
+    \end{itemize}
+then we have 
+    \begin{align*}
+        & \frac{1}{n}\sum_{i=0}^{n-1}r(x_i) \overset{a.s.}{\to} \sum_{w\in S}\pi(w) r(w)\\
+        & \pi(x) = \frac{E_z\left[\sum_{j=0}^{\tau(z)-1}I(x_j=x) \right]}{E_z[\tau(z)]}
+    \end{align*}
+    
+Extension: How to establish stability by showing positive recurrence through Lyapunov bound. \\
+Recall: $u^*=E_x[T]$, $T = \inf\{n\geq 0: x_n \in C^c \}$, $B = (B(x,y):x,y\in C)$, $B(x,u) = P(x,y)$. If there exists a function $g$ such that 
+    \begin{align*}
+        Bg \leq g-e \Longleftrightarrow \sum_{y\in C}B(x,y)g(y) \leq g(x)-1 \qquad \forall x
+    \end{align*}
+then $E_x[T]\leq g(x)$. 
+    \begin{enumerate}
+        \item Choose $C^c = \{ Z \} $
+        \item Find a suitable Lyapunov function for $g$
+        \item $E_z[\tau(z)]\leq g(x)$
+        \item $E_z[\tau(z)]\leq 1 + \sum_{y\neq z} P(z,y)g(y)$
+    \end{enumerate}
+So if we can show the last part is bounded, then we have positive recurrence. 

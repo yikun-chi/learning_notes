@@ -1,0 +1,19 @@
+\chapter{Primer} 
+
+\section{Random Variables Convergence}
+A random variable is a \textbf{function} that maps a point in the sample space $\Omega$ to measurable space, such as $\mathbb{R}$. This means that when we say a r.v. converges, it means a sequence of function converges. E.g.: let $S_n(w)$ be the number of heads in the $n$ toss. If we want to say as $n\to \infty$, $\frac{1}{n} S_n \to \frac{1}{2}$, there are actually many different way of converges, such as 
+    \begin{itemize}
+        \item point-wise convergence: $f_n(x) \to f_\infty(x) \forall x$
+        \item Convergence almost for every point: $f_n(x) \to f_\infty(x)$ for $a.l.x$. i.e.: it only not convergence for a set that measures 0. For example rational vs. real. 
+        \item Uniform convergence: $\sup_x \abs{f_n(x) - f_\infty(x)} \to 0$
+    \end{itemize}
+
+\section{Problem of Points} 
+Problem of points motivates the intuition of expectation, law of large number, and conditional probability. Player A and B play for \$1 and the first one wins 5 rounds gets the price. Current score is (4, 3). How to split the pot? 
+    \begin{align*}
+        u(4,3) 
+        & = P( \textbf{A wins} | (4,3)) \\
+        & = \frac{1}{2} u(5,3) + \frac{1}{2}u(4,4)\\
+        & = \frac{1}{2} + \frac{1}{2}(u(5,4) + u(4,5)) \\
+        & = \frac{3}{4}
+    \end{align*}

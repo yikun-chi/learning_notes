@@ -1,0 +1,771 @@
+\chapter{Probability} 
+
+\section{Measure Space}
+A measure space is a triple $(\mathcal{X, A, \mu})$ where
+    \begin{itemize}
+        \item $\mathcal{X}$ is a set
+        \item $\mathcal{A}$ is a $\sigma-$algebra on the set $\mathcal{X}$
+        \item $\mu$ is a measure on $(\mathcal{X}, A)$
+    \end{itemize}
+    
+
+\subsection{Sigma algebra}
+A $\sigma-$algebra on a set $\mathcal{X}$ is a collection $\Sigma$ of subsets of $\mathcal{X}$ that are: 
+    \begin{itemize}
+        \item Closed under complement 
+        \item Closed under countable unions and countable intersections
+    \end{itemize}
+
+\subsection{Measure}
+Let $\mathcal{X}$ be a set and $\Sigma$ a $\sigma-$ algebra over $\mathcal{X}$. A function $\mathcal{\mu}$ that maps $\Sigma$ to extended real number line is called a measure if the following are true: 
+    \begin{itemize}
+        \item Non-negativity: $\mathcal{\mu}(E) \geq 0 \forall E \in \mathcal{\Sigma}$
+        \item Null empty set: $\mathcal{\mu}(\emptyset) = 0$
+        \item Countable additivity: For all countable collections $\{E_k\}_{k=1}^\infty$ of pairwise disjoint sets in $\Sigma$, we have $\mathcal{\mu}(\bigcup E_k) = \sum \mathcal{\mu}(E_k)$
+    \end{itemize}
+
+
+\section{Consistency Property} 
+For $n \geq 0$. Let $P_n$ be a probability of $\mathbbm{R}^{n+1}$. The sequence $P_n: n \geq 1$ is said to have the consistency property if for $n \geq m$: 
+    \begin{align*}
+        P_n((X_0, ..., X_m) \in \cdot) = P_((m_0, ..., X_m) \in \cdot)
+    \end{align*}
+
+\section{Kolmogorov's Extension Theorem} 
+Let $(P_n : n \geq 1)$ be a sequence of probabilities having the consistency property, then there exists a probability $P$ on $\Omega$ for which 
+    \begin{align*}
+        P((X_0, ..., X_m) \in \cdot) = P_m((X_0, ..., X_m) \in \cdot)
+    \end{align*}
+for $m \geq 0$ and $P$ is unique. 
+
+
+
+\section{Convergence} 
+
+
+\subsection{Convergence in Probability} 
+We say $Z_n \overset{P}{\to} Z_\infty$ iff $\forall \epsilon >0$: 
+    \begin{align*}
+        P(\abs{Z_n  - Z_\infty} > \epsilon) \to 0 \textbf{ as } n \to \infty
+    \end{align*}
+
+
+\subsection{Bounded Convergence Theorem}
+Suppose $Y_n \overset{P}{\to} Y_\infty$ as $n \to \infty$. If there exists $c < \infty$ such that $P(\abs{Y_n} \leq c) = 1$ for $n \geq 1$, then $E[Y_n] \to E[Y_\infty]$ as $n \to \infty$. So it establishes the relationship between convergence in probability and convergence of expectation. 
+
+\paragraph{Proof}
+\begin{align*}
+    \abs{E[Y_n] - E[Y_\infty]} 
+    & \leq E[\abs{Y_n - Y_\infty}] \\
+    & \leq E\left[\abs{Y_n - Y_\infty}* \indic{\abs{Y_n - Y_\infty} \leq \epsilon} \right]   + E\left[\abs{Y_n - Y_\infty}* \indic{\abs{Y_n - Y_\infty} > \epsilon} \right] \\
+    & \leq \epsilon * P(\abs{Y_n - Y_\infty} \leq \epsilon) + 2c P(\abs{Y_n - Y_\infty} > \epsilon)\\
+    & \leq \epsilon +  2c P(\abs{Y_n - Y_\infty} > \epsilon)\\
+\end{align*}
+As $n \to \infty$, we have $\lim_{n\to \infty} sup \abs{E[Y_n] - E[Y_\infty]} \leq \epsilon$
+
+
+\subsection{Dominated Convergence Theorem}
+Suppose $Y_n \overset{P}{\to} Y_\infty$ as $n \to \infty$ and that there exists a r.v. $W \geq 0$ for which $E[W] < \infty$ and 
+    \begin{align*}
+        \abs{Y_n(\omega)} \leq W(\omega)
+    \end{align*}
+for $\omega \in \Omega$ and $n \geq 1$, then 
+    \begin{align*}
+        E[Y_n] \to E[Y_\infty] 
+    \end{align*}
+as $n \to \infty$
+
+
+\subsection{Monotone Convergence Theorem}
+Suppose $Y_n: n \geq 0$ is a sequence of non-negative r.v., and 
+    \begin{align*}
+        Y_{n}(\omega) \leq Y_{n+1} (\omega)
+    \end{align*}
+ as $n \to \infty$ for $n \geq 0$ and $Y_\infty(\omega) \overset{\triangle}{=} \lim_{n\to \infty} Y_n(\omega)$, then  we have 
+    \begin{align*}
+        E[Y_n(\omega)] \leq E[Y_{n+1}(\omega)]
+    \end{align*}
+
+
+\subsection{Fatou's Lemma}
+Suppose $Y_n$ is a sequence of non-negative r.v., then 
+    \begin{align*}
+        E[\lim_{n \to \infty} Y_n] \leq \lim_{n \to \infty} E[Y_n]
+    \end{align*}
+
+
+\subsection{Small O notation}
+$f(\theta) = o(g(\theta))$ as $\theta \to 0$ if $\frac{f(\theta)}{g(\theta)} \to 0$ as $\theta \to 0$
+
+\subsection{big O notation}
+If $\abs{f(\theta)} \leq c g(\theta)$ then $f(\theta) = O(g(\theta))$
+
+
+\subsection{Convergence in Distribution} 
+This is also called convergence weakly or converge in law. Let  $Z_n \in \mathbbm{R}$ be a sequence of r.v.s. Then We say $Z_n \overset{D}{\to} Z_\infty$ or $Z_n \Rightarrow Z_\infty$ iff
+    \begin{align*}
+        \lim_{n \to \infty} F_n(x) = F_\infty(x)
+    \end{align*}
+for every number $x\in \mathbbm{R}$ at which $F_\infty(x)$ is continuous. 
+Notice that we do not need this to hold at all $n$. 
+
+For example, let $X_n$ to be a uniform distribution on the interval of $(0, \frac{1}{n})$. It's cdf is 
+    \begin{align*}
+        F_{X_n}(x) = 
+        \begin{cases}
+        0 & x \leq 0 \\
+        x n & x \in (0, \frac{1}{n}) \\
+        1 & x \geq \frac{1}{n}
+        \end{cases}
+    \end{align*}
+Now consider the degenerate random variable $X = 0$, we know that $F_X(0) = 1$, But $F_{X_n}(0)=0$, so those two cdf failed to converge at point $x=0$ where $F$ is discontinuous. But they $X_n \overset{D}{\to} X$
+
+
+\subsubsection{Extention to Skorohod Representation}
+If $Z_n \Rightarrow Z_\infty$, then there exists a probability space supporting a sequence $Z_n': 1 \leq n \leq \infty$ for which 
+    \begin{itemize}
+        \item $Z_n' \overset{D}{=} Z_n$ 
+        \item $Z_n' \to Z_\infty'$ a.s. as $n \to \infty$
+    \end{itemize}
+
+
+\subsubsection{Expansion}
+$Z_n \overset{D}{\to}$ iff any of the three
+    \begin{itemize}
+        \item $F_{Z_n} \to F_{Z_\infty}$ at all continuity points of $F_{Z_\infty}$
+        \item $F_{Z_n}^{-1}(z) \to F_{Z_\infty}^{-1}(z)$  holds at all except countably many $z$
+        \item $P(F_{Z_n}^{-1}(z) \to F_{Z_\infty}^{-1}(z)) = 1$ as $n \to \infty$
+    \end{itemize}
+
+\subsubsection{Sampling from Uniform Distribution}
+Given $u_1, ...$ iid from uniform $[0,1]$, we can obtain $x_i$ iid with cdf $F_x$ through inversion 
+    \begin{align*}
+    F_X(F_X^{-1}(x)) = X = F^{-1}(F(X))
+    \end{align*}
+where $F_x^{-1}(x) = inf \{ y: F_X(y) \geq x \}$. This means that $F_X^{-1}(u)$ has cdf $F_X$. 
+
+\paragraph{Example}
+Suppose we want to generate $X_i$ from $Exp(\lambda)$. We know that $f(x) = \lambda e^{-\lambda x}$ and $F(x) = 1 - e^{-\lambda x}$. In order to generate this from uniform $[0,1]$, we need to 
+    \begin{enumerate}
+        \item $y = F^{-1}(x)$. So $F(y) = x = 1 - e^{-\lambda y} \Longrightarrow y= -\frac{1}{\lambda}(1-x)$
+        \item $X_i = -\frac{1}{\lambda} (1-U_i)$
+        
+    \end{enumerate}
+
+
+\subsection{Almost Sure Convergence}
+This is also called w/probability 1 or almost certain convergence.  
+    \begin{align*}
+    P(\lim_{n \to \infty} X_n = X) = 1
+    \end{align*}
+Alternative definition: 
+    \begin{align*}
+        & P(A) = 1 \\
+        & A = \{ \omega: Z_n(\omega) \to Z_\infty(\omega) \textbf{ as } n \to \infty \} 
+    \end{align*}
+
+
+\subsection{Hierarchy of Convergence}
+Almost sure $Y_n \to Y_\infty$ implies convergence in probability $Y_n \overset{P}{\to}$, which implies convergence in distribution $Y_n \Rightarrow Y_\infty$
+
+\subsection{Continuous Mapping Theorem} 
+Suppose $h$ is continuous, then if $X_n \to X$ (in any of the three convergence definition), we have $h(X_n) \to h(X)$ (in the corresponding convergence definition) 
+
+
+
+\subsection{TFAE}
+TFAE:  
+    \begin{itemize}
+        \item $Z_n \Rightarrow Z_\infty$
+        \item $\exists$ a probability space such that $Z_n' \to Z_\infty'$ a.s.with $Z_n' \Rightarrow Z_n$
+        \item $E[h(Z_n)] \to E[h(Z_\infty)] \forall h\in$ bounded continuous space \\
+        \item $c_{Z_n}(\theta) \to c_{Z_\infty}(\theta) \forall \theta$
+    \end{itemize}
+
+
+\section{Markov Inequality}
+Let $W$ be a random variable. $W \geq 0$, $E[W] < \infty$,  $x \geq 0$ then we have 
+    \begin{align*}
+        P(W \geq x) \leq \frac{E[W]}{x}
+    \end{align*}
+    
+\paragraph{Proof:}
+\begin{align*}
+    P(W \geq x) 
+    & = E[\mathbbm{I}(W > x)] \\
+    & \leq E[\frac{W}{x} * \mathbbm{I}(W > x)] \tag{$\frac{W}{x} > 1$}\\
+    & \leq E[\frac{W}{x}] \tag{Indicator variable can only be 0, 1}\\
+    & = \frac{E[W]}{x}
+\end{align*}
+
+
+
+\section{Chebyshev's inequality}
+Let $E[W^2] < \infty$ (finite variance), then 
+\begin{align*}
+    P(\abs{W - E[W]} \geq \epsilon) \leq \frac{Var(W)}{\epsilon^2}
+\end{align*}
+
+\paragraph{Proof}: Let $|W - E[W]|^2$ be the $W'$ and apply Markov Inequality 
+\begin{align*}
+    P(\abs{W - E[W]} \geq \epsilon)
+    & = P(\abs{W - E[W]}^2 \geq \epsilon^2)\\
+    & \leq \frac{E[\abs{W - E[W]}^2]}{\epsilon^2}\\
+    & = \frac{Var(W)}{\epsilon^2}
+\end{align*}
+
+
+
+\section{Jensen's Inequality} 
+Let $X$ be a random variable, and $\phi$ is a convex function, then 
+    \begin{align*}
+        \phi(E[X]) \leq E[\phi(X)]
+    \end{align*}
+\paragraph{Proof Sketch}: Given convex function, we have 
+    \begin{align*}
+        \frac{1}{n} \sum_{i=1}^n \phi(X_i) \geq \phi(\frac{1}{n} \sum_{i=1}^n X_i)
+    \end{align*}
+The left hand side converges in probability to $E[\phi(X)]$ due to LLN, the right hand side converges in probability to $\phi(E[X])$ with a lemma that says if $Z_n \overset{P}{\to} Z_\infty$, and $h$ is continuous, then $h(Z_n) \overset{P}{\to} h(Z_\infty)$
+
+\subsection{Cauchy-Schwarz Inequality}
+Cauchy-Schwarz inequality is a special case of Jensen's inequality when $\phi(x) = x^2$
+
+\subsection{Lyapunov's Inequality}
+Cauchy-Schwarz inequality can also be seen as a special case of Lyapunov's inequality. It states that if $0 < s < t$, then 
+    \begin{align*}
+        E[|Z|^s]^{\frac{1}{s}} \leq E[|Z|^t]^{\frac{1}{t}}
+    \end{align*}
+
+
+
+\section{Characteristic function}
+Given a real-valued r.v. $X$, the characteristic function of $X$ is defined as 
+    \begin{align*}
+        c_X(\theta) = E[e^{i \theta X}]
+    \end{align*}
+
+\subsection{Characteristic function and pdf}
+If $X$ has a pdf $f_X$, following the definition of expected value, the characteristic function is given by 
+    \begin{align*}
+        c_X(\theta) = \int_{-\infty}^\infty e^{i \theta x}f_X(x) \, dx
+    \end{align*}
+Characteristic function can be seen as a Fourier transform of the density. 
+
+
+\subsection{Existence of characteristic function} 
+Since $\abs{e^{i \theta X}} \leq 1$ (Euler's Formula), the characteristic function $c_X$ exists for any random variable $X$.  
+
+
+\subsection{Characteristic function and density}
+Characteristic function specifies the distribution function. If $a < b$, then 
+    \begin{align*}
+        P\left(X \in (a,b)\right) + \frac{1}{2}\left( P(X=a) + P(X=b) \right) = \lim_{t \to \infty} \frac{1}{2\pi} \int_{-t}^t \frac{e^{-i \theta a} - e^{-i \theta b}}{i \theta} c_X(\theta) \, d\theta
+    \end{align*}
+
+
+\subsection{Characteristic function and moment}
+Characteristic function can recover moments. Suppose $E[\abs{X}^k] < \infty$ for some $k \geq 1$, then $c_X$ is $k$ times continuously differentiable, and its $k$th derivatives can be given by 
+    \begin{align*}
+        C_X^{(k)}(\theta) = i^k E[X^k e^{i \theta X}]
+    \end{align*}
+
+
+\paragraph{Example of when K=1}
+\begin{align*}
+    \frac{c_X(\theta + h) - c_X(\theta)}{h}
+    & = \frac{E[e^{i (\theta + h) X}] - E[e^{i \theta X}]}{h}\\
+\end{align*}
+According to Euler's formula, the real part of this is 
+    \begin{align*}
+        \frac{\cos((\theta+h)X) - \cos(\theta X)}{h}
+    \end{align*}
+We can think of this as the average rate of change of $\cos(\theta X)$ w.r.t $\theta$ from $\theta$ to $\theta + h$, so by mean value theory we know that this average rate of change will equal to $-X \sin (\xi X)$ where $\xi \in [\theta, \theta+h]$. So we know 
+    \begin{align*}
+        \abs{ \frac{\cos((\theta+h)X) - \cos(\theta X)}{h}} \leq \abs{X}
+    \end{align*}
+Since $E[X] < \infty$, by Dominated Convergence Theorem we have 
+    \begin{align*}
+        E\left[ \frac{\cos((\theta+h)X) - \cos(\theta X)}{h} \right] \to -E[X\sin(\theta X)]
+    \end{align*}
+as $h \to 0$, similarly we have 
+    \begin{align*}
+        E\left[ \frac{\sin((\theta+h)X) - \sin(\theta X)}{h} \right] \to E[X\cos(\theta X)]
+    \end{align*}
+So we have 
+    \begin{align*}
+        \frac{c_X(\theta + h) - c_X(\theta)}{h}
+        & = \frac{E\left[e^{i (\theta + h) X} - e^{i\theta X} \right]}{h} \\
+        & = \frac{E\left[\cos((\theta+h)X) - \cos(\theta X) \right]}{h} + \frac{i E\left[\sin((\theta+h)X) - \sin(\theta X) \right]}{h} \\
+        & \to -E[X \sin(\theta X)] + i E[X \cos(\theta X)]\\
+        & = i ( E[ X \cos(\theta X) + i X \sin(\theta X)])\\
+        & =i E[X e^{i \theta X}]
+    \end{align*}
+    
+\subsection{Characteristic function of sums of independent random variables}
+    \begin{align*}
+        c_{S_n}(\theta) 
+        & = E[e^{i \theta S_n}]\\
+        & = E[\prod_{j=1}^n e^{i \theta X_j}] \\
+        & = \prod_{j=1}^n E[e^{i \theta X_j}] \tag{By independence} \\
+        & = \prod_{j=1}^n c_{X_j}(\theta)
+    \end{align*}
+    
+\subsection{Characteristic function approximation}
+Using Taylor Series expansion, if $E[X]=0$ and $Var(x) = \sigma^2 < \infty$, then $c_X(\theta) = 1 - \frac{\theta^2}{2} \sigma^2 + o(\theta^2)$
+
+\subsection{Characteristic function convergence}
+Let $X_n$ be a sequence of r.v. then 
+    \begin{align*}
+        X_n \Rightarrow X_\infty \tag{Convergence in distribution} 
+    \end{align*}
+as $n \to \infty$ if and only if 
+    \begin{align*}
+        c_{X_n}(\theta) \to C_{X_\infty}(\theta) \tag{Convergence that is not related to randomness}
+    \end{align*}
+
+as $n\to \infty$ at each $\theta \in \mathbbm{R}$. Similarly, if there exists a function $f_\infty$ that is continuous in a neighborhood of $0$ for which 
+    \begin{align*}
+        c_{X_n}(\theta) \to f_{\infty}(\theta)
+    \end{align*}
+as $n \to \infty$ at each $\theta in \mathbbm{R}$, then $f_\infty$ is the characteristic function of a finite-valued r.v. $X_\infty$ and  
+    \begin{align*}
+        X_n \Rightarrow X_\infty
+    \end{align*}
+    
+    
+\section{Law of Large Number}
+\subsection{Weak Law of Large Number}
+Let $x_1, ..., x_n$ be i.i.d samples and $E[x_i] < \infty$, then 
+    \begin{align*}
+        \bar{X_n} = \frac{1}{n}\sum_{i=1}^n x_i \overset{P}{\to} E[x_i]
+    \end{align*}
+
+\paragraph{Proof} for a weaker version by assuming $E[x_i^2] < \infty$ and iid:
+\begin{align*}
+    P(\abs{\bar{X}_n - E[X]} > \epsilon)
+    & \leq \frac{Var(\bar{X}_n)}{\epsilon^2} \\
+    & = \frac{Var(X_1)}{n \epsilon^2} \\
+    & \to 0 \textbf{ as } n \to \infty
+\end{align*}
+
+\paragraph{Proof 2} for a weaker version by assuming $E[x_i^2] < \infty$ and $X_i$s are stationary sequence ($Cov(X_m, X_n) = Cov(X_0, X_{n-m})$ distribution are time invariant) instead of iid. 
+\begin{align*}
+    P(\abs{\frac{1}{n}S_n - E[X_i]} > \epsilon) 
+    & \leq \frac{Var(\bar{X})}{\epsilon^2}\\
+    & = \frac{Var(S_n)}{n^2 \epsilon^2} \\
+    & = \frac{1}{n^2 \epsilon^2} E[(S_n - n* \bar{X}) ^2] \\
+    & = \frac{1}{n^2 \epsilon^2} E[\sum_{i=1}^n \tilde{X}_i^2] \tag{$\tilde{X}_i = X_i - E[X_i]$} \\
+    & = \frac{1}{n^2 \epsilon^2} E[\sum_{i=1}^n \sum_{j=1}^n \tilde{X}_i \tilde{X}_j] \\
+    & = \frac{1}{n^2 \epsilon^2} E[\sum_{i=1}^n \sum_{j=1}^n Cov(X_i, X_j) \\
+    & =  \frac{1}{n^2 \epsilon^2} E[\sum_{i=1}^n \sum_{j=1}^n C(i-j) \tag{Covariate time invariant} \\
+    & = \frac{1}{n^2 \epsilon^2} \left(n * C(0) + 2 * \sum_{i=1}^{n-1} (n-i) C(i)) \right) \\
+    & = \frac{C(0)}{n \epsilon^2} + \frac{2}{n} \frac{\sum (1-\frac{i}{n}) C(i)}{\epsilon^2}\\
+    & \leq \frac{C(0)}{n \epsilon^2} + \frac{2}{n \epsilon^2} \sum C(i)\\
+\end{align*}
+We know the first part goes to 0 as $n \to \infty$. Now for the second part, we know that $C(n) \to 0$ as $n \to \infty$. $\forall \epsilon > 0$, we have $\exists \tilde{n}$ such that $\abs{C(j)} \leq \epsilon_j \forall j \geq \tilde{n}$. So
+    \begin{align*}
+        \lim_{n \to \infty } \frac{1}{n} \abs{\sum C(j)} 
+        & \leq \frac{1}{n }\sum_{i=1}^{\tilde{n}} \abs{C(j)}  + \frac{1}{n }\sum_{i=\tilde{n}+1}^\infty \abs{C(j)}\\
+        & \leq \frac{1}{n }\sum_{i=1}^{\tilde{n}} \abs{C(j)}  + \frac{1}{n} n \epsilon_j\\
+        &  \leq \frac{1}{n }\sum_{i=1}^{\tilde{n}} \abs{C(j)}\epsilon_j\\
+    \end{align*}
+But the choice of $\epsilon_j$ is arbitrary. So the whole thing converges to 0 too. Hence complete the proof. 
+
+\subsection{Strong Law of Large Numbers}
+Let $X_i$ be an iid sequence of r.v. for which $E[X_i] < \infty$, then 
+    \begin{align*}
+        \frac{S_n}{n} \overset{a.s}{\to} E[X_i]
+    \end{align*}
+    
+\paragraph{Proof of bounded iid case} \mbox{}\\
+
+Lemma 1: \\
+Let $C_k: k \geq 1$ to be a sequence of events for which $P(C_k) = 1$ for $k \geq 1$, then 
+    \begin{align*}
+        P(\bigcap_{k=1}^\infty C_k) = \lim_{n \to \infty} P(\bigcap_{k=1}^\infty C_k) = 1
+    \end{align*}
+Proof Part 1: \\
+Notice that in the finite case $P(\bigcap_{k=1}^n C_k) = 1$ can be shown by looking at base case $P(C_1 \cap C_2) = P(C_1) + P(C_2) - P(C_1 \cup C_2) \geq 1+1-1$, and do induction. So we have $\lim_{n \to \infty} P(\bigcap_{k=1}^\infty C_k) = 1$\\
+
+
+Proof Part 2: \\
+First we can connect probability to expected value of indicator variable: 
+    \begin{align*}
+        P(\bigcap_{k=1}^\infty C_k) = E\left[\indic{\bigcap_{k=1}^\infty C_k})\right] & 
+        & P(\bigcap_{k=1}^n C_k) = E\left[\indic{\bigcap_{k=1}^n C_k})\right]
+    \end{align*}
+Second we can transform indicator of intersection of events to product of individual indicator 
+    \begin{align*}
+        \indic{\bigcap_{k=1}^\infty C_k}) = \prod_{k=1}^\infty \indic{C_k} & & 
+        \indic{\bigcap_{k=1}^n C_k}) = \prod_{k=1}^n \indic{C_k}
+    \end{align*}
+We can define the distribution of the product of indicator varibales
+    \begin{align*}
+        Y_n \triangleq \prod_{k=1}^n \indic{C_k} && Y_\infty \triangleq \prod_{k=1}^\infty \indic{C_k} \\
+    \end{align*}
+Since indicator variables can only take on value 0 or 1, we have a trivial monotone sequence 
+    \begin{align*}
+        Y_n \searrow Y_\infty
+    \end{align*}
+    
+By BCT we have $1 = E[Y_n] \to E[Y_\infty]$. Hence 
+    \begin{align*}
+        1 = E[Y_n] = P(\bigcap_{k=1}^n C_k) \to P(\bigcap_{k=1}^\infty C_k) 
+    \end{align*}
+
+
+Proof Statement: Let $X_i$ be an iid sequence for which there exists $c < \infty$ such that $P(\abs{X_1} \leq c) = 1$, then $P(A)=1$ where $A = \{ \omega : \frac{1}{n}(X_1(\omega) + ... + X_n(\omega)) \to E[X_1] \text{ as } n \to \infty \} $ \\
+
+Proof: \\
+$\bar{X}_n \to E[X_1]$ implies that $\forall \epsilon > 0 \, \exists N \, s.t. \, n \geq N(\epsilon) \Longrightarrow \abs{\bar{X_n} - X_\infty} < \epsilon$. In another word, there are only finite number of times where $\abs{\bar{X}_n - X_\infty} > \epsilon$. Further notice that we do not have to check every $\epsilon$, we can just check $\epsilon$ in a countable set such as $\epsilon = \frac{1}{n}$ So we can rewrite $A$ as 
+    \begin{align*}
+        & A = \bigcap{m \geq 1} A_m \\
+        & A_m = \{ \omega : \abs{\frac{S_n(\omega)}{n} - E[X_1]} > \frac{1}{m} \text{ only finite many times} \} 
+    \end{align*}
+Notice that $\omega \in A_m$ iff $\sum_{i=1}^\infty \indic{\abs{\frac{S_n(\omega)}{n} - E[X_1]}>\frac{1}{m}} < \infty$, i.e.: finite number of times violating the inequality. 
+    \begin{align*}
+        & E\left[\sum_{i=1}^\infty \indic{\abs{\frac{S_n(\omega)}{n} - E[X_1]}>\frac{1}{m}}\right]\\
+        & =\sum_{i=1}^\infty E\left[\indic{\abs{\frac{S_n(\omega)}{n} - E[X_1}>\frac{1}{m}}\right] \tag{Fibini's Theorem}\\
+        & \leq \sum_{i=1}^\infty \frac{Var(X_1)}{i \epsilon^2} \tag{Chebyshev's Inequality}
+    \end{align*}
+    
+Notice that this series does not converge, but if we replace $i$ with $i^2$, it converges. If the expected value is not infinite, then we know that the actual value is also not finite, which means $P(A_m) = 1$. Then by Lemma 1 we have $P(A) = 1$. \\
+
+This final bits shows why we can replace $i$ with $i^2$:
+    \begin{align*}
+        \frac{S_{(n+1)^2}}{(n+1)^2} - \frac{S_{n^2}}{n^2} 
+        & \leq \sum_{n^2+1}^{(n+1)^2} \abs{X_j}/ n^2 \\
+        & \leq \sum_{n^2+1}^{(n+1)^2} \frac{c}{n^2} \\
+        & = \frac{c (2n+1)}{n^2} \to 0 \text{ as $n \to \infty$}
+    \end{align*}
+    
+   
+
+
+\subsection{Generalization of the LLN using ergodic theorem} 
+An $S-$valued sequence $(X_j: j \geq 0)$ is stationary if 
+    \begin{align*}
+        (X_{n+j}) \overset{D}{=} (X_j)
+    \end{align*}
+Birkhoff's version of the Ergodic Theorem says that if $X_j$ is a real-valued stationary sequence with $E[X_0] < \infty$, then there exists a random variable $W$ for which 
+    \begin{align*}
+        \frac{1}{n} \sum_{j=0}^{n-1}X_j \overset{a.s.}{\to} W
+    \end{align*}
+as $n\to \infty$ and $E[W] = E[X_0]$
+    
+\subsection{SLLN and Infinite Sequence Probability Example} 
+Setup: Consider $X_i$ to be iid Bernulli with parameter $\frac{1}{2}$. So the natural sample space is $\Omega = \{ 0, 1\}^{\mathbbm{Z_+}}$. Let $X_i(\omega) = \omega_i$ where $\omega = (\omega_0, \omega_1, ...)$. \\
+
+
+Now let's consider event $A$ in the almost surely convergence definition. It is the infinite-dimensional event consisting of the sequence $\omega \in \Omega$ such that:  
+    \begin{align*}
+        A = \{ \omega : \frac{1}{n} \sum_{i=0}^{n-1} X_i(w) \to \frac{1}{2} \textbf{ as } n \to \infty \}
+    \end{align*}
+
+In finite-dimensional computation, we know that the probability of a particular sequence is  $P(X_0 = i_0, ..., X_{n-1} = i_{n-1}) = 2^{-n}$. So we can get the probability of any finite-dimensional event $A_n$ through $2^{-n} \abs{A_n}$ where $\abs{A_n}$ is the number of sequences lying in $A_n$. This approaches fails because if the sequence is infinite dimension, its probability equals to 0. 
+
+
+In order to think about the infinite sequence probability $P((X_0, X_1, ...) \in \cdot)$, we approach it from the binary representation of a $[0,1]$ uniform distribution. 
+
+Let $\tilde{\Omega} = [0,1]$ and let $\tilde{P}$ be the uniform distribution on $\tilde{\Omega}$ and let $Y(\tilde{\omega}) = \tilde{\omega}$, then 
+    \begin{align*}
+        \tilde{P}(Y \in B) = \int_B \, dy
+    \end{align*}
+    
+For $\tilde{\omega} \in [0,1]$, there exists a dyadic expansion (binary representation): 
+    \begin{align*}
+        \tilde{\omega} = \sum_{j=1}^\infty I_j(\tilde{\omega}) 2^{-j}
+    \end{align*}
+where $I_j(\tilde{\omega})\in \{ 0, 1 \}$.  We can then construct the probability $P$ as follows: 
+    \begin{align*}
+        P((X_0, ...)\in \cdot) \overset{\triangle}{=} \tilde{P}\{ (I_1, ...) \in \cdot \} 
+    \end{align*}
+So we transformed the probability of an infinite sequence into the probability of the binary representation of a r.v. b/t $[0,1]$. 
+
+
+
+\subsection{Application of LLN: Newstand Model} 
+Let $D$ be the demand, $x$ be the order amount, profit be 
+    \begin{align*}
+        W(x,D)=r * min(x,D) - cx + s * (x - min(x,D))
+    \end{align*}
+where $r$ is the revenue per newspaper, $c$ is the cost and $s$ is the rebate/trash recovery rate. We have     \begin{align*}
+    E[W(x,D)] 
+    & = E[r * min(x,D) - cx + s * (x - min(x,D))]\\
+    & = r x * P(D>x) + r * \int_0^x y f_D(y) \, dy - E[cx + s * (x - min(x,D))]\\
+    & = r x * P(D>x) + r * \int_0^x y f_D(y) \, dy - cx + E[s * (x - min(x,D))]\\
+    & = r x * P(D>x) + r * \int_0^x y f_D(y) \, dy - cx + s * \int_0^x((x-y) f_D(y) \, dy\\
+\end{align*}
+Taking derivative w.r.t $x$ and set it to 0 we get 
+    \begin{align*}
+        & 0 = r P(D>x) - rxf_D(x) + rx f_D(x) - c + s * \int_0^x f_D(y) \, dy + sx f_D(x) - sx f_D(x) \\
+        & \Longrightarrow P(D \leq x^*) = \frac{r-c}{r-s}
+    \end{align*}
+
+\subsection{Application of LLN: Investment} 
+Setup: Riskless investment return rate is $1 + \delta$, and risky investment return rate is $W_i$ at $i$-th time where $E[W_i] > 1 + \delta$. Let $f$ be the fraction of money allocated to riskless investment. So at any time, the return of investment is 
+    \begin{align*}
+        V_n = V_{n-1} ( f(1+\delta) + (1-f) W_n)
+    \end{align*}
+
+\paragraph{Strategy 1: Maximizing expected return}
+    \begin{align*}
+        & R_i \equiv f (1 + \delta) + (1-f) W_i \\
+        & V_n = V_0 \prod_{i=1}^n R_i \\
+        & E[V_n] = V_0 * \prod_{i=1}^n E[R_i] \tag{Independent assumption}  \\
+        & = V_0 * E[R_1]^n
+    \end{align*}
+So maxing $E[V_n]$ is equivalent to maximizing $R_1$, which means $f=0$. However, this is actually very risky. If $P(W_i=0) > 0$, then after $n$ rounds, the chance of encountering at least 1 wipe out time is $1 - P(W_i \neq 0)^n$. So as $n$ increases, this probability goes to 1. Once you are wiped out, there is no way to recover. So we need a different maximizing objective. 
+
+\paragraph{Strategy 2: Maximizing log expected return} 
+    \begin{align*}
+        \frac{1}{n} E[\log V_n] 
+        & = \frac{1}{n} E[\log V_0 + \sum_{i=1}^n \log R_i] \\
+        & = \frac{\log V_0}{n} + \frac{1}{n} \sum_{i=1}^n E[\log R_i]\\
+        & \overset{P}{\to} E[\log R_1]
+    \end{align*}
+So the objective is to maximizes $E[\log R_1]$, which is smaller than $\log E[R_i]$ due to Jensen's Inequality. 
+
+
+
+
+
+\section{Central Limit Theorem}
+\subsection{Motivation}
+From LLN we know that $S_n \approx E[S_n]$, however, if we want to answer $P(S_n \in A)$, this result can only gives us a binary answer: 1 if $E[S_n]\in A$ and 0 otherwise. So this is not very useful. We want to approximate $S_n$ by a random variable instead of just a number. 
+
+\subsection{Definition}
+    \begin{align*}
+    \frac{S_n - n E[X_1]}{\sqrt{n}\sigma} \Rightarrow N(0,1)
+    \end{align*}
+
+
+\subsection{Proof}
+Statement: Suppose that $X_n$ is an iid sequence of r.v. for which $\sigma^2 = var(X_1) < \infty$, then as $n \to \infty$ 
+    \begin{align*}
+        \frac{S_n - n E[X_1]}{\sqrt{n}} \Rightarrow \sigma N(0,1)
+    \end{align*}
+Notice the result is trivial if $\sigma = 0$, so we can add the assumption that $\sigma^2 > 0$. Let $\tilde{X}_i = \frac{X_i - E[x_1]}{\sigma}$, so we have $E[\tilde{X}_i]=0$ and $Var(\tilde{X}_i) = 1$. Then we have 
+    \begin{align*}
+        E[e^{i \theta \frac{\tilde{S}_n}{\sqrt{n}}}]
+        & = E\left[  e^{i \theta \frac{\tilde{X}_i}{\sqrt{n}}} \right]^n\\
+        & = c_{\tilde{X}_1}(\frac{\theta}{\sqrt{n}})^n \\
+    \end{align*}
+Based on the differentiability of characteristic function and Taylor Series expansion, we have 
+    \begin{align*}
+        c_{\tilde{X}_1}(\frac{\theta}{\sqrt{n}})
+        & = 1 + i \frac{\theta}{\sqrt{n}} E[\tilde{X}_1] - \frac{\theta^2}{2n}E[\tilde{X}_1^2] + o(\frac{1}{n}) \\
+        & = 1 - \frac{\theta^2}{2n} + o(\frac{1}{n})
+    \end{align*}
+So we have 
+    \begin{align*}
+        E[e^{i \theta \frac{\tilde{S}_n}{\sqrt{n}}}]
+        & = (1 - \frac{\theta^2}{2n} + o(\frac{1}{n}))^n \\
+        & \to e^{-\frac{\theta^2}{2}}
+    \end{align*}
+Since $f_\theta(\theta) = e^{-\frac{\theta^2}{2}}$ is continuous in a neighborhood of the origin, then we know that must exsts a r.v. $W$ having characteristic $f_\infty(\cdot)$ for which $\frac{\tilde{S}_n}{\sqrt{n}}\Rightarrow W$. We can then show $W$ has to be normal random variable by showing that the normal random variable's character function is $e^{-\theta^2/2}$
+
+\section{Generalization of the CLT} 
+
+\subsection{To multiple dimension}
+Suppose that $X_1, ...$ is a sequence of iid $\mathbbm{R}^d$ -valued random vectors for which $E[\norm{X_1}^2] < \infty$, then as $n \to \infty$
+    \begin{align*}
+        \frac{S_n - n E[X_1]}{\sqrt{n}} \Rightarrow N(0,C)
+    \end{align*}
+Where $C = E[X_1X_1^T] - E[X_1]E[X_1]^T$
+
+
+\subsection{Delta Method} 
+Let $\bar{X}_n \overset{P}{\to} E[x_1]$, $X_i$ are iid, $E[\norm{X_i}_2^2] < \infty$, $g$ is a continuous function that maps $\mathbbm{R}^d \to \mathbbm{R}$, then we have $g(\bar{X}_n) \overset{P}{\to} g(E[X])$. If $g$ is differentiable in a neighborhood of $E[X]$, we have 
+    \begin{align*}
+        \sqrt{n}(g(\bar{X}_n) - g(E[X_1])) \Rightarrow \nabla g(E[X]) N(0, C)
+    \end{align*}
+In univariate case, we have: \\
+If $\sqrt{n}(X_n - \theta) \Rightarrow N(0, \sigma^2)$, $\theta$, and $\sigma^2$ are finite valued constant, then 
+    \begin{align*}
+        \sqrt{n}(g(X_n) - g(\theta)) \Rightarrow N(0, \sigma^2 * g'(\theta)^2)
+    \end{align*}
+
+
+\section{Tail}
+A real-valued r.v. $X$ is light right tail if $E[e^{\theta X}] < \infty$ for some $\theta < 0$. It has a light left tail if $E[e^{\theta X}] < \infty$ for some $\theta < 0$. It has light tail if statement is true in some neighborhood of the origin. If $X$ does not have light tails, it is heavy tailed. 
+
+\subsection{Tail relation to decay}
+If $E[e^{\theta X_1}] < \infty$ for some $\theta > 0$, Markov's inequality ensures that for $x > 0$
+    \begin{align*}
+        P(X_1 > x) \leq \frac{E[e^{\theta X_1}]}{e^{\theta x}}
+    \end{align*}
+So $P(X_1 > x)$ decays to 0 at least exponentially quickly. So the presence of light tails is equivalent to assuming that the tails decay to zero at least exponentially. 
+    
+\section{Large Deviations} 
+Motivation: If $X_i$ are iid r.v. finite variance $\sigma^2$, CLT gives us 
+    \begin{align*}
+        P(\frac{\tilde{S}_n}{\sqrt{n}} > x) \Rightarrow 1 - \Phi(x)
+    \end{align*}
+However, for a super large number, CLT tells us nothing except that both the left side and right side tends to 0. But in reality, they could converges to 0 at different rates. 
+
+\subsection{Simple Upper Bound Via Exponential Inequality} 
+Recall $\tilde{X}_i = \frac{X_i - E[X_i]}{\sigma}$. We wish to explore the behavior of 
+    \begin{align*}
+        P(\frac{\tilde{S}_n}{n} > \gamma \sqrt{n}) = P(\frac{S_n}{n} > E[X_1] + \gamma \sigma) = P(S_n > ny)
+    \end{align*}
+
+Using Exponential inequality and Markov Inequality, we have 
+    \begin{align*}
+        P(S_n > ny)
+        & = P(e^{\theta S_n} > e^{\theta ny})\\
+        & \leq \frac{E[e^{\theta S_n}]}{e^{\theta n y}}
+    \end{align*}
+
+Based on iid, we have 
+    \begin{align*}
+        & E[e^{\theta S_n}] = E[e^{\theta X_1}]^n = e^{n \psi(\theta)}
+        & \psi(\theta) = \log E[ e^{\theta X}] \tag{log moment generating function}
+    \end{align*}
+
+So 
+    \begin{align*}
+        P(S_n > ny) 
+        & \leq  \frac{E[e^{\theta S_n}]}{e^{\theta n y}}\\
+        & = \frac{e^{n \psi(\theta)}}{e^{\theta n y}}\\
+        & = e^{-n(\theta y - \psi(\theta)}
+    \end{align*}
+
+If we want to find the tighest upper bound, we want to minimize $e^{-n(\theta y - \psi(\theta)}$, which means choosing $\theta$ that maximizes $\theta y - \psi(\theta)$, so the optimal solution $\theta^* = \theta(y)$ (simply means the optimal solution is a function of $y$) satisfies
+    \begin{align*}
+        \psi'(\theta^*) = y
+    \end{align*}
+
+To summarize, our upper bound is 
+    \begin{align*}
+        P(S_n > ny) \leq e^{-n(y \theta(y) - \psi(\theta(y)))}
+    \end{align*}
+Or alternatively
+    \begin{align*}
+        & P(S_n > ny) \leq \exp(-n I(y)) \\
+        & I(y) = y \theta(y) - \psi(\theta(y)) \tag{Rate function}
+    \end{align*}
+
+
+\subsection{Change of Measure}
+For $\theta > 0$, define the probability $P_\theta(\cdot)$ such that $X_i$ are iid with 
+    \begin{align*}
+        P_\theta(X_1 \in dx) \propto e^{\theta x}P(X_1 \in dx)
+    \end{align*}
+for some $x \in \mathbbm{R}$. Intuitively, this means that for probability $P_\theta$, the probability of $X_1$ in a infinitesimal area around $x$ (analogous to $p(x)dx$) is proportional to a weighted original probability. Because $\theta > 0$, the probability puts higher likelihood on large values of $x$ for $X_1$ then original $P$. In order to formalize it as a probability, we have 
+    \begin{align*}
+        P_\theta(X_1 \in dx) = e^{\theta x - \psi(\theta)}P(X_1 \in dx)
+    \end{align*}
+If a function $f: \mathbbm{R^n} \to \mathbbm{R}_+$ is a non-negative function, it follows that 
+    \begin{align*}
+        E[f(X_1, ..., X_n)] = E_\theta[e^{-\theta S_n + n \psi(\theta)} f(X_1, ..., X_n)]
+    \end{align*}
+This formula shows how the expectation in the original setting can be computed as the expectation in terms of the new probability distribution. 
+
+\subsection{Lower Bound} 
+From previous change of measure, we have 
+    \begin{align*}
+        P(S_n > ny) = E_\theta[e^{-\theta S_n + n \psi(\theta)} \indic{S_n > ny}]
+    \end{align*}
+
+Conceptually, given $S_n > ny$ is a rare event, $S_n$ is more likley to be close to $ny$ when this happens. 
+    \begin{align*}
+        E[X_1 | S_n = ny] 
+        & = \frac{1}{n} \sum_{j=1}^n E[X_j | S_n = ny]\\
+        & = E[\frac{S_n}{n} | S_n = ny] \\
+        & = y
+    \end{align*}
+Notice the above argument is valid for all $X_i$ due to iid, so we expect the conditional mean for any $X_i$ to be close to $y$. So we want to choose $\theta$ such that $E_\theta[X_1] = y$, so we have 
+    \begin{align*}
+    y = E_\theta[X_1] 
+    & = \int_{\mathbbm{R}}x e^{-\theta x - \psi(\theta)}P(X_1 \in dx) \\
+    & = e^{-\psi(\theta)} \partiald{\theta} \int_{\mathbbm{R}} e^{\theta x} P(X_1 \in dx) \\
+    & = \frac{\partiald{\theta} E[e^{\theta X_1}]}{E[e^{\theta X_1}]} \tag{By DCT}\\
+    & = \psi'(\theta)
+    \end{align*}
+Note that the idea $\theta$ actually is the same $\theta(y)$ as the upper bound. From LLN we have 
+    \begin{align*}
+        P_{\theta(y)}(\abs{\frac{S_n}{n}- y} \leq \epsilon) \to 1
+    \end{align*}
+So we have 
+    \begin{align*}
+        P(S_n > ny) 
+        & = E_\theta[e^{-\theta S_n + n \psi(\theta)} \indic{S_n > ny}]\\
+        & \approx E_\theta[e^{-\theta ny + n \psi(\theta)} \indic{S_n > ny}]\\
+        & = e^{-\theta ny + n \psi(\theta)} P_{\theta(y)}(S_n > ny)
+    \end{align*}
+Suppose that $X_1$ is such that 
+    \begin{align*}
+        & \exists \theta(y) \, s.t. \, \psi'(\theta(y)) = y \\
+        & \psi(\theta) < \infty \text{ for $\theta$ in a neighborhood of $\theta(y)$}
+    \end{align*}
+then 
+    \begin{align*}
+        & \frac{1}{n} \log P(S_n > ny) \to -I(y) & I(y) = y \theta(y) - \psi((\theta(y))
+    \end{align*}
+    
+A better result is that 
+    \begin{align*}
+        P(S_n > ny) \approx \frac{1}{\sqrt{2 \pi n \psi^{''}(\theta(y))}} \exp(-n I(y))
+    \end{align*}
+    
+
+\section{Monte Carlo}
+\subsection{Set up} 
+Let $X$ be a function of other random variables, such as $X = g(Y_1, ..., Y_n)$. Often we can simulate $Y_i$ easily, but direct computation of $X$ is hard due to $g$ being a complicated / algorithmically implemented function. So we can use Monte Carlo Method: 
+    \begin{enumerate}
+        \item Sample $Y = (Y_1, ..., Y_d)^T$ 
+        \item Compute $X = g(Y)$
+        \item Repeat step 1 and 2 $n$ times to get the empirical expected value and variance. 
+    \end{enumerate}
+then we know 
+    \begin{align*}
+        & \bar{X}_n \overset{P}{\to} E[X] \tag{LLN} \\
+        & \sqrt{n}(\bar{X}_n - E[X]) \Rightarrow \sigma N(0,1) \tag{CLT} \\
+        & \bar{X}_n \overset{D}{\approx} E[X] + \frac{\sigma}{\sqrt{n}}N(0,1) \tag{Informal CLT} 
+    \end{align*}
+
+\subsection{Convergence} 
+From CLT, we can get the confidence interval
+    \begin{align*}
+        P(-Z \leq N(0,1) \leq Z) = 1 - \delta \Rightarrow P(E[X] \in \bar{X}_n \pm \frac{Z \sigma}{\sqrt{n}}) \approx 1 - \delta
+    \end{align*}
+But we don't know $\sigma$, but it can be estimated from sample standard deviation $S_n$. This is because 
+    \begin{align*}
+        & \frac{S_n}{\sigma} \overset{P}{\to} 1 \tag{LLN}\\
+        & \sqrt{n} \frac{\bar{X}_n - E[X]}{\sigma} \Rightarrow N(0,1) \tag{CLT} \\
+    \end{align*}
+Combine both result with Slutsky theorem to have $\sqrt{n} \frac{\bar{X}_n - E[X]}{S_n} \Rightarrow N(0,1)$. So the key takeaway is that the performance of Monte Carlo method relies on the variance 
+
+\subsection{Variance Reduction Method: Importance Sampling}
+\paragraph{Motivation} \mbox{}\\
+Let $f$ be the pdf of $X$ and let $h$ be the pdf of another distribution $Z$. We have     \begin{align*}
+    E_X[X] = \int_{\mathbbm{R}} x f(x) \, dx = \int_{\mathbbm{R}} x \frac{f(x)}{h(x)} h(x) \, dx = E_Z[z * \frac{f(z)}{h(z)}]
+    \end{align*}
+Now we transformed from sampling from $X$ to sampling from $Z$. We can carefuly choose $h$ to minimize the variance. Conceptually, we want to choose the sample from part of the domain where $x f(x)$ is large. 
+
+\paragraph{Formalization} \mbox{}\\
+Let $Y$ be a random variable (so it maps $\omega \in \Omega$ to $\mathbbm{R}$. $P$ is the underlying distribution of $Y$. 
+    \begin{align*}
+        E_P[Y] 
+        & = \int_{\Omega} y(\omega) p(\omega) \, d\omega \\
+        & = \int_{\Omega} y(\omega) P(d\omega) \tag{Notation change} \\
+        & = \int_{\Omega} y(\omega) \frac{P(d\omega)}{Q(d\omega)}Q(d\omega) \\
+        & = E_Q[YL] \tag{L is likelihood ratio} \\
+    \end{align*}
+
+\paragraph{Prerequisite} \mbox{}\\
+Notice that the if we can find an $x$ such that $Q(x) = 0$ but $P(x) \neq 0$, then we are in trouble. So the \href{https://en.wikipedia.org/wiki/Support_(mathematics)}{support} of $P$ has to be the same or contained within the support of $Q$. This is called $P << Q$. If this condition is satisfied, then the likelihood ratio always exists by Radon–Nikodym theorem. 
+
+\paragraph{Picking Optimal Q given P} \mbox{}\\
+Let's say we want to get $a = E_P[Y]$, we can define an optimal $Q^*$ as 
+    \begin{align*}
+        Q^*(d\omega) 
+        & = \frac{\abs{Y(\omega)} P(d\omega)}{\int_{\Omega} \abs{Y(\omega)}P(d\omega)} \\
+        & = \frac{Y(\omega) P(d\omega)}{a} \tag{Assume $Y > 0$}
+    \end{align*}
+Notice that when we sample from $Q^*$, the r.v. returned by the algorithm is 
+    \begin{align*}
+        (Y L)(\omega) = (Y(\omega) \frac{P(d\omega) a }{Y(\omega) P(d\omega)} = a
+    \end{align*}
+This would mean that it can get the exact quantity $a$ with 0 variance. But notice that $Q^*$ has $a$ in it, so it is impossible to get $Q^*$. 

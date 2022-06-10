@@ -1,0 +1,239 @@
+\chapter{Gaussian Modeling}
+
+\section{Primer: First Order AR Model} 
+Assume a first order AR model, we have 
+    \begin{align*}
+        & x_{n+1} = \alpha_0 x_n + c + \epsilon_{n+1}\\
+        & \epsilon \overset{iid}{\sim} N(0, \sigma^2)
+    \end{align*}
+So given data point $X_0, ..., X_n$, the likelihood is 
+    \begin{align*}
+        \prod_{j=0}^{n-1} \frac{1}{\sqrt{2\pi \sigma}} \exp\left(-\frac{1}{2} \left(\frac{x_{j+1} - \alpha_0 x_j - c}{\sigma} \right)^2 \right)
+    \end{align*}
+The covariance is 
+    \begin{align*}
+        Cov(X_{n+1}, X_n) 
+        & = Cov(\alpha_0 X_n + c + \epsilon_{n+1}, x_n) \\
+        & = Cov(\alpha_0 x_n , x_n) \\
+        & = \alpha_0 Var(X_n)\\
+        & \Longrightarrow \alpha_0 = \frac{Cov(x_{n+1}, x_n)}{Var(x_n)}\\
+        & \Longrightarrow \hat{\alpha}_0 = \frac{\frac{1}{n} \sum_{j=0}^{n-1}(x_j x_{j+1} - \bar{x}^2)}{\frac{1}{n} \sum_{j=1}^n(x_j - \bar{x})^2}
+    \end{align*}
+If we know $\alpha_i$ and $c$, then generating the next value is easy: 
+    \begin{align*}
+        E[X_{n+1}|x_j: j \leq n ] 
+        & = E[\alpha_0 x_n + ... + \alpha_p x_{n-p} + c + \epsilon_{n+1} | x_j : j \leq n]\\
+        & = \alpha_0 x_n + ... + \alpha_p x_{n-p} + c
+    \end{align*}
+
+\section{Gaussian Distribution} 
+Multivariate Gaussian distribution pdf is: 
+    \begin{align*}
+        \frac{1}{\sqrt{2\pi}^d \sqrt{\det(\Sigma)}} \exp\left(-\frac{1}{2}(X-\mu)^T\Sigma^{-1}(X-\mu)\right)
+    \end{align*}
+
+\section{Generating Multivariate Gaussian from Standard Multivariate Gaussian} 
+One important property of multivariate is that it is closed under affine transformation: 
+    \begin{align*}
+        & X \sim N(\mu, \Sigma)  \\
+        & Y = AX + b \\
+        & \Longrightarrow Y \overset{D}{=}N(A\mu + b, A \Sigma A^T)
+    \end{align*}
+This means that if we want to generate any multivariate Gaussian r.v. $Y \sim N(\mu, C)$, we can: 
+    \begin{enumerate}
+        \item Generate $X\sim N(0, I)$
+        \item Set $Y = \mu + AX$ where $AA^T = C$. (We can easily find such $A$ through Cholesky factorization
+    \end{enumerate}
+
+\paragraph{Example of Cholesky Factorization}
+    \begin{align*}
+        & \begin{bmatrix}
+                X_1 \\ X_2 
+        \end{bmatrix} \overset{D}{=}N(0, C) \\
+        & C \equiv
+            \begin{bmatrix}
+                    \sigma_1^2 & \rho \sigma_1 \sigma_2 \\
+                    \rho \sigma_1 \sigma_2 & \sigma_2^2
+            \end{bmatrix} \\
+        & \begin{bmatrix}
+                Z_1 \\ Z_2 
+        \end{bmatrix} \overset{D}{=}N(0, I) \\
+    \end{align*}
+So we begin the factorization process by 
+    \begin{align*}
+        & X_1 = \sigma_1 Z_1 \\
+        & X_2 = \alpha X_1 + b Z_2
+    \end{align*}
+So we have: 
+    \begin{align*}
+        & \alpha \sigma_1^2 = Cov(X_1, \alpha X_1 + b Z_2) = Cov(X_1, X_2)= \rho \sigma_1 \sigma_2 \\
+        & \Longrightarrow \alpha = \frac{\rho \sigma_2}{\sigma_1}
+    \end{align*}
+Then we can look at $Var(X_2)$: 
+    \begin{align*}
+        & \alpha^2\sigma_1^2 + b^2 = Cov(X_2, X_2) = Var(X_2) = \sigma_2^2 \\
+        & \Longrightarrow b = \sqrt{1 - \rho^2}\sigma_2
+    \end{align*}
+
+\section{Generating Standard Multivariate Gaussian Random Variable} 
+We have shown that we can generate any $Y=N(\mu, C)$ by generating a standard multivariate normal r.v.  $X$ and transform it via $Y = \mu + AX$ such that $AA^T =C$. So we need to a good algorithm to generate $X\sim N(0, I)$, or essentially generating scalar $N(0,1)$. Turns out, we can generate $\begin{bmatrix} x_1 \\ x_2\end{bmatrix}\sim N(0,I)$ from polar coordinates. \\
+
+First, any pair of coordinate $(x_1, x_2)$ from polar coodinates can be represented as $(R \cos \theta, R \sin \theta)$ and $\theta = unif[0, 2\pi]$, independent of R. 
+
+Second, notice that $R^2 = x_1^2 + x_2^2 = X^2$ r.v. with 2 degree of freedom, which is equivalent to $2 * Exp(1)$, which can be generated through inversion. Specifically, we can generate $U\sim uniform[0,1]$ and then take $-2 \log(1-u)$, which is equivalent to $-2 \log(u)$. 
+
+So in summary, we can generate $\begin{bmatrix} x_1 \\ x_2\end{bmatrix}\sim N(0,I)$ by: 
+    \begin{enumerate}
+        \item Generuate $u_1, u_2$ from $uniform[0,1]$ (1 for generate $\theta$, and another for generate $R$. 
+        \item Set $x_1 = \sqrt{-2 \log(u_1)} \cos(2\pi u_2)$ and $x_2 = \sqrt{-2 \log(u_1)}\sin(2\pi u_2)$
+    \end{enumerate}
+
+\section{Structure of Conditional Distribution}
+In block matrix from, we have: 
+    \begin{align*}
+        & X = \begin{bmatrix} X_1 \\ X_2\end{bmatrix} =  N(\mu, C) \\
+        & \mu = \begin{bmatrix} \mu_1 \\ \mu_2\end{bmatrix}\\
+        & C = \begin{bmatrix} E[\tilde{X}_1 \tilde{X}_1^T] &  E[\tilde{X}_1 \tilde{X}_2^T] \\ E[\tilde{X}_2 \tilde{X}_1^T & E[\tilde{X}_2 \tilde{X}_2^T]] \end{bmatrix} \\
+        & \tilde{X}_i = X_i - \mu_i
+    \end{align*}
+The conditional mean of $X_1 | X_2 = x_2$ is :
+    \begin{align*}
+        \mu_1 + E[\tilde{X}_1\tilde{X}_2^T](E[\tilde{X}_2\tilde{X}_2^T])^{-1}(x_2 - \mu_2)
+    \end{align*}
+The conditional variance actually does not depend on $x_2$. This means that it can be pre-computed without actually seeing the data. 
+
+\section{Gaussian Stochastic Process and Gaussian Random Field} 
+Given Gaussian Stochastic Process $z(t), t \geq 0$ or Random Field $z(x), x\in \mathbbm{R}^d$, we have below notation: 
+    \begin{align*}
+        & m(x) = E[z(x)] \\
+        & c(x,y) = Cov(z(x), z(y)) \\
+    \end{align*}
+
+\subsection{Fixed Mean Stationary Isotropic Case} 
+Add the following simplifying assumptions: 
+    \begin{align*}
+        & m(x) = m \tag{Fixed mean} \\
+        & c(x,y) = c'(x-y) \tag{Stationary: cov only dependent on difference} \\
+        & c(z) = c'(\norm{z}) \tag{Isotropic: cov only dependent on Euclidean distance } \\
+        & \Longrightarrow c(x,y) \equiv Cov(z(x), z(y)) = c(\norm{x-y})
+    \end{align*}
+    
+One good example of such case is Brownian model (note it is technically not stationary, but have stationary increment) : 
+    \begin{align*}
+        B(t+h) - B(t) \overset{D}{=} B(h) - B(0) \overset{D}{=}  N(0, h) \overset{D}{=} \sqrt{h}N(0,1)
+    \end{align*}
+However Brownian motion is not differentiable. We can see this intuitively by looking at as $h\to 0$, the approximation doesn't converges to anything good. 
+    \begin{align*}
+        \frac{ B(t+h) - B(t)}{h} \overset{D}{=} \sqrt{h} N(0,1)
+    \end{align*}
+But we could look at what it looks like for a general process that is smooth. So we want 
+    \begin{align*}
+        \frac{z(x+h) - z(x)}{h}\Rightarrow z'(x)
+    \end{align*}
+One intuition to make such thing happen is to make the variance of the LHS and RHS equivalent. 
+    \begin{align*}
+        Var(\frac{z(x+h) - z(x)}{h})
+        & = (var(z(x+h)) + var(z(h)) - 2cov(z(x), z(x+h))) * \frac{1}{h^2}\\
+        & = \frac{2}{h^2}(var(z(0)) - cov(z(0), z(h))) \tag{stationary property} \\
+        & = \frac{2}{h^2}Var(z(0))(1 - \rho(h))*\frac{1}{h^2}\\
+    \end{align*}
+Notice that $\rho(h) = 1 + h \rho'(0) + \frac{h^2}{2}\rho''(0) + o(h^2)$. So if we want to converge, we need to have $\rho'(0)=0$ since the outside is $\frac{1}{h^2}$ term. In addition, $\rho$ has to have positive definite property in order to be a proper correlation function. 
+
+\subsection{Principal Component of a Multivariate Gaussian}
+    \begin{align*}
+        X \overset{D}{=}N(0,C) \tag{$C$ is positive definite symmetric}
+    \end{align*}
+We can show that there exists a basis of orthogonal eigenvectors for C: 
+    \begin{align*}
+        & C = U^TDU \\
+        & U^TU = I
+    \end{align*}
+Let $Z=UX$, then 
+    \begin{align*}
+        Z \overset{D}{=}N(0, UCU^T) \overset{D}{=}N(0, UU^TDUU^T)\overset{D}{=}N(0, D)
+    \end{align*}
+So we have 
+    \begin{align*}
+        Cov(z_i, z_j) = \begin{cases} \lambda_i & i=j \\ 0 & i \neq j\end{cases}
+    \end{align*}
+and $X=U^TZ$ where $Z$ is the principal component of $X$
+
+\subsection{Generalization of Principal Component to Gaussian Process}
+We have 
+    \begin{align*}
+        & X = (X(t): 0 \leq t \leq 1) \\
+        & E[X(t)] = 0\\
+        & \int_0^1 E[X^2(t)] \, dt < \infty \\
+        & c(s,t) = Cov(X(s), X(t))
+    \end{align*}
+Mercer's Theorem says that there exists eigen function $e_k(t)$ such that: 
+    \begin{align*}
+        & \int_{0}^1 c(s,t) e_k(t) \,dt = \lambda_k e_k(s), k \geq 1\\
+        & \int_{0}^1 e_k(s) e_g(s) \, ds = \begin{cases} 1 & k=g \\ 0 & \text{otherwise} \end{cases}
+    \end{align*}
+Some quick notation 
+    \begin{align*}
+        & <f,g> \triangleq \int_0^1 f(t) g(t) \, dt \\
+        & \norm{f} = \sqrt{<f,f>} \\
+        & L^2[0,1] = \{ f: \int_0^1 f^2(t) \, dt < \infty \} \tag{Square-integrable function} \\
+        & \text{Eigen functions complete in $L^2$}
+    \end{align*}
+Define $Z_i$ as the following 
+    \begin{align*}
+        Z_i \triangleq \int_0^1 x(t) e_i(t) \, dt
+    \end{align*}
+We know $Z_i$ is a linear process (think of any Ramon sum approximation. We can look at the covariance of $Z_i$ (showing independence): 
+    \begin{align*}
+        E[Z_i Z_j]
+        & = \int_0^1 \int_0^1 E[x(s) x(t) e_i(s) e_j(t)] \, ds \, dt \\
+        & = \int_0^1 \int_0^1 c(s,t) e_j(t)  e_i(s) \, ds \, dt \\
+        & = \int_0^1 \lambda_j e_j(s)  e_i(s) \, ds \\
+        & = \int \lambda_i \, ds \tag{If $i=j$, because $\int_0^1 e_i e_j = 0$ if $i\neq j$}
+    \end{align*}
+Overall we have the Kosambi–Karhunen–Loève theorem, i.e.:  stochastic process can be represented as an infinite linear combination of orthogonal functions
+    \begin{align*}
+        x(t) = \sum_{k=0}^\infty z_k e_k(t)
+    \end{align*}
+$Z_k$ are pairwise uncorrelated random variables and the function $e_k$ are continuous real valued functions that are pairwise orthogonal in $L^2$
+
+
+\subsection{Example: Kosambi–Karhunen–Loève Expansion in Weiner Process}
+We have 
+    \begin{align*}
+        & B(t) : 0 \leq t \leq 1 \\
+        & E[B(t) = 0] \quad \forall t \\
+        & B(t) \overset{D}{=}N(0, t)
+    \end{align*}
+We can look at $c(s,t)$: 
+    \begin{align*}
+        C(s,t) 
+        & = Cov(B(s), B(t))\\
+        & = Cov(B(s), B(s) + (B(t) - B(s))) \tag{Notice $B(t) - B(s)$ is independent from $B(s)$}  \\
+        & = Cov(B(s), B(s)) \tag{$s = min(s,t)$} \\
+        & = s
+    \end{align*}
+So then what happens to eigenfunction $e_k$
+    \begin{align*}
+        \int_0^1 c(s,t)e_k(t) \, dt 
+        & = \int_0^1 min(s,t) e_k(t) \, dt \\
+        & = \int_0^s min(s,t) e_k(t) \, dt + \int_s^1 min(s,t)e_k(t) \, dt\\
+        & = \int_0^s t e_k(t) \, dt + \int_s^1 s e_k(t) \, dt\\
+        & = \lambda_k e_k(s) \tag{From Mercer's Theorem}
+    \end{align*}
+Take the derivative w.r.t $s$ on both side of the last two lines we have 
+    \begin{align*}
+        s e_k(s) + s(-e_k(s)) + \int_s^1 e_k(t) \, dt = \lambda_k e'_k(s) 
+    \end{align*}
+take the derivative again we have 
+    \begin{align*}
+        & -e_k(s) = \lambda_k e''_k(s) \\
+        & \Longrightarrow e''_k(s) + \frac{1}{\lambda_k}e_k(s) = 0\\
+        & \Longrightarrow \lambda_k = \frac{1}{(k-\frac{1}{2})^2 \pi^2} \\
+        & e_k(t) = \sqrt{2}\sin((k-\frac{1}{2})\pi t)
+    \end{align*}
+So we have the expansion of Brownian process: 
+    \begin{align*}
+        & B(t) = \sum_{k=0}^\infty Z_k e_k(t) \\
+        & Z_k \text{ is independent Gaussian with variance $\lambda_k$} \\
+        & e_k \text{ is defined above} 
+    \end{align*}
