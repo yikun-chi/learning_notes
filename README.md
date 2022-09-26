@@ -1,4 +1,7 @@
 # learning_notes
+Each folder will contain the original LaTex notes (can be directly uploaded to Overleaf to compile) as well as a compiled notes. 
+The mystyle file is the LaTex style I used for notes. Feel free to download and modify it for your own purpose. 
+
 
 ## Stanford Classes
 - [CS 236: Deep Generative Model](https://deepgenerativemodels.github.io/)
