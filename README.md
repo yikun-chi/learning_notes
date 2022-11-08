@@ -9,7 +9,8 @@ The mystyle file is the LaTeX style I used for notes. It contains some useful cu
 - STATS 307: Time Series Analyses 
 - [CS 246: Mining Massive Dataset](https://web.stanford.edu/class/cs246/)
 - CME 308: Stochastic Method for Engineering
-
-## Coursera 
-- Natural Language Processing Specialization
-  - [Natural Language Processing With Classification and Vector Spaces](https://www.coursera.org/learn/classification-vector-spaces-in-nlp/home/week/1)
+- Method Notes: self learning from a variety of places
+  - NLP 
+    - [Natural Language Processing Specialization](https://www.coursera.org/specializations/natural-language-processing)
+  - Longitudinal Method 
+    - COMM 367: Longitudinal Design and Data Analysis
