@@ -1,0 +1,115 @@
+\chapter{Probabilistic Models}
+
+\section{Autocorrect with Minimum Edit Distance}
+
+\subsection{Key Idea} 
+This is only for spelling error and in an naive way. It does not detect contextual error. 
+\begin{enumerate}
+    \item Identify a misspelled word 
+    \item Find strings $n$ edit distance away (normally 1 - 3)
+    \item Filter candidates (only restrict to correctly spelled word)
+    \item Calculated word probability. ($P(w) = \frac{count(w)}{V}$ where $V$ is the size of corpus). A slighter more advanced version would be to track in two words co-occurring and use the word before misspelled word to identify the correct autocorrect. 
+\end{enumerate}
+
+\subsection{Find Minimum Edit Distance with Dynamic Programming} 
+Given word $x$ and $y$. Construct a matrix where the columns are alphabets of word $x$ and rows are alphabets of $y$. Both should include a blank / starting line character. Cell $i,j$ means the minimum edit distance that goes from $w_x[:i]$ to $w_y[:j]$. Therefore, the minimum edit distance problem can be decomposed into: 
+    \begin{equation*}
+        D[i,j] = min
+            \begin{cases}
+                D[i-1,j] + del\_cost \\
+                D[i,j-1] + ins\_cost \\
+                D[i-1, j-1] +
+                    \begin{cases}
+                        rep\_cost & w_x[i] \neq w_y[j] \\
+                        0 & else
+                    \end{cases}
+            \end{cases}
+    \end{equation*}
+
+
+
+
+
+\section{Part of Speech Tagging with Viterbi Algorithm} 
+
+\subsection{Hidden Markov Model as PoS Transition}
+Hidden Markov Model can be used to model the part of speech transition: 
+    \begin{itemize}
+        \item Hidden nodes: Part of speech, e.g.: verb, noun
+        \item Observable nodes: Actual words, e.g.: "like", "use" 
+    \end{itemize}
+
+\subsection{Smoothing} 
+Original transition probability: ($t_i$ is the tag at loc $i$)
+    \begin{align*}
+        P(t_i|t_{i-1}) = \frac{Count(t_{i-1}, t_i)}{\sum_{j=1}^N Count(t_{i-1}, t_j)}
+    \end{align*}
+We can smooth it like below to deal with cases of 0 entries for an entire row (e.g.: if no verb will transition to another verb).  
+    \begin{align*}
+        P(t_i|t_{i-1}) = \frac{Count(t_{i-1}, t_i) + \epsilon}{\sum_{j=1}^N Count(t_{i-1}, t_j) + N * \epsilon}
+    \end{align*}    
+In practice, we do not apply smoothing to the first row of the transition matrix (The transition probability of from new sentence beginning to an actual word). This way the model remains not allowing the sentence to start arbitrarily. 
+
+
+\subsection{Viterbi Algorithm} 
+
+Component:
+    \begin{itemize}
+        \item Transition matrix $A$ and emission matrix $B$ of Hidden Markov Model 
+        \item Auxiliary Matrix $C$ which tracks the intermediate optimal probability $n \times k$ where $n$ is the number of hidden state and $k$ is the number of words in our text sequence. 
+        \item Auxiliary Matrix $D$, which tracks the visited indices $n \times k$
+    \end{itemize}
+
+\paragraph{Initialization} \mbox{}\\
+First fill the first column of $C$: 
+    \begin{align*}
+        C_{i,1} = \pi_i * b_{i, cindex(w_1)} = a_{1,i} * b_{i, cindex(w_1)}
+    \end{align*}
+cell $C_{i,1}$ means the probability of starting from beginning of sentence, and then transition to word 1 with state $i$. \\
+Then fill the first column of $D$ : 
+    \begin{align*}
+        d_{i,1} = 0
+    \end{align*}
+
+
+\paragraph{Forward Pass} \mbox{}\\
+    \begin{align*}
+        & c_{i,j} = \max_k c_{k, j-1} * a_{k,i} * b_{i, cindex(w_j)}\\
+        & d_{i.j} = \argmax_k  c_{k, j-1} * a_{k,i} * b_{i, cindex(w_j)}\\
+    \end{align*}
+Logic: At $C_{i,j}$, we want to find the optimal probability for the word sequence up to word $j$ where the word $j$ speech tag is $t_i$. This is by iterative looking over all possible previous $C_{k,j-1}$, i.e.: the tag options ending at word $j-1$. For each optimal probability $C_{k, j-1}$, we then multiply the probability of transition from $t_k$ to $t_{i}$, hence $a_{k,i}$ and the emission probability of $w_j$ at $t_i$, hence $b_i, cindix(w_j)$. 
+
+\paragraph{Backward Pass} \mbox{}\\
+Find the index of the largest value in last column of C
+    \begin{align*}
+        s = \argmax_i C_{i, K} 
+    \end{align*}
+Then we can use $s$ to start at the last column row $s$ of $D$, and then traverse back by following the cell value of $D$ (use the cell value of $D_{i,j}$ as the row index of column $j-1$). 
+
+\paragraph{Consideration: Log Probability}
+Because we are multiplying many small numbers, we should again consider using log probability. Hence 
+    \begin{align*}
+        \log(C_{i,j}) = \max_k \log(C_{k, j-1}) + \log(a_{k,i}) + \log(b_{i, cindex(w_j)})
+    \end{align*}
+
+
+
+
+\section{Code Example} 
+
+\subsection{Counter}
+\href{https://docs.python.org/3/library/collections.html#collections.Counter}{Counter} is a specialized dict subclass where keys are elements and the item is the count. It contains many useful methods. For example: 
+\begin{python}
+Counter('abracadabra').most_common(3)
+\end{python}
+
+\section{Completed Notebook}
+
+\paragraph{Autocorrection}:
+\href{https://drive.google.com/file/d/1CV5Zee5wwLkynsyB5PRtygWChqyeSq15/view?usp=sharing}{Link}
+    \begin{itemize}
+        \item Dynamic Programming 
+        \item String Edit as List Comprehension 
+        \item Using Counter object
+    \end{itemize}
+    
