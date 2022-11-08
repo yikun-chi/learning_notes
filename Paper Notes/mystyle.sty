@@ -1,0 +1,248 @@
+% Common Packages
+\usepackage{bbm} % pretty indicator variable 
+\usepackage{hyperref} % hyperlink
+\usepackage{enumitem} % different numbering system for numeration 
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{upquote}
+\usepackage{color}
+\usepackage{todonotes}
+
+% Math Packages
+\usepackage{amssymb,amsmath,amsthm} % Standard Math symbols, operators, and environments
+\usepackage{esdiff } % pretty derivatives 
+
+
+% Operators
+\newcommand{\indep}{\perp \!\!\! \perp}
+\newcommand{\partiald}[1]{\frac{\partial}{\partial #1}}
+\newcommand{\set}[1]{\{ #1 \}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left| #1 \right|}
+
+
+% Layout 
+\setlength\parindent{0pt} % no paragraph indent
+\setcounter{secnumdepth}{3}
+
+
+
+
+
+
+
+
+
+
+% ---------------------------- Define Code Note Environment ---------------------------- 
+\definecolor{lightgray}{rgb}{0.95, 0.95, 0.95}
+\definecolor{darkgray}{rgb}{0.4, 0.4, 0.4}
+\definecolor{editorGray}{rgb}{0.95, 0.95, 0.95}
+\definecolor{editorOcher}{rgb}{1, 0.5, 0} % #FF7F00 -> rgb(239, 169, 0)
+\definecolor{editorGreen}{rgb}{0, 0.5, 0} % #007C00 -> rgb(0, 124, 0)
+\definecolor{orange}{rgb}{1,0.45,0.13}		
+\definecolor{olive}{rgb}{0.17,0.59,0.20}
+\definecolor{brown}{rgb}{0.69,0.31,0.31}
+\definecolor{purple}{rgb}{0.38,0.18,0.81}
+\definecolor{lightblue}{rgb}{0.1,0.57,0.7}
+\definecolor{lightred}{rgb}{1,0.4,0.5}
+\definecolor{deepgreen}{rgb}{0,0.4,0}
+
+
+
+%https://www.overleaf.com/latex/examples/listings-code-style-for-html5-css-html-javascript/htstpdbpnpmt
+% CSS
+\lstdefinelanguage{CSS}{
+  keywords={color,background-image:,margin,padding,font,weight,display,position,top,left,right,bottom,list,style,border,size,white,space,min,width, transition:, transform:, transition-property, transition-duration, transition-timing-function},	
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  alsoletter={:},
+  alsodigit={-}
+}
+
+% JavaScript
+\lstdefinelanguage{JavaScript}{
+  morekeywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]//,
+  morestring=[b]",
+  morestring=[b]'
+}
+
+
+\lstdefinelanguage{HTML5}{
+  language=html,
+  sensitive=true,	
+  alsoletter={<>=-},	
+  morecomment=[s]{<!-}{-->},
+  tag=[s],
+  otherkeywords={
+  % General
+  >,
+  % Standard tags
+	<!DOCTYPE,
+  </html, <html, <head, <title, </title, <style, </style, <link, </head, <meta, />,
+	% body
+	</body, <body,
+	% Divs
+	</div, <div, </div>, 
+	% Paragraphs
+	</p, <p, </p>,
+	% header
+	</h1, <h1, </h1>,	</h2, <h2, </h2>,	</h3, <h3, </h3>,	</h4, <h4, </h4>,
+	% scripts
+	</script, <script,
+  % More tags...
+  <canvas, /canvas>, <svg, <rect, <animateTransform, </rect>, </svg>, <video, <source, <iframe, </iframe>, </video>, <image, </image>, <header, </header, <article, </article
+  },
+  ndkeywords={
+  % General
+  =,
+  % HTML attributes
+  charset=, src=, id=, width=, height=, style=, type=, rel=, href=,
+  % SVG attributes
+  fill=, attributeName=, begin=, dur=, from=, to=, poster=, controls=, x=, y=, repeatCount=, xlink:href=,
+  % properties
+  margin:, padding:, background-image:, border:, top:, left:, position:, width:, height:, margin-top:, margin-bottom:, font-size:, line-height:,
+	% CSS3 properties
+  transform:, -moz-transform:, -webkit-transform:,
+  animation:, -webkit-animation:,
+  transition:,  transition-duration:, transition-property:, transition-timing-function:,
+  }
+}
+
+\lstdefinestyle{htmlcssjs}{%
+  % General design
+%  backgroundcolor=\color{editorGray},
+  basicstyle={\footnotesize\ttfamily},   
+  frame=b,
+  % line-numbers
+  xleftmargin={0.75cm},
+  numbers=left,
+  stepnumber=1,
+  firstnumber=1,
+  numberfirstline=true,	
+  % Code design
+  identifierstyle=\color{black},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywordstyle=\color{editorGreen}\bfseries,
+  stringstyle=\color{editorOcher}\ttfamily,
+  commentstyle=\color{brown}\ttfamily,
+  % Code
+  language=HTML5,
+  alsolanguage=JavaScript,
+  alsodigit={.:;},	
+  tabsize=2,
+  showtabs=false,
+  showspaces=false,
+  showstringspaces=false,
+  extendedchars=true,
+  breaklines=true,
+  % German umlauts
+  literate=%
+  {Ö}{{\"O}}1
+  {Ä}{{\"A}}1
+  {Ü}{{\"U}}1
+  {ß}{{\ss}}1
+  {ü}{{\"u}}1
+  {ä}{{\"a}}1
+  {ö}{{\"o}}1
+}
+\lstnewenvironment{web}{\lstset{style=htmlcssjs}}{}
+
+
+
+% Based on Stanford CME 212 Notes Template
+% C++ Code
+\usepackage{alltt, listings, textcomp, color, verbatim}
+\lstdefinestyle{cpp}{
+		language=C++,                        % choose the language of the code
+		basicstyle=\ttfamily\footnotesize,   % the size of the fonts that are used for the code
+		tabsize=2,                           % sets default tabsize to 2 spaces
+		showstringspaces=false,              % show spaces adding particular underscores
+		showtabs=false,                      % show tabs within strings adding particular underscores
+		keywordstyle=\color{blue},           % keyword style
+		identifierstyle=\color{black},       % identifier style
+		emphstyle=\color{black}\bf,          % emphasis style
+		%commentstyle=\color{gray}\slshape,   % comment style
+		%stringstyle=\color{gray},            % string literal style
+		aboveskip=\baselineskip,             % skip space when starting code environment
+		xleftmargin=10pt, xrightmargin=10pt, % code margins
+		frame=lines,                         % adds a frame around the code
+		numbers=left,                        % where to put the line-numbers
+		numberstyle=\tiny,                   % the size of the fonts that are used for the line-numbers
+		numbersep=10pt,                      % how far the line-numbers are from the code
+}
+\lstnewenvironment{cpp}{\lstset{style=cpp}}{}
+
+
+% Based on Stanford CME 212 Notes Template
+% Python Code
+\usepackage{listings, textcomp, color, verbatim, xcolor}
+\lstdefinestyle{python}{
+		language=python,
+		basicstyle=\color{black}\ttfamily\footnotesize,
+		stringstyle=\color{deepgreen}\slshape,
+		% commentstyle=\color{gray}\slshape,
+		keywordstyle=\color{red}\bf,
+		emphstyle=\color{blue}\bf,
+		tabsize=2,
+		%%%%%%%%%%%%%%%
+		showstringspaces=false,
+    emph={access,and,break,class,continue,def,del,elif,else,except,exec,finally,for,from,global,if,import,in,i s,lambda,not,or,pass,print,raise,return,try,while,as},
+		upquote=true,
+		morecomment=[s]{"""}{"""},
+		literate=*
+		{:}{{\textcolor{blue}:}}{1}%
+		{=}{{\textcolor{blue}=}}{1}%
+		{-}{{\textcolor{blue}-}}{1}%
+		{+}{{\textcolor{blue}+}}{1}%
+		{*}{{\textcolor{blue}*}}{1}%
+		{!}{{\textcolor{blue}!}}{1}%
+		{(}{{\textcolor{blue}(}}{1}%
+		{)}{{\textcolor{blue})}}{1}%
+		{[}{{\textcolor{blue}[}}{1}%
+		{]}{{\textcolor{blue}]}}{1}%
+		{<}{{\textcolor{blue}<}}{1}%
+		{>}{{\textcolor{blue}>}}{1},%
+		%%%%%%%%%%%%%%%%
+		aboveskip=\baselineskip,
+		xleftmargin=20pt, xrightmargin=15pt,
+		frame=lines,
+		numbers=left, numberstyle=\tiny
+}
+\lstnewenvironment{python}{\lstset{style=python}}{}
+
+
+\lstdefinestyle{r}{
+    language=R,
+    backgroundcolor=\color{white},   % choose the background color
+    basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+    breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+    breaklines=true,                 % sets automatic line breaking
+    captionpos=b,                    % sets the caption-position to bottom
+    commentstyle=\color{deepgreen},    % comment style
+    escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+    extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+    firstnumber=1,                % start line enumeration with line 1000
+    frame=single,                    % adds a frame around the code
+    keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+    numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+    numbersep=5pt,                   % how far the line-numbers are from the code
+    numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
+    rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+    showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+    showstringspaces=false,          % underline spaces within strings only
+    showtabs=false,                  % show tabs within strings adding particular underscores
+    stepnumber=5,                    % the step between two line-numbers. If it's 1, each line will be numbered
+    stringstyle=\color{purple},     % string literal style
+    tabsize=2,                       % sets default tabsize to 2 spaces
+}
+\lstnewenvironment{R}{\lstset{style=r}}{}

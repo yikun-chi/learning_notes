@@ -1,0 +1,211 @@
+\chapter{Mobility and Physical Space}
+
+\section{Investigating the Relationships Between Mobility Behaviours and Indicators of Subjective Well-Being Using Smartphone-Based Experience Sampling and GPS Tracking}
+
+Author: Sandrine R. Müller, Heinrich Peters, Sandra C. Matz,  Weichen Wang,Gabriella M. Harari
+\href{https://onlinelibrary.wiley.com/doi/10.1002/per.2262}{Link}
+
+\paragraph{Intro Literature} 
+\begin{itemize}
+    \item Everyday Mobility Behavior through GPS signal
+    \item Movement Patterns and Subjective Well-Being
+    \item Place Visited and Subjective Well-Being 
+\end{itemize}
+
+\paragraph{Method} 
+    \begin{itemize}
+        \item Subjective Well-being: depression, loneliness, anxiety, affects, stress, energy 
+        \item Movement Patterns: 23 mobility features which later loaded into three factors
+    \end{itemize}
+
+\paragraph{Question}
+    \begin{itemize}
+        \item Between-person level, mobility behaviours over a two-week period relate to subjective well-being
+        \item Within-person level, daily mobility behaviours relate to daily subjective well-being 
+    \end{itemize}
+
+
+
+
+
+\newpage
+\section{Real-World Exploration Increases Across Adolescence and Relates to Affect, Risk Taking and Social Connectivity} 
+
+Author: Natalie M. Saragosa-Harris, Alexandra O. Cohen, Travis R. Reneau, William J. Villano, Aaron S. Heller, Catherine A. Hartley 
+\href{https://journals.sagepub.com/doi/10.1177/09567976221102070}{Link}
+
+\subsection{Abstract} 
+Cross-species research suggests that exploratory behaviors increase during adolescence and relate to the social, affective, and risky behaviors characteristic of this developmental stage. However, how these typical adolescent behaviors manifest and relate in real-world settings remains unclear. Using geolocation tracking to quantify exploration—variability in daily movement patterns—over a 3-month period in 58 adolescents and adults (ages 13–27) in New York City, we investigated whether daily exploration varied with age and whether exploration related to social connectivity, risk taking, and momentary positive affect. In our cross-sectional sample, we found an association between daily exploration and age, with individuals near the transition to legal adulthood exhibiting the highest exploration levels. Days of higher exploration were associated with greater positive affect irrespective of age. Higher mean exploration was associated with greater social connectivity in all participants but was linked to higher risk taking selectively among adolescents. Our results highlight the interplay of exploration and socioemotional behaviors across development and suggest that societal norms may modulate their expression in naturalistic contexts.
+
+\subsection{Key Concept in Literature Review} 
+    \begin{itemize}
+        \item Conceptualization of roaming entropy as a measurement of exploration 
+        \item Relation between social network expansion and environmental exploration
+        \item Relation between risky behavior and exploration
+        \item Roaming entropy is related to the number of novel locations visited in a day
+    \end{itemize}
+
+\subsection{Experiment Detail} 
+    \begin{itemize}
+        \item $n = 58$
+        \item 3 months tracking period at 2-min interval
+    \end{itemize}
+
+\subsection{Variables and Methods} 
+\paragraph{Exploration} is the operationaliz as roaming entropy. It is defined as follow: 
+    \begin{align*}
+        -\sum_{j=1}^n \left( p_{ij} \times \log(p_{ij})\right) / \log(n)
+    \end{align*}
+Here $p_{ij}$ is the within-day historical probability that location $j$ was visited by participant $i$, quantified as the proportion of the day spent in location $j$ (in minutes) divided by the 1440 minutes. $n$ is the total number of unique locations on Earth at four decimal degree of GPS resolution. Note that here unique location is defined as four decimal point rounded GPS points. 
+
+\paragraph{Other Variables}
+    \begin{itemize}
+        \item Novel location: Location that hasn't been visited before
+        \item Affect: 0 to 100 scale (EMA every 48 hours) 
+        \item Social network measures: how many unique individuals they interacted via phone calls and messaging platforms  (One survey mid way through experiment)
+        \item Risk taking measures: abbreviated version of the Domain-Specific Risk-Taing Scale (DOSPERT) and Cognitive Appraisal of Risky Events (CARE) questionnaire. (Beginning of study)
+        \item Age: Categorical, z-scored, linear + quadratic z-scored
+        \item Control Variables: Day of the week, precipitation, temperature, distance traveled, time of the day for EMA. 
+    \end{itemize}
+\paragraph{Statistical Models} 
+    \begin{itemize}
+        \item daily roaming entropy and positive affect:  Linear mixed-effect model
+        \item Daily roaming entropy and novelty: Multilevel regression with zero-inflated negative binomial distribution 
+        \item Between-subject analysis: Robust multiple regression with iterated reweighted least squares
+    \end{itemize}
+    
+\subsection{Results}
+    \begin{itemize}
+        \item Roaming entropy positive correlate with novelty 
+        \item Roaming entropy positive correlate with affect, but age does not serve as a moderator. 
+        \item Roaming entroy positive correlate with social network size. 
+    \end{itemize}
+    
+    
+
+
+    
+\newpage 
+\section{Discovering Mobile Application Usage Patterns from a Large-Scale Dataset} 
+
+Author: Fabricio A. Silva, Augusto C.S.A.Domingues, Thais R.M. Braga Silva
+\href{https://dl.acm.org/doi/abs/10.1145/3209669}{Link}
+
+\subsection{Abstract} 
+The discovering of patterns regarding how, when, and where users interact with mobile applications reveals important insights for mobile service providers. In this work, we exploit for the first time a real and large-scale dataset representing the records of mobile application usage of 5,342 users during 2014. The data was collected by a software agent, installed at the users’ smartphones, which monitors detailed usage of applications. First, we look for general patterns of how users access some of the most popular mobile applications in terms of frequency, duration, diversity, and data traffic. Next, we mine the dataset looking for temporal patterns in terms of when and how often accesses occur. Finally, we exploit the location of each access to detect users’ points of interest and location-based communities. Based on the results, we derive a model to generate synthetic datasets of mobile application usage and evaluate solutions to predict the next application to be launched. We also discuss a series of implications of the findings regarding telecommunication services, mobile advertisements, and smart cities. This is the first time this dataset is used, and we also make it publicly available for other researchers.
+
+\subsection{Literature Review} 
+    \begin{itemize}
+        \item Describing social network usage
+        \item Mobility and cellphone records
+        \item Cellphone application and personality, wellbeing 
+    \end{itemize}
+    
+\subsection{Data}
+    \begin{itemize}
+        \item 5,342 user, each one tracked for more than 30 days
+        \item per record: $(u, a, i, e, d, dl, ul, l_1, l_2)$
+            \begin{itemize}
+                \item $u$: user 
+                \item $a$: app (Facebook, Instagram, WhatsApp, IBM Notes, Waze, Youtube, Browsers)
+                \item $i$: timestamp of beginning usage 
+                \item $e$: timestamp of end usage 
+                \item $d$: total duration in seconds 
+                \item $dl$: total amount of Bytes downloaded 
+                \item $ul$: total amount of Bytes uploaded 
+                \item $l_1$: lat, lon at the beginning of usage 
+                \item $l_2$: lat, lon at the end of usage 
+            \end{itemize}
+        \item Data available to public
+    \end{itemize}
+
+\subsection{Analysis} 
+    \begin{itemize}
+        \item Access
+            \begin{itemize}
+                \item Records Duration : stats, CDF 
+            \end{itemize}
+        \item Navigation 
+            \begin{itemize}
+                \item Transition matrix 
+                \item Transition diversity (Computed as Shannon entropy on transition matrix)
+            \end{itemize}
+        \item Data Traffic: stats, bar graph on upload and download, CDF
+        \item Temporal 
+            \begin{itemize}
+                \item Period (time of the day, week) of Access: bar graph, heatmap 
+                \item Inter-access time (time between access the same application): CDF
+            \end{itemize}
+        \item Spatial 
+            \begin{itemize}
+                \item Mobility as distance traveled during usage: Complementary CDF
+                \item Places of Interest: count, diversity (entropy), distance between places, return time, lifetime, period of usage in places. For each categories mostly barchart and CDF. 
+                \item Community: clustering based on places of interest. 
+            \end{itemize}
+        
+    \end{itemize}
+
+
+
+
+
+\newpage    
+\section{Predicting Symptoms of Depression and Anxiety Using Smartphone and Wearable Data}
+Author: Issac Moshe, Yannik Terhorst, Kennedy Opoku Asare, Lasse Bosse Sander, Denzil Ferreira, Harald Baumeister, David C. Mohor, Laura Pulkki-Raback 
+
+\href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7876288/}{Link}
+
+\subsection{Abstract} 
+\textbf{Background}: Depression and anxiety are leading causes of disability worldwide but often remain undetected and untreated. Smartphone and wearable devices may offer a unique source of data to detect moment by moment changes in risk factors associated with mental disorders that overcome many of the limitations of traditional screening methods.
+
+\textbf{Objective}: The current study aimed to explore the extent to which data from smartphone and wearable devices could predict symptoms of depression and anxiety.
+
+\textbf{Methods}: A total of N = 60 adults (ages 24–68) who owned an Apple iPhone and Oura Ring were recruited online over a 2-week period. At the beginning of the study, participants installed the Delphi data acquisition app on their smartphone. The app continuously monitored participants' location (using GPS) and smartphone usage behavior (total usage time and frequency of use). The Oura Ring provided measures related to activity (step count and metabolic equivalent for task), sleep (total sleep time, sleep onset latency, wake after sleep onset and time in bed) and heart rate variability (HRV). In addition, participants were prompted to report their daily mood (valence and arousal). Participants completed self-reported assessments of depression, anxiety and stress (DASS-21) at baseline, midpoint and the end of the study.
+
+\textbf{Results}: Multilevel models demonstrated a significant negative association between the variability of locations visited and symptoms of depression (beta = -0.21, p = 0.037) and significant positive associations between total sleep time and depression (beta = 0.24, p = 0.023), time in bed and depression (beta = 0.26, p = 0.020), wake after sleep onset and anxiety (beta = 0.23, p = 0.035) and HRV and anxiety (beta = 0.26, p = 0.035). A combined model of smartphone and wearable features and self-reported mood provided the strongest prediction of depression.
+
+\textbf{Conclusion}: The current findings demonstrate that wearable devices may provide valuable sources of data in predicting symptoms of depression and anxiety, most notably data related to common measures of sleep.
+
+\textbf{Keywords}: digital phenotyping, predicting symptoms, depression, anxiety, mobile sensing
+
+\subsection{Introduction}
+\begin{itemize}
+    \item Importance of depression and anxiety 
+    \item Problem with traditional survey approach 
+    \item Smartphone capability and digital phenotype 
+    \item GPS, sleep, and activity predicting depression 
+\end{itemize}
+
+\subsection{Variable and Methods} 
+60 people study over 1 month, features are aggregated to bi-weekly level to be in the time-frame as mental health outcome survey frequency 
+\paragraph{Data}
+    \begin{itemize}
+        \item Mental health outcome: DASS-21l at day 0, 16, 31
+        \item EMA: mood (valence and arousal), 3 times a day
+        \item Smartphone Sensor data 
+            \begin{itemize}
+                \item GPS: Location variance, total distance, location entropy, normalized location entropy, homestay 
+                \item Screen Usage: usage time, frequency 
+            \end{itemize}
+        \item Wearable
+            \begin{itemize}
+                \item Steps 
+                \item Metabolic equivalent for task
+                \item Total sleep time 
+                \item Sleep onset latency 
+                \item Wake after sleep onset 
+                \item Time in bed 
+                \item HRV 
+            \end{itemize}
+    \end{itemize}
+\paragraph{Method}
+    \begin{itemize}
+        \item Multilevel Modeling 
+        \item Correlation 
+        \item Good imputation strategy 
+    \end{itemize}
+\paragraph{Result}
+    \begin{itemize}
+        \item Location variance negatively correlated with depression, but not anxiety or stress 
+        \item Other GPS derived features not correlated with depression, anxiety, or stress. 
+    \end{itemize}
