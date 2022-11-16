@@ -145,6 +145,13 @@ read.full <- nlme(read_ks ~ (beta_00 + beta_01 * attent_m + beta_02 * hrs_day5 +
 
 
 
+\subsection{Standard Practice and Notes} 
+\begin{itemize}
+    \item If we have b/t person covariate that is used to predict b/t person difference in intra-person change, we normally would plot the curve with mean, and plus minus 1 standard deviation of the covariate. 
+    \item Note that if we add a b/t person covariate, this will not reduce the residual of the model. It will only potentially reduce the variance in the random effects. 
+    \item Objective 5 adds terms to level 2 equations (equation that models inter-person differences). 
+    \item Objective 4 adds term to level 1 equation (equation that models intra-person change) 
+\end{itemize}
 
 
 \section{Structural Equation Modeling}
@@ -704,4 +711,113 @@ The diagram is given as
 
 
 
-\subsection{Non Linear Growth Model} 
+\subsection{Non Linear Growth Model: Quadratic Growth Model} 
+Multilevel Model Equation 
+    \begin{align*}
+        y_{yn} = b_{0n} + b_{1n} * t + b_{2n} * t^2 + u_{tn}
+    \end{align*}
+Partial Derivatives (factor loading): 
+    \begin{align*}
+        & \partiald{b_{0n}} y = 1 \\
+        & \partiald{b_{1n}} y = t \\
+        & \partiald{b_{2n}} y = t^2
+    \end{align*}
+We can describe the parabolic curve w.r.t the time for the curve reaching its maximum / minimum curve. So people can be different in 3 ways: intercept, max / min, and the time at max / min. In order to do so, we can derive algebraically (solving for those three params w.r.t the original quadratic equation coefficient) and gets 
+    \begin{align*}
+    y_{tn} = b_{0n} + \left(\frac{2 * (y_{maxn} - b_{0n})}{t_{maxn}} \right) * t + \left( \frac{b_{0n}-y_{maxn}}{t^2_{maxn}} \right)*t^2 + u_{tn}
+    \end{align*}
+
+\subsection{Non Linear Growth Model: Spline Model} 
+A spline model with 1 knot at $t$ (determined a-priori or through data) can be defined as 
+    \begin{align*}
+        y_{tn} = b_{0n} + b_{1n}*t + b_{2n} * \max(t-k,0) + u_{tn}
+    \end{align*}
+    \begin{itemize}
+        \item $b_{0n}$ is the intercept, predicted score when $t=k$
+        \item $b_{1n}$ is the pre-knot slope, predicted rate of change when $t<k$
+        \item $b_{2n}$ is the change in the slope after the knot. (The actual post-knot rate of change is $b_{1n} + b_{2n}$, 
+    \end{itemize}
+Alternative coding that is useful when knot can be varying across persons
+    \begin{align*}
+        y_{tn} = b_{0n} + b_{1n}(t_{tn} - k_n) + b_{2n}\sqrt{(t_{tn} - k_n)^2} + u_{tn}
+    \end{align*}
+People can be different in 
+    \begin{enumerate}
+        \item pre-slope 
+        \item post-slope
+        \item knot point 
+        \item intercept
+    \end{enumerate}
+We can extend it to higher order splines, such as natural cubic splines, which have continuous second derivatives and also have to be linear beyond the boundary knots.  
+
+\subsection{Non Linear Growth Model: Special Shape} 
+We can recode the time variables to obtain special shapes, e.g.: 
+    \begin{align*}
+        & A[t] = [1,1,2,2,3,3] \text{Steps} \\
+        & A[t] = [1,2,3,3,2,1] \text{up and down} \\
+        & A[t] = [1,-1,1,-1,1,-1] \text{simple cycles} 
+    \end{align*}
+We can also transform the time through centering, log function, exponential function etc. 
+
+\subsection{Non Linear Growth Model: Latent Basis Growth Model} 
+Formulation 
+    \begin{align*}
+        & Y_{nt} = A_0[t] * g_{0n} + A_1[t]*g_{1n} + e_{nt}\\
+        & A_0[t] = [1,1,1,1,1,1,1,1,1,1]\\
+        & A_1[t] = [0,\alpha_1, \alpha_2, \alpha_3, \alpha_4, \alpha_5, \alpha_6, \alpha_7,1]\\
+        & g_0, g_1, e_t \sim MVN
+    \end{align*}
+Notice now the time $\alpha_t$ is another set of parameters. Limitation: large number of parameters and cannot generalize outside of observation period. 
+
+\subsection{Non Linear Growth Model: Exponential Growth Model} 
+
+A model is properly termed as nonlinear if the derivatives of the model with respect to the model parameters depend on one or more parameters. For example, a polynomial model is not a nonlinear model because it's derivative does not contain any parameters. 
+    \begin{align*}
+        y = b_0 + b_1 * t + b_2 * t^2 + e
+    \end{align*}
+By comparison, an exponential model is formally a nonlinear model 
+    \begin{align*}
+        & y_{ij} = b_{0i} + b_{1i}(1-\exp(-at_{ij})) + e_{ij}\\
+        & \partiald{db_{0i}}y = 1\\
+        & \partiald{db_{1i}}y = (1-\exp(-at_{ij})) \\
+        & \partiald{da}y = b_{1i}t_{ij}\exp(-at_{ij})
+    \end{align*}
+    \begin{itemize}
+        \item $b_{0i}$ is the individual intercept, predicted value when $t= 0$
+        \item $b_{1i}$ is the individual change to the asymptote 
+        \item $a$ is the rate parameter, same for everyone 
+    \end{itemize}
+This model is additive because the random effect structure. Here $a$ is constant. If we want a multiplicative model, we would have 
+    \begin{align*}
+        y_{ij} = b_{0i} + b_{1i}(1-\exp(-a_it_{ij})) + e_{ij}
+    \end{align*}
+Now the derivatives depend on non-constant coefficients. So it is multiplicative nonlinear. Multiplicative nonlinear models means the latent variable(s) / random effects enters the model in a nonlinear fashion, and it is generally easier to be done in Bayesian fashion. 
+
+
+\subsection{Non Linear Growth Model: Sigmoid} 
+People can differ in 
+    \begin{enumerate}
+        \item Lower asymptote
+        \item Upper asymptote 
+        \item Growth rate
+        \item Inflection point 
+    \end{enumerate}
+    
+\paragraph{Gompertz Model} 
+\begin{align*}
+    y_{tn} = b_{0n} + b_{1n} * \exp(-\exp(-b_{2n} * (t-b_{3n}))) + u_{tn}
+\end{align*}
+    \begin{itemize}
+        \item $b_{0n}$: Lower asymptote for individual $n$ 
+        \item $b_{1n}$: Total change from lower to upper asymptote for $n$ 
+        \item $b_{2n}$: rate parameters for individual $n$ 
+        \item $b_{3n}$: inflection point 
+        \item $u_{tn}$: time-dependent residual. 
+    \end{itemize}
+In additive nonlinear model version, only $b_{0n}$ and $b_{1n}$ are random coefficients. For multiplicative models, $b_{1n}, b_{2n}, b_{3n}$ are the only random coefficient. 
+
+
+\subsection{Non Linear Growth Model: Sinusoidal} 
+\begin{align*}
+    Y_{ti} = R_i(\cos(\omega_i t_{ti} + \phi_i)) + \epsilon_{ti}
+\end{align*}
